@@ -277,54 +277,170 @@
         gridHelper.position.y = 0.01;
         scene.add(gridHelper);
 
-        // --- Glass Beaker ---
-        const beakerGeo = new THREE.CylinderGeometry(1.1, 0.9, 2.5, 32, 1, true);
-        const beakerMat = new THREE.MeshPhysicalMaterial({
-            color: 0xffffff, transparent: true, opacity: 0.12,
-            roughness: 0.05, metalness: 0.0, side: THREE.DoubleSide,
-            transmission: 0.9, thickness: 0.05,
+        // --- Glass Beaker (proper visible glass) ---
+        // Outer wall
+        const beakerOuterGeo = new THREE.CylinderGeometry(1.15, 0.95, 2.5, 32, 1, true);
+        const beakerGlassMat = new THREE.MeshStandardMaterial({
+            color: 0xaaddff, transparent: true, opacity: 0.25,
+            roughness: 0.05, metalness: 0.1, side: THREE.DoubleSide,
+            depthWrite: false,
         });
-        const beaker = new THREE.Mesh(beakerGeo, beakerMat);
-        beaker.position.set(0, 1.25, 0);
-        scene.add(beaker);
+        const beakerOuter = new THREE.Mesh(beakerOuterGeo, beakerGlassMat);
+        beakerOuter.position.set(0, 1.25, 0);
+        beakerOuter.renderOrder = 1;
+        scene.add(beakerOuter);
 
-        // Beaker bottom
+        // Inner wall (gives glass "thickness" from any angle)
+        const beakerInnerGeo = new THREE.CylinderGeometry(1.08, 0.88, 2.5, 32, 1, true);
+        const beakerInnerMat = new THREE.MeshStandardMaterial({
+            color: 0xcceeFF, transparent: true, opacity: 0.12,
+            roughness: 0.05, metalness: 0.05, side: THREE.BackSide,
+            depthWrite: false,
+        });
+        const beakerInner = new THREE.Mesh(beakerInnerGeo, beakerInnerMat);
+        beakerInner.position.set(0, 1.25, 0);
+        beakerInner.renderOrder = 0;
+        scene.add(beakerInner);
+
+        // Beaker bottom (solid visible glass)
         const beakerBottom = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.9, 0.9, 0.05, 32),
-            new THREE.MeshPhysicalMaterial({ color: 0xffffff, transparent: true, opacity: 0.08, roughness: 0.05 })
+            new THREE.CylinderGeometry(0.95, 0.95, 0.08, 32),
+            new THREE.MeshStandardMaterial({
+                color: 0xaaddff, transparent: true, opacity: 0.3,
+                roughness: 0.1, metalness: 0.1, depthWrite: false,
+            })
         );
-        beakerBottom.position.set(0, 0.025, 0);
+        beakerBottom.position.set(0, 0.04, 0);
         scene.add(beakerBottom);
 
-        // Beaker rim
-        const rimGeo = new THREE.TorusGeometry(1.1, 0.03, 8, 32);
-        const rimMat = new THREE.MeshStandardMaterial({ color: 0xaaccee, roughness: 0.2, metalness: 0.3 });
+        // Beaker rim (thick visible ring at top)
+        const rimGeo = new THREE.TorusGeometry(1.15, 0.04, 12, 48);
+        const rimMat = new THREE.MeshStandardMaterial({
+            color: 0xbbddff, transparent: true, opacity: 0.5,
+            roughness: 0.1, metalness: 0.2,
+        });
         const rim = new THREE.Mesh(rimGeo, rimMat);
         rim.rotation.x = Math.PI / 2;
         rim.position.set(0, 2.5, 0);
         scene.add(rim);
 
-        // --- Electrolyte (blue liquid) ---
+        // Beaker spout/lip (small pour spout)
+        const spoutGeo = new THREE.CylinderGeometry(0.15, 0.12, 0.15, 8, 1, true, 0, Math.PI);
+        const spout = new THREE.Mesh(spoutGeo, beakerGlassMat);
+        spout.position.set(0, 2.55, 1.1);
+        spout.rotation.y = Math.PI;
+        scene.add(spout);
+
+        // --- Electrolyte (blue liquid, solid look) ---
+        const electrolyteMat = new THREE.MeshStandardMaterial({
+            color: 0x3377BB, transparent: true, opacity: 0.45,
+            roughness: 0.2, metalness: 0.0, side: THREE.DoubleSide,
+            depthWrite: false,
+        });
         const electrolyte = new THREE.Mesh(
-            new THREE.CylinderGeometry(1.05, 0.87, 1.7, 32),
-            new THREE.MeshPhysicalMaterial({
-                color: 0x4488CC, transparent: true, opacity: 0.35,
-                roughness: 0.1, metalness: 0.0, side: THREE.DoubleSide,
-            })
+            new THREE.CylinderGeometry(1.06, 0.87, 1.7, 32),
+            electrolyteMat
         );
         electrolyte.position.set(0, 0.9, 0);
+        electrolyte.renderOrder = 0;
         scene.add(electrolyte);
 
-        // Liquid surface
+        // Liquid surface (clear distinct top surface)
         const liquidSurface = new THREE.Mesh(
-            new THREE.CylinderGeometry(1.05, 1.05, 0.02, 32),
-            new THREE.MeshPhysicalMaterial({
-                color: 0x5599DD, transparent: true, opacity: 0.5,
-                roughness: 0.0, metalness: 0.1,
+            new THREE.CylinderGeometry(1.06, 1.06, 0.03, 32),
+            new THREE.MeshStandardMaterial({
+                color: 0x4499DD, transparent: true, opacity: 0.6,
+                roughness: 0.0, metalness: 0.15, depthWrite: false,
             })
         );
-        liquidSurface.position.set(0, 1.75, 0);
+        liquidSurface.position.set(0, 1.76, 0);
         scene.add(liquidSurface);
+
+        // --- Sprite Label Helper ---
+        function makeTextSprite(text, color) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            ctx.font = 'bold 36px Nunito, Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // Background pill
+            const metrics = ctx.measureText(text);
+            const pad = 20;
+            const w = metrics.width + pad * 2;
+            const h = 50;
+            const x = 128 - w / 2;
+            const y = 64 - h / 2;
+            ctx.fillStyle = 'rgba(0,0,0,0.6)';
+            ctx.beginPath();
+            ctx.roundRect(x, y, w, h, 14);
+            ctx.fill();
+
+            // Text
+            ctx.fillStyle = color;
+            ctx.fillText(text, 128, 64);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            const mat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+            const sprite = new THREE.Sprite(mat);
+            sprite.scale.set(1.4, 0.7, 1);
+            return sprite;
+        }
+
+        // Electrode labels (will be updated dynamically)
+        const leftLabel = makeTextSprite('Left: Zn', '#E86830');
+        leftLabel.position.set(-0.45, 2.9, 0);
+        scene.add(leftLabel);
+
+        const rightLabel = makeTextSprite('Right: Cu', '#4CAF50');
+        rightLabel.position.set(0.45, 2.9, 0);
+        scene.add(rightLabel);
+
+        function updateLabels() {
+            const L = METALS[leftMetal];
+            const R = METALS[rightMetal];
+            const leftIsAnode = anodeSide === 'left';
+            const rightIsAnode = anodeSide === 'right';
+
+            // Rebuild label sprites
+            const leftText = leftIsAnode ? `${L.symbol} (Anode −)` : (rightIsAnode ? `${L.symbol} (Cathode +)` : `${L.symbol}`);
+            const rightText = rightIsAnode ? `${R.symbol} (Anode −)` : (leftIsAnode ? `${R.symbol} (Cathode +)` : `${R.symbol}`);
+
+            // Update by replacing textures
+            updateSpriteText(leftLabel, leftText, leftIsAnode ? '#E86830' : (anodeSide === 'none' ? '#999' : '#4CAF50'));
+            updateSpriteText(rightLabel, rightText, rightIsAnode ? '#E86830' : (anodeSide === 'none' ? '#999' : '#4CAF50'));
+        }
+
+        function updateSpriteText(sprite, text, color) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            ctx.font = 'bold 30px Nunito, Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            const metrics = ctx.measureText(text);
+            const pad = 16;
+            const w = Math.min(metrics.width + pad * 2, 250);
+            const h = 44;
+            const x = 128 - w / 2;
+            const y = 64 - h / 2;
+            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+            ctx.beginPath();
+            ctx.roundRect(x, y, w, h, 12);
+            ctx.fill();
+
+            ctx.fillStyle = color;
+            ctx.fillText(text, 128, 64);
+
+            if (sprite.material.map) sprite.material.map.dispose();
+            sprite.material.map = new THREE.CanvasTexture(canvas);
+            sprite.material.map.needsUpdate = true;
+        }
 
         // --- Electrodes ---
         const ELECTRODE_HEIGHT = 2.0;
@@ -596,6 +712,7 @@
 
             computeCell();
             updateUI();
+            updateLabels();
         }
 
         leftSelect.addEventListener('change', onElectrodeChange);
@@ -609,11 +726,13 @@
             rightElectrode.position.y = 1.3;
             computeCell();
             updateUI();
+            updateLabels();
         });
 
         // Initial computation
         computeCell();
         updateUI();
+        updateLabels();
 
         // --- Animation Loop ---
         const clock = new THREE.Clock();
