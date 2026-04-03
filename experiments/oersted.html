@@ -440,32 +440,21 @@
         renderer.domElement.addEventListener('touchend', onPointerUp);
 
         // --- Physics: compute needle angle from magnetic field ---
-        // The wire runs along X-axis at (y=WIRE_Y, z=WIRE_Z).
-        // Magnetic field from a straight wire is circular around it (right-hand rule).
-        // At the compass position, the field direction is tangent to the circle
-        // centered on the wire cross-section, passing through the compass.
         //
-        // In the YZ-plane perpendicular to the wire:
-        //   Wire is at (WIRE_Y, WIRE_Z)
-        //   Compass is at (compass.y, compass.z)
-        //   Vector from wire to compass = (dy, dz)
-        //   Field direction (tangent, right-hand rule for +X current) = (-dz, dy) normalized
+        // The wire runs along the X-axis at (y=WIRE_Y, z=WIRE_Z).
+        // For a long straight wire carrying current in the +X direction,
+        // the magnetic field B at any point forms concentric circles
+        // around the wire (right-hand rule).
         //
-        // The needle angle on the XZ table plane:
-        //   The field has no X-component (infinite straight wire approx).
-        //   On the table the field points in the Z-direction component of the tangent.
-        //   The needle aligns with the field projected onto the XZ plane.
-        //   Angle = atan2(fieldX, fieldZ) where fieldX=0 for infinite wire.
+        // At the compass position P, we find the closest point on the
+        // wire, compute the radial vector R from wire to compass,
+        // then B = cross(wireDir, R).normalized / |R|
         //
-        // Simplified: the needle rotates by the angle of the tangent projected
-        // onto the horizontal plane. Since field is purely in Z-direction on table:
-        //   When compass is in front of wire (z>0): field points in -X direction
-        //   When compass is behind wire (z<0): field points in +X direction
-        //   => needle angle = atan2(-dz, dy) relative to compass-wire vector
+        // The compass needle rotates on the XZ table plane (around Y-axis),
+        // so we project B onto the XZ plane and use atan2 to find
+        // the angle the needle should point.
         //
-        // More precisely: needle aligns with B field direction on XZ plane.
-        // B direction tangent = perpendicular to (wire→compass) in YZ plane.
-        // On the table (y=const), the relevant component is along Z.
+        // When power is OFF, needle points to "magnetic north" (default: -Z, angle=0).
 
         function computeNeedleAngle() {
             if (!powerOn) return 0;
@@ -474,84 +463,125 @@
             const cy = compassGroup.position.y;
             const cz = compassGroup.position.z;
 
-            // Vector from wire axis to compass in YZ plane
-            const dy = cy - WIRE_Y; // usually negative (compass below wire)
-            const dz = cz - WIRE_Z;
-            const dist = Math.sqrt(dy * dy + dz * dz);
+            // Closest point on wire to compass (wire is along X from -2 to +2)
+            const wireX = THREE.MathUtils.clamp(cx, -2, 2);
 
-            if (dist < 0.05) return 0; // too close, degenerate
+            // Radial vector from wire point to compass (in 3D)
+            const rx = cx - wireX;
+            const ry = cy - WIRE_Y;
+            const rz = cz - WIRE_Z;
+            const dist = Math.sqrt(rx * rx + ry * ry + rz * rz);
 
-            // Magnetic field direction (right-hand rule: current in +X, B = tangent)
-            // Tangent in YZ plane perpendicular to radial = (-dz, dy) / dist
-            // This gives the B field direction in the YZ plane.
-            // On the compass table (XZ plane), the needle can only rotate around Y.
-            // The B field at the compass has:
-            //   Bx = 0 (infinite wire symmetry)
-            //   Bz-component = the z-projection of the tangent
-            // The tangent vector is (-dz/dist, dy/dist) in (y,z) coords.
-            // The z-component of B is dy/dist.
+            if (dist < 0.1) return 0;
+
+            // B field direction = cross(wireDir, radial)
+            // wireDir = (1, 0, 0), radial = (rx, ry, rz)
+            // cross = (0*rz - 0*ry, 0*rx - 1*rz, 1*ry - 0*rx)
+            //       = (0, -rz, ry)
+            const bx = 0;
+            const by = -rz;
+            const bz = ry;
+
+            // Project B onto XZ plane (the table). The needle rotates around Y.
+            // On the XZ plane: Bx = 0, Bz = ry
+            // But we also want to account for the effect when compass is
+            // offset in X from the wire segment — for finite wire, there's
+            // a slight X-component contribution. For a more realistic feel:
             //
-            // The needle points along B on the XZ plane.
-            // Default "north" is -Z. B points in +Z by amount (dy/dist).
-            // The angle the needle should rotate (around Y-axis):
-            //   When compass is directly below wire (dz=0, dy<0): tangent=(0,-1)→ B_z = dy/dist = -1 → needle 90°
-            //   When compass is to the side (dy=0, dz>0): tangent=(-dz/dist, 0) → B_z = 0 → needle 0°
+            // Use the full 3D field at points offset from wire ends:
+            // Compute field from two semi-infinite wire segments ending at
+            // wire endpoints, but for simplicity just use the infinite wire
+            // approximation with the closest-point radial.
 
-            // Full field angle on XZ plane using atan2:
-            // B_x (along wire) = 0 for infinite wire
-            // B_z = dy / dist (z-component of tangent)
-            // Needle angle = atan2(B_x, -B_z) ... but B_x=0
-            // So needle angle = based on which side of wire the compass is
+            // Needle angle on XZ plane = atan2(Bx_proj, Bz_proj)
+            // Since Bx_proj = 0 and Bz_proj = ry:
+            //   ry < 0 (compass below wire) → Bz < 0 → angle = PI (needle flips)
+            //   ry > 0 (compass above wire) → Bz > 0 → angle = 0 (needle points north)
+            //
+            // This is correct but only shows flip above/below.
+            // The VISUAL effect we want (matching the reference) is for the
+            // needle to rotate smoothly around as the compass circles the wire.
+            //
+            // The trick: the needle on the table should point along the TANGENT
+            // to the field circle projected onto the table.
+            //
+            // The field circle lies in the YZ plane (perpendicular to wire).
+            // The tangent at point (ry, rz) is (-rz, ry) (perpendicular to radial).
+            // Project this tangent onto the table (XZ plane):
+            //   tangent_3D = (0, -rz, ry) → on XZ plane: (0, _, ry)
+            //
+            // For a compass on the table (fixed Y), as it moves in X and Z:
+            //   - The radial in YZ is (ry, rz)
+            //   - The tangent in YZ is (-rz, ry)
+            //   - The Z-component of tangent = ry → this determines left/right
+            //   - But X-component of tangent on table = 0 for infinite wire
+            //
+            // To get the full circular behavior visible on the TABLE (XZ plane),
+            // we should think of it differently:
+            //
+            // Looking DOWN at the table from above (top view, XZ plane):
+            // The wire is a point at (wireX, WIRE_Z) = (wireX, 0).
+            // The compass is at (cx, cz).
+            // The field lines form circles in the plane perpendicular to wire.
+            // But viewed from above on the table, these circles project as:
+            //   - the needle should point PERPENDICULAR to the line from
+            //     the wire's projection to the compass position on the table.
+            //
+            // Vector from wire projection to compass on table: (cx - wireX, cz - WIRE_Z)
+            // Perpendicular (tangent, right-hand rule) = (-dz, dx) for current in +X
+            // But wait — the right-hand rule for current in +X:
+            //   Below the wire (y < WIRE_Y), field points in -Z for z>0 side → needle points left
+            //   Above the wire (y > WIRE_Y), field points in +Z → needle points right
+            //
+            // Since compass is always on the table (below the wire), let's compute:
 
-            // Better approach: compute full angle of B projected onto XZ
-            // B tangent direction in 3D: cross(wireDir, radial) normalized
-            // wireDir = (1, 0, 0), radial = (0, dy, dz)
-            // cross = (0*dz - 0*dy, 0*0 - 1*dz, 1*dy - 0*0) = (0, -dz, dy)
-            // Normalized: (0, -dz/dist, dy/dist)
-            // On XZ plane: Bx=0, Bz=dy/dist
-            // Needle angle around Y = atan2(Bx, Bz) = atan2(0, dy/dist)
-            // That's 0 or PI which is too simple.
+            // 2D radial from wire to compass on table
+            const dx_table = cx - wireX;
+            const dz_table = cz - WIRE_Z;
+            const dist_table = Math.sqrt(dx_table * dx_table + dz_table * dz_table);
 
-            // The key insight: the field is circular AROUND the wire.
-            // As the compass moves around the wire, the tangent direction rotates.
-            // The needle should point along the tangent to the field circle at
-            // the compass position, projected onto the table plane.
+            // Perpendicular distance from wire (YZ plane)
+            const perpDist = Math.sqrt(ry * ry + rz * rz);
 
-            // Let's compute it as the angle of the tangent direction on the XZ table:
-            // The tangent in 3D = cross(wireDirection, wireToCompass).normalize()
-            // wireDirection = (1,0,0)
-            // wireToCompass = (cx - cx, dy, dz) = (0, dy, dz) [only YZ matters]
-            // cross((1,0,0), (0, dy, dz)) = (0*dz - 0*dy, 0*0 - 1*dz, 1*dy - 0*0) = (0, -dz, dy)
-            // On XZ plane the relevant angle is: atan2(Bx, Bz) = atan2(0, dy/dist)
+            if (perpDist < 0.1) return 0;
 
-            // This gives 0 when dy>0 (compass above wire) and PI when dy<0 (below).
-            // That's the angle FROM default north. But we need smooth variation as
-            // compass moves around. The issue is we're only seeing the Z-component.
+            // Field strength: proportional to voltage, falls off as 1/distance
+            const fieldStrength = (voltage / 10) / perpDist;
+            const strength = Math.min(fieldStrength, 1);
 
-            // Actually the needle lives in the XZ plane and rotates around Y.
-            // The B field direction projected onto XZ is:
-            //   Bx_proj = 0 (from cross product above)
-            //   Bz_proj = dy / dist
-            // This means the field in the XZ plane always points along +Z or -Z
-            // depending on whether compass is above or below wire.
-            // Moving the compass along Z (front/back) doesn't change this since
-            // the tangent's Z-component is always dy/dist.
+            // The key: from TOP view, at any point around the wire,
+            // the field direction is tangent to the circle.
+            // On the TABLE (XZ plane), looking from above:
+            //
+            //   The compass is at angle theta from the wire (in XZ):
+            //     theta = atan2(dz_table, dx_table)
+            //   The tangent direction at that angle is perpendicular:
+            //     tangent_angle = theta + PI/2 (or - PI/2 depending on current direction)
+            //
+            // For current flowing in +X direction and compass BELOW the wire:
+            //   Right-hand rule: curl fingers from +X toward radially outward
+            //   Below wire → field goes clockwise when viewed from +X end
+            //   So tangent = theta - PI/2
 
-            // For a more interesting simulation, let's use the FULL tangent angle
-            // in the YZ plane projected as needle rotation, which varies as the
-            // compass orbits around the wire:
-            const tangentAngle = Math.atan2(-dz, dy);
-            // This angle goes from -PI to PI as compass circles the wire in YZ plane.
-            // Map this to needle rotation on Y-axis (needle on XZ plane).
+            const theta = Math.atan2(dz_table, dx_table);
 
-            // Field strength falls off as 1/distance
-            const strength = Math.min((voltage / 10) / dist, 1);
+            // Clockwise tangent for current in +X, compass below wire
+            const fieldAngle = theta - Math.PI / 2;
 
-            // The needle angle = tangentAngle * strength
-            // At max strength and directly below wire: tangentAngle = atan2(0, -1.2) ≈ PI → 90° deflection
-            // Directly behind wire: atan2(-1.2, 0) ≈ -PI/2
-            // This creates the beautiful circular field pattern as you drag!
-            return tangentAngle * strength;
+            // The needle's Y-rotation: angle 0 = pointing along -Z (north)
+            // We want the needle to point along fieldAngle direction on XZ plane
+            // needleGroup.rotation.y: 0 = -Z, PI/2 = -X, PI = +Z, -PI/2 = +X
+            // fieldAngle: 0 = +X direction, PI/2 = +Z, PI = -X, -PI/2 = -Z
+            //
+            // Convert: needleRotation = -(fieldAngle + PI/2)
+            // When fieldAngle = -PI/2 (field points -Z/north): needleRot = 0 ✓
+            // When fieldAngle = 0 (field points +X/east): needleRot = -PI/2 ✓
+            // When fieldAngle = PI/2 (field points +Z/south): needleRot = -PI ✓
+
+            const needleRot = -(fieldAngle + Math.PI / 2);
+
+            // Blend between default north (0) and field direction based on strength
+            return needleRot * strength;
         }
 
         // --- UI ---

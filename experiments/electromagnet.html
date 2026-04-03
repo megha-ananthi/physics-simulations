@@ -411,6 +411,8 @@
 
         // --- Wire Coil (dynamic) ---
         let coilMesh = null;
+        let coilLeadStart = new THREE.Vector3(-1.8, 0.5, 0);
+        let coilLeadEnd = new THREE.Vector3(1.8, 0.5, 0);
 
         function buildCoil(turns) {
             if (coilMesh) {
@@ -432,32 +434,52 @@
                 points.push(new THREE.Vector3(x, y, z));
             }
 
-            // Lead wires extending from coil ends
-            const lastPoint = points[points.length - 1];
-            const firstPoint = points[0];
-            // Wire going down from start
-            for (let i = 1; i <= 8; i++) {
-                points.unshift(new THREE.Vector3(firstPoint.x - i * 0.15, firstPoint.y - i * 0.12, firstPoint.z));
+            // Lead wires extending from coil ends down to table level
+            const lastPoint = points[points.length - 1].clone();
+            const firstPoint = points[0].clone();
+            const LEAD_STEPS = 8;
+            for (let i = 1; i <= LEAD_STEPS; i++) {
+                points.unshift(new THREE.Vector3(
+                    firstPoint.x - i * 0.15,
+                    firstPoint.y - i * 0.12,
+                    firstPoint.z
+                ));
             }
-            // Wire going down from end
-            for (let i = 1; i <= 8; i++) {
-                points.push(new THREE.Vector3(lastPoint.x + i * 0.15, lastPoint.y - i * 0.12, lastPoint.z));
+            for (let i = 1; i <= LEAD_STEPS; i++) {
+                points.push(new THREE.Vector3(
+                    lastPoint.x + i * 0.15,
+                    lastPoint.y - i * 0.12,
+                    lastPoint.z
+                ));
             }
+
+            // Store lead endpoints (in world space, offset by nail position)
+            const nailPos = nailGroup.position;
+            coilLeadStart.set(
+                points[0].x + nailPos.x,
+                points[0].y + nailPos.y,
+                points[0].z + nailPos.z
+            );
+            coilLeadEnd.set(
+                points[points.length - 1].x + nailPos.x,
+                points[points.length - 1].y + nailPos.y,
+                points[points.length - 1].z + nailPos.z
+            );
 
             const curve = new THREE.CatmullRomCurve3(points);
             const tubeGeo = new THREE.TubeGeometry(curve, totalSteps + 16, 0.03, 8, false);
             coilMesh = new THREE.Mesh(tubeGeo, matWire);
             coilMesh.castShadow = true;
-            coilMesh.position.copy(nailGroup.position);
+            coilMesh.position.copy(nailPos);
             scene.add(coilMesh);
-        }
 
-        buildCoil(4);
+            // Rebuild connecting wires to match new lead endpoints
+            rebuildConnectingWires();
+        }
 
         // --- Battery ---
         const batteryGroup = new THREE.Group();
 
-        // Main body - bottom half (black)
         const batteryBottom = new THREE.Mesh(
             new THREE.CylinderGeometry(0.35, 0.35, 0.8, 16),
             matBatteryBlack
@@ -466,7 +488,6 @@
         batteryBottom.castShadow = true;
         batteryGroup.add(batteryBottom);
 
-        // Main body - top half (red)
         const batteryTop = new THREE.Mesh(
             new THREE.CylinderGeometry(0.35, 0.35, 0.8, 16),
             matBatteryRed
@@ -475,7 +496,6 @@
         batteryTop.castShadow = true;
         batteryGroup.add(batteryTop);
 
-        // + terminal
         const termPlus = new THREE.Mesh(
             new THREE.CylinderGeometry(0.1, 0.1, 0.15, 12),
             matBatteryTerminal
@@ -483,7 +503,6 @@
         termPlus.position.y = 1.68;
         batteryGroup.add(termPlus);
 
-        // - terminal (flat)
         const termMinus = new THREE.Mesh(
             new THREE.CylinderGeometry(0.2, 0.2, 0.05, 12),
             matBatteryTerminal
@@ -494,34 +513,47 @@
         batteryGroup.position.set(-3.5, 0, 0);
         scene.add(batteryGroup);
 
-        // --- Connecting Wires (battery to coil leads) ---
-        function createWire(from, to, material) {
-            const mid = new THREE.Vector3(
-                (from.x + to.x) / 2,
-                Math.max(from.y, to.y) + 0.3,
-                (from.z + to.z) / 2
+        // --- Connecting Wires (battery to coil leads, rebuilt dynamically) ---
+        let wireRed = null;
+        let wireBlack = null;
+
+        function rebuildConnectingWires() {
+            // Remove old wires
+            if (wireRed) { scene.remove(wireRed); wireRed.geometry.dispose(); }
+            if (wireBlack) { scene.remove(wireBlack); wireBlack.geometry.dispose(); }
+
+            // Red wire: battery + terminal → coil start lead
+            const redFrom = new THREE.Vector3(-3.5, 1.68, 0);
+            const redTo = coilLeadStart.clone();
+            const redMid = new THREE.Vector3(
+                (redFrom.x + redTo.x) / 2,
+                Math.max(redFrom.y, redTo.y) + 0.3,
+                (redFrom.z + redTo.z) / 2
             );
-            const curve = new THREE.CatmullRomCurve3([from, mid, to]);
-            const geo = new THREE.TubeGeometry(curve, 20, 0.025, 8, false);
-            const mesh = new THREE.Mesh(geo, material);
-            mesh.castShadow = true;
-            scene.add(mesh);
-            return mesh;
+            const redCurve = new THREE.CatmullRomCurve3([redFrom, redMid, redTo]);
+            wireRed = new THREE.Mesh(
+                new THREE.TubeGeometry(redCurve, 20, 0.025, 8, false),
+                matWireRed
+            );
+            wireRed.castShadow = true;
+            scene.add(wireRed);
+
+            // Black wire: battery - terminal → coil end lead
+            const blackFrom = new THREE.Vector3(-3.5, 0, 0);
+            const blackTo = coilLeadEnd.clone();
+            const blackMid = new THREE.Vector3(
+                (blackFrom.x + blackTo.x) / 2,
+                Math.max(blackFrom.y, blackTo.y) + 0.3,
+                (blackFrom.z + blackTo.z) / 2
+            );
+            const blackCurve = new THREE.CatmullRomCurve3([blackFrom, blackMid, blackTo]);
+            wireBlack = new THREE.Mesh(
+                new THREE.TubeGeometry(blackCurve, 20, 0.025, 8, false),
+                matWireBlack
+            );
+            wireBlack.castShadow = true;
+            scene.add(wireBlack);
         }
-
-        // Red wire: battery + terminal to coil start
-        let wireRed = createWire(
-            new THREE.Vector3(-3.5, 1.68, 0),
-            new THREE.Vector3(-1.8, 0.5, 0),
-            matWireRed
-        );
-
-        // Black wire: battery - terminal to coil end
-        let wireBlack = createWire(
-            new THREE.Vector3(-3.5, 0, 0),
-            new THREE.Vector3(1.8, 0.5, 0),
-            matWireBlack
-        );
 
         // --- Paper Clips ---
         const TOTAL_CLIPS = 10;
