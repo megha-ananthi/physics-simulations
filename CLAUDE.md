@@ -11,7 +11,6 @@ An interactive physics simulations suite for children (Class 8 CBSE level), demo
 - **Live URL**: https://megha-ananthi.github.io/physics-simulations/
 - **Repo**: https://github.com/megha-ananthi/physics-simulations
 - **Target audience**: Children aged 12-14, using home computers or mobile devices
-- **Reference video**: https://www.youtube.com/watch?v=CgIqFMMc9MM
 
 ---
 
