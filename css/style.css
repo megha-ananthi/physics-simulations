@@ -87,7 +87,7 @@ a {
 }
 
 .lab-header::before {
-    content: '\u269B';
+    content: '\269B';
     position: absolute;
     top: 15px;
     left: 20px;
@@ -97,7 +97,7 @@ a {
 }
 
 .lab-header::after {
-    content: '\u26A1';
+    content: '\26A1';
     position: absolute;
     bottom: 15px;
     right: 20px;
