@@ -528,25 +528,51 @@
         bulbGroup.position.set(0, 3.5, 0);
         scene.add(bulbGroup);
 
-        // --- Wires (electrode tops to bulb) ---
+        // --- Wires (electrode tops to bulb, rebuilt dynamically) ---
         const wireMat = new THREE.MeshStandardMaterial({ color: 0x444455, roughness: 0.5, metalness: 0.4 });
+        let leftWire = { mesh: null, curve: null };
+        let rightWire = { mesh: null, curve: null };
 
-        function buildWire(fromX, toX) {
-            const from = new THREE.Vector3(fromX, 2.3, 0);
-            const mid1 = new THREE.Vector3(fromX, 3.2, 0);
-            const mid2 = new THREE.Vector3(toX, 3.45, 0);
-            const to = new THREE.Vector3(toX, 3.45, 0);
-            const curve = new THREE.CatmullRomCurve3([from, mid1, mid2, to]);
-            const geo = new THREE.TubeGeometry(curve, 24, 0.025, 8, false);
-            const mesh = new THREE.Mesh(geo, wireMat);
-            mesh.castShadow = true;
-            return { mesh, curve };
+        function rebuildWires() {
+            // Get current top Y of each electrode based on scale and position
+            const leftTopY = leftElectrode.position.y + (ELECTRODE_HEIGHT / 2) * leftElectrode.scale.y;
+            const rightTopY = rightElectrode.position.y + (ELECTRODE_HEIGHT / 2) * rightElectrode.scale.y;
+
+            // Left wire: electrode top → bulb left side
+            if (leftWire.mesh) { scene.remove(leftWire.mesh); leftWire.mesh.geometry.dispose(); }
+            const lFrom = new THREE.Vector3(-0.45, leftTopY, 0);
+            const lMid1 = new THREE.Vector3(-0.45, 3.2, 0);
+            const lMid2 = new THREE.Vector3(-1.0, 3.45, 0);
+            const lTo = new THREE.Vector3(-1.0, 3.45, 0);
+            leftWire.curve = new THREE.CatmullRomCurve3([lFrom, lMid1, lMid2, lTo]);
+            leftWire.mesh = new THREE.Mesh(
+                new THREE.TubeGeometry(leftWire.curve, 24, 0.025, 8, false), wireMat
+            );
+            leftWire.mesh.castShadow = true;
+            scene.add(leftWire.mesh);
+
+            // Right wire: electrode top → bulb right side
+            if (rightWire.mesh) { scene.remove(rightWire.mesh); rightWire.mesh.geometry.dispose(); }
+            const rFrom = new THREE.Vector3(0.45, rightTopY, 0);
+            const rMid1 = new THREE.Vector3(0.45, 3.2, 0);
+            const rMid2 = new THREE.Vector3(1.0, 3.45, 0);
+            const rTo = new THREE.Vector3(1.0, 3.45, 0);
+            rightWire.curve = new THREE.CatmullRomCurve3([rFrom, rMid1, rMid2, rTo]);
+            rightWire.mesh = new THREE.Mesh(
+                new THREE.TubeGeometry(rightWire.curve, 24, 0.025, 8, false), wireMat
+            );
+            rightWire.mesh.castShadow = true;
+            scene.add(rightWire.mesh);
         }
 
-        const leftWire = buildWire(-0.45, -1.0);
-        scene.add(leftWire.mesh);
-        const rightWire = buildWire(0.45, 1.0);
-        scene.add(rightWire.mesh);
+        rebuildWires();
+
+        // --- Bulb spotlight (casts visible light cone onto beaker) ---
+        const bulbSpot = new THREE.SpotLight(0xFFDD44, 0, 6, Math.PI / 4, 0.5, 1.5);
+        bulbSpot.position.set(0, 3.5, 0);
+        bulbSpot.target.position.set(0, 0, 0);
+        scene.add(bulbSpot);
+        scene.add(bulbSpot.target);
 
         // --- Electron Particles ---
         const ELECTRON_COUNT = 24;
@@ -713,6 +739,7 @@
             computeCell();
             updateUI();
             updateLabels();
+            rebuildWires();
         }
 
         leftSelect.addEventListener('change', onElectrodeChange);
@@ -727,6 +754,7 @@
             computeCell();
             updateUI();
             updateLabels();
+            rebuildWires();
         });
 
         // Initial computation
@@ -748,6 +776,7 @@
             const normalizedV = effectiveV / MAX_VOLTAGE;
 
             // --- Anode Dissolution ---
+            let needsWireRebuild = false;
             if (baseVoltage > 0.01 && dissolveProgress < 1) {
                 dissolveProgress += dt / DISSOLVE_DURATION;
                 dissolveProgress = Math.min(dissolveProgress, 1);
@@ -756,12 +785,16 @@
                 if (anodeEl) {
                     const s = Math.max(0.15, 1 - dissolveProgress * 0.85);
                     anodeEl.scale.set(s, s, 1);
-                    // Shift down slightly as it shrinks
                     anodeEl.position.y = 1.3 - (1 - s) * 0.4;
+                    needsWireRebuild = true;
                 }
 
-                // Update UI periodically
                 if (Math.floor(elapsed * 4) % 2 === 0) updateUI();
+            }
+
+            // Rebuild wires every few frames during dissolution to track electrode top
+            if (needsWireRebuild && Math.floor(elapsed * 8) % 2 === 0) {
+                rebuildWires();
             }
 
             // --- Bulb Glow ---
@@ -769,6 +802,7 @@
             bulbCore.material.emissiveIntensity = normalizedV * 2.5 * pulse;
             bulbCore.material.opacity = 0.3 + normalizedV * 0.7;
             bulbLight.intensity = normalizedV * 4 * pulse;
+            bulbSpot.intensity = normalizedV * 5 * pulse;
 
             // --- Electron Flow ---
             const electronSpeed = 0.1 + normalizedV * 0.6;
