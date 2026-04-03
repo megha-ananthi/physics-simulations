@@ -6,4 +6,9 @@ Thumbs.db
 .vscode/
 .idea/
 node_modules/
-.claude/
+# Claude Code — allow shared config, block local/private files
+.claude/settings.local.json
+.claude/memory/
+.claude/plans/
+.claude/worktrees/
+.claude/todos/
