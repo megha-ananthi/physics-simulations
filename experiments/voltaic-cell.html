@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Voltaic Cell - Science Lab</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F50B;</text></svg>">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: #0a0a1a;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #three-canvas { display: block; width: 100%; height: 100%; }
+
+        .ui-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 10; }
+        .ui-overlay > * { pointer-events: auto; }
+
+        .back-btn {
+            position: fixed; top: 1rem; left: 1rem;
+            background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2); color: #fff;
+            padding: 0.6rem 1.2rem; border-radius: 50px;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.9rem;
+            cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;
+            transition: background 0.3s; z-index: 20;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.25); }
+
+        .exp-title {
+            position: fixed; top: 1rem; left: 50%; transform: translateX(-50%);
+            font-family: 'Fredoka One', cursive; font-size: 1.3rem; text-align: center;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.5); z-index: 20; white-space: nowrap;
+        }
+
+        /* Electrode selector panel */
+        .electrode-panel {
+            position: fixed; top: 4rem; left: 1rem;
+            background: rgba(15, 15, 35, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.12); border-radius: 15px;
+            padding: 1rem 1.2rem; z-index: 20; min-width: 180px;
+        }
+        .electrode-group { margin-bottom: 0.8rem; }
+        .electrode-group:last-child { margin-bottom: 0; }
+        .electrode-label {
+            font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.5px; opacity: 0.7; margin-bottom: 0.3rem; display: block;
+        }
+        .electrode-select {
+            width: 100%; padding: 0.5rem 0.7rem; border-radius: 10px;
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+            color: #fff; font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.9rem;
+            cursor: pointer; outline: none; -webkit-appearance: none; appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23fff' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 0.7rem center;
+        }
+        .electrode-select option { background: #1a1a2e; color: #fff; }
+        .electrode-role {
+            font-size: 0.7rem; font-weight: 700; margin-top: 0.25rem;
+            padding: 0.15rem 0.5rem; border-radius: 20px; display: inline-block;
+        }
+        .electrode-role.anode { background: rgba(232, 104, 48, 0.3); color: #E86830; }
+        .electrode-role.cathode { background: rgba(76, 175, 80, 0.3); color: #4CAF50; }
+        .electrode-role.neutral { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.4); }
+
+        /* Chemistry info panel */
+        .info-display {
+            position: fixed; top: 1rem; right: 1rem;
+            background: rgba(15, 15, 35, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.12); border-radius: 15px;
+            padding: 1rem 1.2rem; font-size: 0.85rem; z-index: 20; min-width: 220px;
+        }
+        .info-header {
+            font-family: 'Fredoka One', cursive; font-size: 0.95rem;
+            color: #4CAF50; margin-bottom: 0.6rem; border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 0.4rem;
+        }
+        .reaction-line { padding: 0.2rem 0; font-size: 0.8rem; }
+        .reaction-line .label { opacity: 0.5; font-size: 0.65rem; }
+        .reaction-line .eq { color: #4CAF50; font-weight: 700; }
+        .info-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 0.5rem 0; }
+        .info-row { display: flex; justify-content: space-between; gap: 1rem; padding: 0.2rem 0; }
+        .info-label { opacity: 0.6; }
+        .info-val { font-weight: 700; color: #4CAF50; }
+        .info-val.off { color: #E86830; }
+        .brightness-bar {
+            margin-top: 0.5rem; height: 8px; border-radius: 4px;
+            background: rgba(255,255,255,0.1); overflow: hidden;
+        }
+        .brightness-fill {
+            height: 100%; border-radius: 4px; width: 0%;
+            transition: width 0.5s ease, background 0.5s ease;
+            background: #4CAF50;
+        }
+
+        /* Bottom controls */
+        .control-panel {
+            position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 15, 35, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.12); border-radius: 20px;
+            padding: 0.8rem 1.5rem; display: flex; align-items: center; gap: 1rem;
+            z-index: 20;
+        }
+        .reset-btn {
+            background: rgba(76, 175, 80, 0.2); border: 1px solid rgba(76, 175, 80, 0.4);
+            color: #4CAF50; padding: 0.5rem 1.2rem; border-radius: 50px;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.85rem;
+            cursor: pointer; transition: background 0.3s;
+        }
+        .reset-btn:hover { background: rgba(76, 175, 80, 0.35); }
+
+        .hint {
+            position: fixed; bottom: 5.5rem; left: 50%; transform: translateX(-50%);
+            font-size: 0.8rem; opacity: 0.5; text-align: center; z-index: 20; white-space: nowrap;
+        }
+
+        @media (max-width: 600px) {
+            .exp-title { font-size: 1rem; top: 0.6rem; }
+            .back-btn { padding: 0.5rem 0.8rem; font-size: 0.8rem; }
+            .electrode-panel { top: 3.2rem; left: 0.5rem; padding: 0.7rem 0.9rem; min-width: 150px; font-size: 0.8rem; }
+            .info-display { top: 3.2rem; right: 0.5rem; padding: 0.7rem 0.9rem; font-size: 0.75rem; min-width: 180px; }
+            .control-panel { padding: 0.6rem 1rem; bottom: 0.8rem; }
+            .hint { bottom: 4.5rem; font-size: 0.7rem; }
+        }
+    </style>
+</head>
+<body>
+    <div id="three-canvas"></div>
+
+    <div class="ui-overlay">
+        <a href="../index.html" class="back-btn">&larr; Back to Lab</a>
+        <div class="exp-title">&#x1F50B; The Voltaic Cell</div>
+
+        <!-- Electrode Selector -->
+        <div class="electrode-panel">
+            <div class="electrode-group">
+                <label class="electrode-label">Left Electrode</label>
+                <select class="electrode-select" id="left-electrode">
+                    <option value="Zinc" selected>Zinc</option>
+                    <option value="Aluminum">Aluminum</option>
+                    <option value="Magnesium">Magnesium</option>
+                    <option value="Iron">Iron</option>
+                    <option value="Copper">Copper</option>
+                    <option value="Silver">Silver</option>
+                </select>
+                <div class="electrode-role anode" id="left-role">Anode (−)</div>
+            </div>
+            <div class="electrode-group">
+                <label class="electrode-label">Right Electrode</label>
+                <select class="electrode-select" id="right-electrode">
+                    <option value="Zinc">Zinc</option>
+                    <option value="Aluminum">Aluminum</option>
+                    <option value="Magnesium">Magnesium</option>
+                    <option value="Iron">Iron</option>
+                    <option value="Copper" selected>Copper</option>
+                    <option value="Silver">Silver</option>
+                </select>
+                <div class="electrode-role cathode" id="right-role">Cathode (+)</div>
+            </div>
+        </div>
+
+        <!-- Chemistry Info Panel -->
+        <div class="info-display">
+            <div class="info-header">Chemical Reactions</div>
+            <div class="reaction-line">
+                <span class="eq" id="anode-reaction">Zn &rarr; Zn&sup2;&#x207A; + 2e&macr;</span><br>
+                <span class="label" id="anode-label">(Anode - Oxidation)</span>
+            </div>
+            <div class="reaction-line">
+                <span class="eq" id="cathode-reaction">Cu&sup2;&#x207A; + 2e&macr; &rarr; Cu</span><br>
+                <span class="label" id="cathode-label">(Cathode - Reduction)</span>
+            </div>
+            <div class="info-divider"></div>
+            <div class="info-row">
+                <span class="info-label">Cell EMF</span>
+                <span class="info-val" id="info-voltage">1.10 V</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Brightness</span>
+                <span class="info-val" id="info-brightness">Bright</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Cell Life</span>
+                <span class="info-val" id="info-life">100%</span>
+            </div>
+            <div class="brightness-bar">
+                <div class="brightness-fill" id="brightness-fill"></div>
+            </div>
+        </div>
+
+        <p class="hint">&#x1F9EA; Select different metals to see how voltage changes!</p>
+
+        <div class="control-panel">
+            <button class="reset-btn" id="reset-btn">&#x1F504; Reset Experiment</button>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- Metal Properties ---
+        const METALS = {
+            Zinc:      { reactivity: 4, color: 0x8899AA, symbol: 'Zn', potential: -0.76 },
+            Aluminum:  { reactivity: 5, color: 0xAABBCC, symbol: 'Al', potential: -1.66 },
+            Magnesium: { reactivity: 6, color: 0xBBCCDD, symbol: 'Mg', potential: -2.37 },
+            Iron:      { reactivity: 3, color: 0x777788, symbol: 'Fe', potential: -0.44 },
+            Copper:    { reactivity: 1, color: 0xCC6633, symbol: 'Cu', potential:  0.34 },
+            Silver:    { reactivity: 0, color: 0xCCCCDD, symbol: 'Ag', potential:  0.80 },
+        };
+        const MAX_VOLTAGE = 3.17; // Mg + Ag theoretical max
+
+        // --- Scene Setup ---
+        const container = document.getElementById('three-canvas');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1a1a2e);
+        scene.fog = new THREE.Fog(0x1a1a2e, 15, 30);
+
+        const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(4, 4, 6);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.2;
+        container.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.08;
+        controls.minDistance = 3;
+        controls.maxDistance = 12;
+        controls.maxPolarAngle = Math.PI * 0.85;
+        controls.target.set(0, 1.5, 0);
+
+        // --- Lighting ---
+        scene.add(new THREE.AmbientLight(0x404060, 0.7));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.1);
+        dirLight.position.set(5, 8, 5);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.set(1024, 1024);
+        scene.add(dirLight);
+        const fillLight = new THREE.DirectionalLight(0x6688cc, 0.3);
+        fillLight.position.set(-4, 3, -3);
+        scene.add(fillLight);
+
+        // Bulb glow light
+        const bulbLight = new THREE.PointLight(0xFFDD44, 0, 6);
+        bulbLight.position.set(0, 3.8, 0);
+        scene.add(bulbLight);
+
+        // --- Table ---
+        const matTable = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.8, metalness: 0.05 });
+        const tableTop = new THREE.Mesh(new THREE.BoxGeometry(8, 0.3, 6), matTable);
+        tableTop.position.y = -0.15;
+        tableTop.receiveShadow = true;
+        scene.add(tableTop);
+        const gridHelper = new THREE.GridHelper(8, 16, 0x333355, 0x222244);
+        gridHelper.position.y = 0.01;
+        scene.add(gridHelper);
+
+        // --- Glass Beaker (proper visible glass) ---
+        // Outer wall
+        const beakerOuterGeo = new THREE.CylinderGeometry(1.15, 0.95, 2.5, 32, 1, true);
+        const beakerGlassMat = new THREE.MeshStandardMaterial({
+            color: 0xaaddff, transparent: true, opacity: 0.25,
+            roughness: 0.05, metalness: 0.1, side: THREE.DoubleSide,
+            depthWrite: false,
+        });
+        const beakerOuter = new THREE.Mesh(beakerOuterGeo, beakerGlassMat);
+        beakerOuter.position.set(0, 1.25, 0);
+        beakerOuter.renderOrder = 1;
+        scene.add(beakerOuter);
+
+        // Inner wall (gives glass "thickness" from any angle)
+        const beakerInnerGeo = new THREE.CylinderGeometry(1.08, 0.88, 2.5, 32, 1, true);
+        const beakerInnerMat = new THREE.MeshStandardMaterial({
+            color: 0xcceeFF, transparent: true, opacity: 0.12,
+            roughness: 0.05, metalness: 0.05, side: THREE.BackSide,
+            depthWrite: false,
+        });
+        const beakerInner = new THREE.Mesh(beakerInnerGeo, beakerInnerMat);
+        beakerInner.position.set(0, 1.25, 0);
+        beakerInner.renderOrder = 0;
+        scene.add(beakerInner);
+
+        // Beaker bottom (solid visible glass)
+        const beakerBottom = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.95, 0.95, 0.08, 32),
+            new THREE.MeshStandardMaterial({
+                color: 0xaaddff, transparent: true, opacity: 0.3,
+                roughness: 0.1, metalness: 0.1, depthWrite: false,
+            })
+        );
+        beakerBottom.position.set(0, 0.04, 0);
+        scene.add(beakerBottom);
+
+        // Beaker rim (thick visible ring at top)
+        const rimGeo = new THREE.TorusGeometry(1.15, 0.04, 12, 48);
+        const rimMat = new THREE.MeshStandardMaterial({
+            color: 0xbbddff, transparent: true, opacity: 0.5,
+            roughness: 0.1, metalness: 0.2,
+        });
+        const rim = new THREE.Mesh(rimGeo, rimMat);
+        rim.rotation.x = Math.PI / 2;
+        rim.position.set(0, 2.5, 0);
+        scene.add(rim);
+
+        // Beaker spout/lip (small pour spout)
+        const spoutGeo = new THREE.CylinderGeometry(0.15, 0.12, 0.15, 8, 1, true, 0, Math.PI);
+        const spout = new THREE.Mesh(spoutGeo, beakerGlassMat);
+        spout.position.set(0, 2.55, 1.1);
+        spout.rotation.y = Math.PI;
+        scene.add(spout);
+
+        // --- Electrolyte (blue liquid, solid look) ---
+        const electrolyteMat = new THREE.MeshStandardMaterial({
+            color: 0x3377BB, transparent: true, opacity: 0.45,
+            roughness: 0.2, metalness: 0.0, side: THREE.DoubleSide,
+            depthWrite: false,
+        });
+        const electrolyte = new THREE.Mesh(
+            new THREE.CylinderGeometry(1.06, 0.87, 1.7, 32),
+            electrolyteMat
+        );
+        electrolyte.position.set(0, 0.9, 0);
+        electrolyte.renderOrder = 0;
+        scene.add(electrolyte);
+
+        // Liquid surface (clear distinct top surface)
+        const liquidSurface = new THREE.Mesh(
+            new THREE.CylinderGeometry(1.06, 1.06, 0.03, 32),
+            new THREE.MeshStandardMaterial({
+                color: 0x4499DD, transparent: true, opacity: 0.6,
+                roughness: 0.0, metalness: 0.15, depthWrite: false,
+            })
+        );
+        liquidSurface.position.set(0, 1.76, 0);
+        scene.add(liquidSurface);
+
+        // --- Sprite Label Helper ---
+        function makeTextSprite(text, color) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            ctx.font = 'bold 36px Nunito, Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // Background pill
+            const metrics = ctx.measureText(text);
+            const pad = 20;
+            const w = metrics.width + pad * 2;
+            const h = 50;
+            const x = 128 - w / 2;
+            const y = 64 - h / 2;
+            ctx.fillStyle = 'rgba(0,0,0,0.6)';
+            ctx.beginPath();
+            ctx.roundRect(x, y, w, h, 14);
+            ctx.fill();
+
+            // Text
+            ctx.fillStyle = color;
+            ctx.fillText(text, 128, 64);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            const mat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+            const sprite = new THREE.Sprite(mat);
+            sprite.scale.set(1.4, 0.7, 1);
+            return sprite;
+        }
+
+        // Electrode labels (will be updated dynamically)
+        const leftLabel = makeTextSprite('Left: Zn', '#E86830');
+        leftLabel.position.set(-0.45, 2.9, 0);
+        scene.add(leftLabel);
+
+        const rightLabel = makeTextSprite('Right: Cu', '#4CAF50');
+        rightLabel.position.set(0.45, 2.9, 0);
+        scene.add(rightLabel);
+
+        function updateLabels() {
+            const L = METALS[leftMetal];
+            const R = METALS[rightMetal];
+            const leftIsAnode = anodeSide === 'left';
+            const rightIsAnode = anodeSide === 'right';
+
+            // Rebuild label sprites
+            const leftText = leftIsAnode ? `${L.symbol} (Anode −)` : (rightIsAnode ? `${L.symbol} (Cathode +)` : `${L.symbol}`);
+            const rightText = rightIsAnode ? `${R.symbol} (Anode −)` : (leftIsAnode ? `${R.symbol} (Cathode +)` : `${R.symbol}`);
+
+            // Update by replacing textures
+            updateSpriteText(leftLabel, leftText, leftIsAnode ? '#E86830' : (anodeSide === 'none' ? '#999' : '#4CAF50'));
+            updateSpriteText(rightLabel, rightText, rightIsAnode ? '#E86830' : (anodeSide === 'none' ? '#999' : '#4CAF50'));
+        }
+
+        function updateSpriteText(sprite, text, color) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            ctx.font = 'bold 30px Nunito, Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            const metrics = ctx.measureText(text);
+            const pad = 16;
+            const w = Math.min(metrics.width + pad * 2, 250);
+            const h = 44;
+            const x = 128 - w / 2;
+            const y = 64 - h / 2;
+            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+            ctx.beginPath();
+            ctx.roundRect(x, y, w, h, 12);
+            ctx.fill();
+
+            ctx.fillStyle = color;
+            ctx.fillText(text, 128, 64);
+
+            if (sprite.material.map) sprite.material.map.dispose();
+            sprite.material.map = new THREE.CanvasTexture(canvas);
+            sprite.material.map.needsUpdate = true;
+        }
+
+        // --- Electrodes ---
+        const ELECTRODE_HEIGHT = 2.0;
+        const ELECTRODE_WIDTH = 0.6;
+        const ELECTRODE_DEPTH = 0.08;
+
+        function makeElectrodeMat(metalName) {
+            const m = METALS[metalName];
+            return new THREE.MeshStandardMaterial({
+                color: m.color, roughness: 0.3, metalness: 0.85,
+            });
+        }
+
+        // Left electrode
+        let leftMat = makeElectrodeMat('Zinc');
+        const leftElectrode = new THREE.Mesh(
+            new THREE.BoxGeometry(ELECTRODE_DEPTH, ELECTRODE_HEIGHT, ELECTRODE_WIDTH),
+            leftMat
+        );
+        leftElectrode.position.set(-0.45, 1.3, 0);
+        leftElectrode.castShadow = true;
+        scene.add(leftElectrode);
+
+        // Right electrode
+        let rightMat = makeElectrodeMat('Copper');
+        const rightElectrode = new THREE.Mesh(
+            new THREE.BoxGeometry(ELECTRODE_DEPTH, ELECTRODE_HEIGHT, ELECTRODE_WIDTH),
+            rightMat
+        );
+        rightElectrode.position.set(0.45, 1.3, 0);
+        rightElectrode.castShadow = true;
+        scene.add(rightElectrode);
+
+        // --- Light Bulb ---
+        const bulbGroup = new THREE.Group();
+
+        // Bulb glass
+        const bulbGlass = new THREE.Mesh(
+            new THREE.SphereGeometry(0.3, 16, 12),
+            new THREE.MeshPhysicalMaterial({
+                color: 0xffffee, transparent: true, opacity: 0.2,
+                roughness: 0.05, metalness: 0.0, transmission: 0.8,
+            })
+        );
+        bulbGlass.position.y = 0.3;
+        bulbGroup.add(bulbGlass);
+
+        // Bulb filament/core (emissive)
+        const bulbCore = new THREE.Mesh(
+            new THREE.SphereGeometry(0.12, 12, 8),
+            new THREE.MeshStandardMaterial({
+                color: 0xFFDD44, emissive: 0xFFDD44, emissiveIntensity: 0,
+                roughness: 0.3, metalness: 0.1,
+            })
+        );
+        bulbCore.position.y = 0.3;
+        bulbGroup.add(bulbCore);
+
+        // Bulb base (screw part)
+        const bulbBase = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.15, 0.18, 0.25, 12),
+            new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.4, metalness: 0.7 })
+        );
+        bulbGroup.add(bulbBase);
+
+        // Holder bar
+        const holderBar = new THREE.Mesh(
+            new THREE.BoxGeometry(2.2, 0.08, 0.12),
+            new THREE.MeshStandardMaterial({ color: 0x666677, roughness: 0.5, metalness: 0.5 })
+        );
+        holderBar.position.y = -0.05;
+        bulbGroup.add(holderBar);
+
+        // Bulb legs
+        const legMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.4, metalness: 0.6 });
+        const leftLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.3, 6), legMat);
+        leftLeg.position.set(-0.08, -0.1, 0);
+        leftLeg.rotation.z = 0.15;
+        bulbGroup.add(leftLeg);
+        const rightLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.3, 6), legMat);
+        rightLeg.position.set(0.08, -0.1, 0);
+        rightLeg.rotation.z = -0.15;
+        bulbGroup.add(rightLeg);
+
+        bulbGroup.position.set(0, 3.5, 0);
+        scene.add(bulbGroup);
+
+        // --- Wires (electrode tops to bulb, rebuilt dynamically) ---
+        const wireMat = new THREE.MeshStandardMaterial({ color: 0x444455, roughness: 0.5, metalness: 0.4 });
+        let leftWire = { mesh: null, curve: null };
+        let rightWire = { mesh: null, curve: null };
+
+        function rebuildWires() {
+            // Get current top Y of each electrode based on scale and position
+            const leftTopY = leftElectrode.position.y + (ELECTRODE_HEIGHT / 2) * leftElectrode.scale.y;
+            const rightTopY = rightElectrode.position.y + (ELECTRODE_HEIGHT / 2) * rightElectrode.scale.y;
+
+            // Left wire: electrode top → bulb left side
+            if (leftWire.mesh) { scene.remove(leftWire.mesh); leftWire.mesh.geometry.dispose(); }
+            const lFrom = new THREE.Vector3(-0.45, leftTopY, 0);
+            const lMid1 = new THREE.Vector3(-0.45, 3.2, 0);
+            const lMid2 = new THREE.Vector3(-1.0, 3.45, 0);
+            const lTo = new THREE.Vector3(-1.0, 3.45, 0);
+            leftWire.curve = new THREE.CatmullRomCurve3([lFrom, lMid1, lMid2, lTo]);
+            leftWire.mesh = new THREE.Mesh(
+                new THREE.TubeGeometry(leftWire.curve, 24, 0.025, 8, false), wireMat
+            );
+            leftWire.mesh.castShadow = true;
+            scene.add(leftWire.mesh);
+
+            // Right wire: electrode top → bulb right side
+            if (rightWire.mesh) { scene.remove(rightWire.mesh); rightWire.mesh.geometry.dispose(); }
+            const rFrom = new THREE.Vector3(0.45, rightTopY, 0);
+            const rMid1 = new THREE.Vector3(0.45, 3.2, 0);
+            const rMid2 = new THREE.Vector3(1.0, 3.45, 0);
+            const rTo = new THREE.Vector3(1.0, 3.45, 0);
+            rightWire.curve = new THREE.CatmullRomCurve3([rFrom, rMid1, rMid2, rTo]);
+            rightWire.mesh = new THREE.Mesh(
+                new THREE.TubeGeometry(rightWire.curve, 24, 0.025, 8, false), wireMat
+            );
+            rightWire.mesh.castShadow = true;
+            scene.add(rightWire.mesh);
+        }
+
+        rebuildWires();
+
+        // --- Bulb spotlight (casts visible light cone onto beaker) ---
+        const bulbSpot = new THREE.SpotLight(0xFFDD44, 0, 6, Math.PI / 4, 0.5, 1.5);
+        bulbSpot.position.set(0, 3.5, 0);
+        bulbSpot.target.position.set(0, 0, 0);
+        scene.add(bulbSpot);
+        scene.add(bulbSpot.target);
+
+        // --- Electron Particles ---
+        const ELECTRON_COUNT = 24;
+        const electronMat = new THREE.MeshBasicMaterial({ color: 0x44AAFF });
+        const electrons = [];
+
+        for (let i = 0; i < ELECTRON_COUNT; i++) {
+            const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.035, 6, 6), electronMat.clone());
+            sphere.visible = false;
+            scene.add(sphere);
+            // Half go along left wire, half along right wire
+            const isLeft = i < ELECTRON_COUNT / 2;
+            electrons.push({
+                mesh: sphere,
+                t: (i % (ELECTRON_COUNT / 2)) / (ELECTRON_COUNT / 2),
+                speed: 0.3,
+                wire: isLeft ? 'left' : 'right',
+            });
+        }
+
+        // --- Dissolve Particles (debris from anode) ---
+        const dissolveParticles = [];
+        const DISSOLVE_PARTICLE_COUNT = 15;
+        for (let i = 0; i < DISSOLVE_PARTICLE_COUNT; i++) {
+            const mat = new THREE.MeshBasicMaterial({ color: 0x88AACC, transparent: true, opacity: 0 });
+            const mesh = new THREE.Mesh(new THREE.SphereGeometry(0.02 + Math.random() * 0.02, 6, 6), mat);
+            mesh.visible = false;
+            scene.add(mesh);
+            dissolveParticles.push({
+                mesh,
+                offsetX: (Math.random() - 0.5) * 0.3,
+                offsetZ: (Math.random() - 0.5) * 0.4,
+                speed: 0.15 + Math.random() * 0.25,
+                y: Math.random(),
+                phase: Math.random() * Math.PI * 2,
+            });
+        }
+
+        // --- State ---
+        let leftMetal = 'Zinc';
+        let rightMetal = 'Copper';
+        let baseVoltage = 0;
+        let dissolveProgress = 0; // 0 (fresh) to 1 (fully dissolved)
+        let anodeSide = 'left'; // which electrode is the anode
+
+        // --- Chemistry Logic ---
+        function computeCell() {
+            const L = METALS[leftMetal];
+            const R = METALS[rightMetal];
+            baseVoltage = Math.abs(L.potential - R.potential);
+
+            if (L.reactivity > R.reactivity) {
+                anodeSide = 'left';
+            } else if (R.reactivity > L.reactivity) {
+                anodeSide = 'right';
+            } else {
+                anodeSide = 'none'; // same metals
+            }
+        }
+
+        function getEffectiveVoltage() {
+            return baseVoltage * Math.max(0, 1 - dissolveProgress);
+        }
+
+        function getBrightnessLabel(v) {
+            if (v < 0.01) return 'No light';
+            if (v < 0.5) return 'Dim';
+            if (v < 1.0) return 'Moderate';
+            if (v < 1.8) return 'Bright';
+            return 'Very bright';
+        }
+
+        // --- UI ---
+        const leftSelect = document.getElementById('left-electrode');
+        const rightSelect = document.getElementById('right-electrode');
+        const leftRoleEl = document.getElementById('left-role');
+        const rightRoleEl = document.getElementById('right-role');
+        const anodeReactionEl = document.getElementById('anode-reaction');
+        const anodeLabelEl = document.getElementById('anode-label');
+        const cathodeReactionEl = document.getElementById('cathode-reaction');
+        const cathodeLabelEl = document.getElementById('cathode-label');
+        const infoVoltageEl = document.getElementById('info-voltage');
+        const infoBrightnessEl = document.getElementById('info-brightness');
+        const infoLifeEl = document.getElementById('info-life');
+        const brightnessFillEl = document.getElementById('brightness-fill');
+        const resetBtn = document.getElementById('reset-btn');
+
+        function updateUI() {
+            const L = METALS[leftMetal];
+            const R = METALS[rightMetal];
+            const v = getEffectiveVoltage();
+
+            // Roles
+            if (anodeSide === 'left') {
+                leftRoleEl.textContent = 'Anode (\u2212)';
+                leftRoleEl.className = 'electrode-role anode';
+                rightRoleEl.textContent = 'Cathode (+)';
+                rightRoleEl.className = 'electrode-role cathode';
+            } else if (anodeSide === 'right') {
+                leftRoleEl.textContent = 'Cathode (+)';
+                leftRoleEl.className = 'electrode-role cathode';
+                rightRoleEl.textContent = 'Anode (\u2212)';
+                rightRoleEl.className = 'electrode-role anode';
+            } else {
+                leftRoleEl.textContent = 'No reaction';
+                leftRoleEl.className = 'electrode-role neutral';
+                rightRoleEl.textContent = 'No reaction';
+                rightRoleEl.className = 'electrode-role neutral';
+            }
+
+            // Reactions
+            const anodeMetal = anodeSide === 'left' ? L : (anodeSide === 'right' ? R : null);
+            const cathodeMetal = anodeSide === 'left' ? R : (anodeSide === 'right' ? L : null);
+
+            if (anodeMetal && cathodeMetal) {
+                anodeReactionEl.innerHTML = `${anodeMetal.symbol} &rarr; ${anodeMetal.symbol}&sup2;&#x207A; + 2e&macr;`;
+                anodeLabelEl.textContent = '(Anode - Oxidation)';
+                cathodeReactionEl.innerHTML = `${cathodeMetal.symbol}&sup2;&#x207A; + 2e&macr; &rarr; ${cathodeMetal.symbol}`;
+                cathodeLabelEl.textContent = '(Cathode - Reduction)';
+            } else {
+                anodeReactionEl.innerHTML = 'No reaction';
+                anodeLabelEl.textContent = '(Same metals)';
+                cathodeReactionEl.innerHTML = '&mdash;';
+                cathodeLabelEl.textContent = '';
+            }
+
+            // Voltage & brightness
+            infoVoltageEl.textContent = v.toFixed(2) + ' V';
+            infoVoltageEl.className = 'info-val' + (v < 0.01 ? ' off' : '');
+            const brightnessLabel = getBrightnessLabel(v);
+            infoBrightnessEl.textContent = brightnessLabel;
+            infoBrightnessEl.className = 'info-val' + (v < 0.01 ? ' off' : '');
+
+            // Life
+            const life = Math.max(0, Math.round((1 - dissolveProgress) * 100));
+            infoLifeEl.textContent = life + '%';
+            infoLifeEl.className = 'info-val' + (life < 20 ? ' off' : '');
+
+            // Brightness bar
+            const barPercent = Math.min((v / MAX_VOLTAGE) * 100, 100);
+            brightnessFillEl.style.width = barPercent + '%';
+            if (v < 0.5) brightnessFillEl.style.background = '#E86830';
+            else if (v < 1.2) brightnessFillEl.style.background = '#E8A830';
+            else brightnessFillEl.style.background = '#4CAF50';
+        }
+
+        function onElectrodeChange() {
+            leftMetal = leftSelect.value;
+            rightMetal = rightSelect.value;
+
+            // Update electrode materials
+            leftElectrode.material.dispose();
+            leftElectrode.material = makeElectrodeMat(leftMetal);
+            rightElectrode.material.dispose();
+            rightElectrode.material = makeElectrodeMat(rightMetal);
+
+            // Reset dissolution
+            dissolveProgress = 0;
+            leftElectrode.scale.set(1, 1, 1);
+            rightElectrode.scale.set(1, 1, 1);
+            leftElectrode.position.y = 1.3;
+            rightElectrode.position.y = 1.3;
+
+            computeCell();
+            updateUI();
+            updateLabels();
+            rebuildWires();
+        }
+
+        leftSelect.addEventListener('change', onElectrodeChange);
+        rightSelect.addEventListener('change', onElectrodeChange);
+
+        resetBtn.addEventListener('click', () => {
+            dissolveProgress = 0;
+            leftElectrode.scale.set(1, 1, 1);
+            rightElectrode.scale.set(1, 1, 1);
+            leftElectrode.position.y = 1.3;
+            rightElectrode.position.y = 1.3;
+            computeCell();
+            updateUI();
+            updateLabels();
+            rebuildWires();
+        });
+
+        // Initial computation
+        computeCell();
+        updateUI();
+        updateLabels();
+
+        // --- Animation Loop ---
+        const clock = new THREE.Clock();
+        const DISSOLVE_DURATION = 30; // seconds to fully dissolve
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const dt = Math.min(clock.getDelta(), 0.05);
+            const elapsed = clock.elapsedTime;
+            controls.update();
+
+            const effectiveV = getEffectiveVoltage();
+            const normalizedV = effectiveV / MAX_VOLTAGE;
+
+            // --- Anode Dissolution ---
+            let needsWireRebuild = false;
+            if (baseVoltage > 0.01 && dissolveProgress < 1) {
+                dissolveProgress += dt / DISSOLVE_DURATION;
+                dissolveProgress = Math.min(dissolveProgress, 1);
+
+                const anodeEl = anodeSide === 'left' ? leftElectrode : rightElectrode;
+                if (anodeEl) {
+                    const s = Math.max(0.15, 1 - dissolveProgress * 0.85);
+                    anodeEl.scale.set(s, s, 1);
+                    anodeEl.position.y = 1.3 - (1 - s) * 0.4;
+                    needsWireRebuild = true;
+                }
+
+                if (Math.floor(elapsed * 4) % 2 === 0) updateUI();
+            }
+
+            // Rebuild wires every few frames during dissolution to track electrode top
+            if (needsWireRebuild && Math.floor(elapsed * 8) % 2 === 0) {
+                rebuildWires();
+            }
+
+            // --- Bulb Glow ---
+            const pulse = 0.9 + Math.sin(elapsed * 4) * 0.1;
+            bulbCore.material.emissiveIntensity = normalizedV * 2.5 * pulse;
+            bulbCore.material.opacity = 0.3 + normalizedV * 0.7;
+            bulbLight.intensity = normalizedV * 4 * pulse;
+            bulbSpot.intensity = normalizedV * 5 * pulse;
+
+            // --- Electron Flow ---
+            const electronSpeed = 0.1 + normalizedV * 0.6;
+            const showElectrons = effectiveV > 0.01;
+
+            // Determine flow direction: electrons flow from anode to cathode through external circuit
+            // In external circuit: anode → wire → bulb → wire → cathode
+            const leftIsAnode = anodeSide === 'left';
+
+            electrons.forEach(e => {
+                if (showElectrons) {
+                    e.mesh.visible = true;
+                    e.t += electronSpeed * dt;
+                    if (e.t > 1) e.t -= 1;
+
+                    let curve, flowT;
+                    if (e.wire === 'left') {
+                        curve = leftWire.curve;
+                        // If left is anode, electrons flow UP (out) on left wire: t goes 0→1
+                        // If left is cathode, electrons flow DOWN (in): t goes 1→0
+                        flowT = leftIsAnode ? e.t : (1 - e.t);
+                    } else {
+                        curve = rightWire.curve;
+                        // If right is cathode, electrons flow DOWN (in): t goes 1→0
+                        // If right is anode, electrons flow UP (out): t goes 0→1
+                        flowT = leftIsAnode ? (1 - e.t) : e.t;
+                    }
+
+                    const pos = curve.getPointAt(Math.max(0, Math.min(1, flowT)));
+                    e.mesh.position.copy(pos);
+
+                    // Pulsing opacity
+                    e.mesh.material.opacity = 0.5 + Math.sin(elapsed * 6 + e.t * 10) * 0.3;
+                } else {
+                    e.mesh.visible = false;
+                }
+            });
+
+            // --- Dissolve Particles (bubbles from anode) ---
+            if (showElectrons && dissolveProgress > 0.02) {
+                const anodeX = anodeSide === 'left' ? -0.45 : 0.45;
+                const particleCount = Math.floor(dissolveProgress * DISSOLVE_PARTICLE_COUNT);
+
+                dissolveParticles.forEach((p, i) => {
+                    if (i < particleCount) {
+                        p.mesh.visible = true;
+                        p.y += p.speed * dt;
+                        if (p.y > 1.2) p.y = 0;
+
+                        const wobble = Math.sin(elapsed * 2.5 + p.phase) * 0.04;
+                        p.mesh.position.set(
+                            anodeX + p.offsetX + wobble,
+                            0.5 + p.y * 1.2,
+                            p.offsetZ
+                        );
+                        p.mesh.material.opacity = (1 - p.y / 1.2) * 0.6 * dissolveProgress;
+                    } else {
+                        p.mesh.visible = false;
+                    }
+                });
+            } else {
+                dissolveParticles.forEach(p => { p.mesh.visible = false; });
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
