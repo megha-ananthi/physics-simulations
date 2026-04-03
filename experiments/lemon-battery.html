@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Lemon Battery - Science Lab</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F34B;</text></svg>">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: #0a0a1a;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #three-canvas { display: block; width: 100%; height: 100%; }
+
+        .ui-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 10; }
+        .ui-overlay > * { pointer-events: auto; }
+
+        .back-btn {
+            position: fixed; top: 1rem; left: 1rem;
+            background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2); color: #fff;
+            padding: 0.6rem 1.2rem; border-radius: 50px;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.9rem;
+            cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;
+            transition: background 0.3s; z-index: 20;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.25); }
+
+        .exp-title {
+            position: fixed; top: 1rem; left: 50%; transform: translateX(-50%);
+            font-family: 'Fredoka One', cursive; font-size: 1.3rem; text-align: center;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.5); z-index: 20; white-space: nowrap;
+        }
+
+        .control-panel {
+            position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 15, 35, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.12); border-radius: 20px;
+            padding: 1.2rem 1.8rem; display: flex; align-items: center; gap: 1.5rem;
+            flex-wrap: wrap; justify-content: center; max-width: 95vw; z-index: 20;
+        }
+        .control-group { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+        .control-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
+        .control-value { font-family: 'Fredoka One', cursive; font-size: 1.1rem; color: #4CAF50; }
+
+        input[type="range"] {
+            -webkit-appearance: none; appearance: none; width: 120px; height: 8px;
+            border-radius: 4px; background: rgba(255,255,255,0.15); outline: none; cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 24px; height: 24px;
+            border-radius: 50%; background: #4CAF50; border: 3px solid #fff; cursor: pointer;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 24px; height: 24px; border-radius: 50%;
+            background: #4CAF50; border: 3px solid #fff; cursor: pointer;
+        }
+
+        .power-switch { position: relative; width: 70px; height: 36px; cursor: pointer; }
+        .power-switch input { display: none; }
+        .switch-track {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.15); border-radius: 18px; transition: background 0.3s;
+        }
+        .power-switch input:checked + .switch-track { background: #4CAF50; box-shadow: 0 0 15px rgba(76,175,80,0.5); }
+        .switch-knob {
+            position: absolute; top: 3px; left: 3px; width: 30px; height: 30px;
+            background: #fff; border-radius: 50%; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        .power-switch input:checked ~ .switch-knob { transform: translateX(34px); }
+
+        .info-display {
+            position: fixed; top: 1rem; right: 1rem;
+            background: rgba(15, 15, 35, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.12); border-radius: 15px;
+            padding: 1rem 1.2rem; font-size: 0.85rem; z-index: 20; min-width: 170px;
+        }
+        .info-row { display: flex; justify-content: space-between; gap: 1rem; padding: 0.2rem 0; }
+        .info-label { opacity: 0.6; }
+        .info-val { font-weight: 700; color: #4CAF50; }
+        .info-val.active { color: #4CAF50; }
+        .info-val.inactive { color: #E86830; }
+        .info-val.dim { color: #E8A830; }
+
+        .led-indicator {
+            margin-top: 0.5rem;
+            text-align: center;
+            padding: 0.4rem;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            background: rgba(255,255,255,0.05);
+            transition: all 0.5s;
+        }
+        .led-indicator.off { color: #666; }
+        .led-indicator.dim { color: #E8A830; text-shadow: 0 0 8px rgba(232,168,48,0.5); }
+        .led-indicator.on { color: #FF3333; text-shadow: 0 0 15px rgba(255,50,50,0.8); }
+
+        .hint {
+            position: fixed; bottom: 7rem; left: 50%; transform: translateX(-50%);
+            font-size: 0.8rem; opacity: 0.5; text-align: center; z-index: 20; white-space: nowrap;
+        }
+
+        @media (max-width: 600px) {
+            .exp-title { font-size: 1rem; top: 0.6rem; }
+            .back-btn { padding: 0.5rem 0.8rem; font-size: 0.8rem; }
+            .control-panel { padding: 1rem; gap: 1rem; bottom: 0.8rem; border-radius: 16px; }
+            input[type="range"] { width: 90px; }
+            .info-display { top: 3.2rem; right: 0.5rem; padding: 0.7rem 0.9rem; font-size: 0.75rem; min-width: 130px; }
+            .hint { bottom: 6rem; font-size: 0.7rem; }
+        }
+    </style>
+</head>
+<body>
+    <div id="three-canvas"></div>
+
+    <div class="ui-overlay">
+        <a href="../index.html" class="back-btn">&larr; Back to Lab</a>
+        <div class="exp-title">&#x1F34B; The Lemon Battery</div>
+
+        <div class="info-display">
+            <div class="info-row">
+                <span class="info-label">Lemons</span>
+                <span class="info-val" id="info-lemons">4</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Voltage/Lemon</span>
+                <span class="info-val" id="info-per">~0.9V</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Total Voltage</span>
+                <span class="info-val" id="info-total">3.6V</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Circuit</span>
+                <span class="info-val inactive" id="info-status">OPEN</span>
+            </div>
+            <div class="led-indicator off" id="led-indicator">&#x1F4A1; LED OFF</div>
+        </div>
+
+        <p class="hint">&#x1F5B1;&#xFE0F; Drag to rotate &bull; Scroll to zoom &bull; Connect the circuit!</p>
+
+        <div class="control-panel">
+            <div class="control-group">
+                <span class="control-label">Lemons</span>
+                <span class="control-value" id="lemons-display">4</span>
+                <input type="range" id="lemons-slider" min="1" max="6" value="4" step="1">
+            </div>
+            <div class="control-group">
+                <span class="control-label">Connect</span>
+                <label class="power-switch">
+                    <input type="checkbox" id="power-switch">
+                    <div class="switch-track"></div>
+                    <div class="switch-knob"></div>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- Scene ---
+        const container = document.getElementById('three-canvas');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1a1a2e);
+        scene.fog = new THREE.Fog(0x1a1a2e, 18, 35);
+
+        const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(5, 5, 7);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.2;
+        container.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.08;
+        controls.minDistance = 3;
+        controls.maxDistance = 15;
+        controls.maxPolarAngle = Math.PI * 0.85;
+        controls.target.set(0, 1, 0);
+
+        // --- Lighting ---
+        scene.add(new THREE.AmbientLight(0x404060, 0.7));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.1);
+        dirLight.position.set(5, 8, 5);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.set(1024, 1024);
+        scene.add(dirLight);
+        const fillLight = new THREE.DirectionalLight(0x6688cc, 0.3);
+        fillLight.position.set(-4, 3, -3);
+        scene.add(fillLight);
+
+        // LED glow light
+        const ledLight = new THREE.PointLight(0xFF2222, 0, 4);
+        scene.add(ledLight);
+
+        // --- Materials ---
+        const matTable = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.8, metalness: 0.05 });
+        const matLemon = new THREE.MeshStandardMaterial({ color: 0xFFDD00, roughness: 0.6, metalness: 0.05 });
+        const matLemonBump = new THREE.MeshStandardMaterial({ color: 0xEECC00, roughness: 0.7, metalness: 0.05 });
+        const matIronNail = new THREE.MeshStandardMaterial({ color: 0x777788, roughness: 0.35, metalness: 0.85 });
+        const matCopper = new THREE.MeshStandardMaterial({ color: 0xCC6633, roughness: 0.3, metalness: 0.8 });
+        const matWireGreen = new THREE.MeshStandardMaterial({ color: 0x33AA44, roughness: 0.5, metalness: 0.3 });
+        const matLEDBody = new THREE.MeshStandardMaterial({ color: 0xCC2222, roughness: 0.4, metalness: 0.1 });
+        const matLEDLeg = new THREE.MeshStandardMaterial({ color: 0x999999, roughness: 0.3, metalness: 0.8 });
+        const matBubble = new THREE.MeshBasicMaterial({ color: 0xAAFFAA, transparent: true, opacity: 0.5 });
+
+        // --- Table ---
+        const tableTop = new THREE.Mesh(new THREE.BoxGeometry(12, 0.3, 6), matTable);
+        tableTop.position.y = -0.15;
+        tableTop.receiveShadow = true;
+        scene.add(tableTop);
+
+        const gridHelper = new THREE.GridHelper(12, 24, 0x333355, 0x222244);
+        gridHelper.position.y = 0.01;
+        scene.add(gridHelper);
+
+        // --- Lemon Builder ---
+        const MAX_LEMONS = 6;
+        const LEMON_SPACING = 1.8;
+        const allLemonGroups = [];
+        const allWires = [];
+        const allBubbles = []; // per lemon
+
+        function buildLemon(index) {
+            const group = new THREE.Group();
+            const xPos = (index - (MAX_LEMONS - 1) / 2) * LEMON_SPACING;
+
+            // Lemon body (squashed sphere)
+            const lemonGeo = new THREE.SphereGeometry(0.5, 16, 12);
+            const lemon = new THREE.Mesh(lemonGeo, matLemon);
+            lemon.scale.set(1.3, 0.9, 0.9);
+            lemon.position.y = 0.5;
+            lemon.castShadow = true;
+            group.add(lemon);
+
+            // Small bump on top
+            const bump = new THREE.Mesh(
+                new THREE.SphereGeometry(0.08, 8, 8),
+                matLemonBump
+            );
+            bump.position.set(0, 0.95, 0);
+            group.add(bump);
+
+            // Iron nail (left side of lemon)
+            const nailGroup = new THREE.Group();
+            const nailBody = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.03, 0.03, 0.7, 8),
+                matIronNail
+            );
+            nailBody.castShadow = true;
+            nailGroup.add(nailBody);
+            const nailTip = new THREE.Mesh(
+                new THREE.ConeGeometry(0.03, 0.12, 8),
+                matIronNail
+            );
+            nailTip.position.y = -0.41;
+            nailGroup.add(nailTip);
+            const nailHead = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.06, 0.06, 0.03, 8),
+                matIronNail
+            );
+            nailHead.position.y = 0.365;
+            nailGroup.add(nailHead);
+            nailGroup.position.set(-0.25, 0.7, 0);
+            nailGroup.rotation.z = 0.15;
+            group.add(nailGroup);
+
+            // Copper strip (right side of lemon)
+            const copperStrip = new THREE.Mesh(
+                new THREE.BoxGeometry(0.04, 0.7, 0.15),
+                matCopper
+            );
+            copperStrip.position.set(0.3, 0.7, 0);
+            copperStrip.rotation.z = -0.15;
+            copperStrip.castShadow = true;
+            group.add(copperStrip);
+
+            // Label
+            group.position.set(xPos, 0, 0);
+            scene.add(group);
+
+            // Bubbles for this lemon
+            const bubbles = [];
+            for (let b = 0; b < 6; b++) {
+                const bubble = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.02 + Math.random() * 0.02, 6, 6),
+                    matBubble.clone()
+                );
+                bubble.visible = false;
+                bubble.position.set(xPos, 0.5, 0);
+                scene.add(bubble);
+                bubbles.push({
+                    mesh: bubble,
+                    offsetX: (Math.random() - 0.5) * 0.4,
+                    offsetZ: (Math.random() - 0.5) * 0.3,
+                    speed: 0.3 + Math.random() * 0.4,
+                    y: Math.random(),
+                    phase: Math.random() * Math.PI * 2,
+                });
+            }
+            allBubbles.push(bubbles);
+
+            return { group, xPos };
+        }
+
+        for (let i = 0; i < MAX_LEMONS; i++) {
+            allLemonGroups.push(buildLemon(i));
+        }
+
+        // --- Connecting wires between lemons (copper of one → iron of next) ---
+        function buildWires() {
+            // Remove old wires
+            allWires.forEach(w => { scene.remove(w); w.geometry.dispose(); });
+            allWires.length = 0;
+
+            for (let i = 0; i < MAX_LEMONS - 1; i++) {
+                const fromX = allLemonGroups[i].xPos + 0.3; // copper of current
+                const toX = allLemonGroups[i + 1].xPos - 0.25; // iron of next
+                const from = new THREE.Vector3(fromX, 1.05, 0);
+                const to = new THREE.Vector3(toX, 1.05, 0);
+                const mid = new THREE.Vector3((fromX + toX) / 2, 1.4, 0);
+                const curve = new THREE.CatmullRomCurve3([from, mid, to]);
+                const geo = new THREE.TubeGeometry(curve, 16, 0.02, 8, false);
+                const mesh = new THREE.Mesh(geo, matWireGreen);
+                mesh.castShadow = true;
+                scene.add(mesh);
+                allWires.push(mesh);
+            }
+        }
+        buildWires();
+
+        // --- LED at the end ---
+        const ledGroup = new THREE.Group();
+
+        // LED bulb (dome)
+        const ledBulb = new THREE.Mesh(
+            new THREE.SphereGeometry(0.15, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+            new THREE.MeshStandardMaterial({
+                color: 0xCC2222,
+                roughness: 0.3,
+                metalness: 0.1,
+                emissive: 0x000000,
+                emissiveIntensity: 0,
+                transparent: true,
+                opacity: 0.85,
+            })
+        );
+        ledBulb.position.y = 0.15;
+        ledGroup.add(ledBulb);
+
+        // LED base cylinder
+        const ledBase = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.15, 0.15, 0.15, 16),
+            matLEDBody
+        );
+        ledBase.position.y = 0.075;
+        ledGroup.add(ledBase);
+
+        // LED legs
+        const leg1 = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.5, 6), matLEDLeg);
+        leg1.position.set(-0.06, -0.25, 0);
+        ledGroup.add(leg1);
+        const leg2 = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.4, 6), matLEDLeg);
+        leg2.position.set(0.06, -0.2, 0);
+        ledGroup.add(leg2);
+
+        // Position LED to the right of the last lemon
+        const ledXPos = allLemonGroups[MAX_LEMONS - 1].xPos + 1.5;
+        ledGroup.position.set(ledXPos, 0.7, 0);
+        scene.add(ledGroup);
+        ledLight.position.set(ledXPos, 1.2, 0);
+
+        // Wires from first lemon iron and last lemon copper to LED
+        function buildLEDWires(numLemons) {
+            // Remove old LED wires (tagged)
+            scene.children.filter(c => c.userData.ledWire).forEach(c => {
+                scene.remove(c);
+                c.geometry.dispose();
+            });
+
+            const lastLemon = allLemonGroups[numLemons - 1];
+            const firstLemon = allLemonGroups[0];
+
+            // Last lemon copper → LED leg1
+            const from1 = new THREE.Vector3(lastLemon.xPos + 0.3, 1.05, 0);
+            const to1 = new THREE.Vector3(ledXPos - 0.06, 0.45, 0);
+            const mid1 = new THREE.Vector3((from1.x + to1.x) / 2, 1.3, -0.2);
+            const curve1 = new THREE.CatmullRomCurve3([from1, mid1, to1]);
+            const wire1 = new THREE.Mesh(new THREE.TubeGeometry(curve1, 16, 0.02, 8, false), matWireGreen);
+            wire1.userData.ledWire = true;
+            scene.add(wire1);
+
+            // First lemon iron → LED leg2 (long wire going under)
+            const from2 = new THREE.Vector3(firstLemon.xPos - 0.25, 1.05, 0);
+            const to2 = new THREE.Vector3(ledXPos + 0.06, 0.45, 0);
+            const mid2a = new THREE.Vector3(firstLemon.xPos - 0.5, 0.3, 0.8);
+            const mid2b = new THREE.Vector3(ledXPos + 0.5, 0.3, 0.8);
+            const curve2 = new THREE.CatmullRomCurve3([from2, mid2a, mid2b, to2]);
+            const wire2 = new THREE.Mesh(new THREE.TubeGeometry(curve2, 24, 0.02, 8, false), matWireGreen);
+            wire2.userData.ledWire = true;
+            scene.add(wire2);
+        }
+        buildLEDWires(4);
+
+        // --- State ---
+        let circuitClosed = false;
+        let numLemons = 4;
+        const VOLTAGE_PER_LEMON = 0.9;
+
+        // --- Visibility control ---
+        function updateVisibility() {
+            for (let i = 0; i < MAX_LEMONS; i++) {
+                allLemonGroups[i].group.visible = i < numLemons;
+            }
+            // Show/hide wires
+            allWires.forEach((w, i) => {
+                w.visible = i < numLemons - 1;
+            });
+            // Rebuild LED wires
+            buildLEDWires(numLemons);
+            // Update camera target
+            const centerX = (allLemonGroups[0].xPos + allLemonGroups[numLemons - 1].xPos) / 2;
+            controls.target.set(centerX, 1, 0);
+        }
+
+        // --- UI ---
+        const lemonsSlider = document.getElementById('lemons-slider');
+        const powerSwitchEl = document.getElementById('power-switch');
+        const lemonsDisplay = document.getElementById('lemons-display');
+        const infoLemons = document.getElementById('info-lemons');
+        const infoTotal = document.getElementById('info-total');
+        const infoStatus = document.getElementById('info-status');
+        const ledIndicator = document.getElementById('led-indicator');
+
+        lemonsSlider.addEventListener('input', (e) => {
+            numLemons = parseInt(e.target.value);
+            lemonsDisplay.textContent = numLemons;
+            infoLemons.textContent = numLemons;
+            const totalV = (numLemons * VOLTAGE_PER_LEMON).toFixed(1);
+            infoTotal.textContent = totalV + 'V';
+            updateVisibility();
+        });
+
+        powerSwitchEl.addEventListener('change', (e) => {
+            circuitClosed = e.target.checked;
+            infoStatus.textContent = circuitClosed ? 'CLOSED' : 'OPEN';
+            infoStatus.className = 'info-val ' + (circuitClosed ? 'active' : 'inactive');
+        });
+
+        // --- Animation ---
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const dt = Math.min(clock.getDelta(), 0.05);
+            const elapsed = clock.elapsedTime;
+            controls.update();
+
+            const totalVoltage = numLemons * VOLTAGE_PER_LEMON;
+            const ledThreshold = 1.8; // minimum voltage to light LED dimly
+            const fullBright = 4.5; // voltage for full brightness
+            const isLit = circuitClosed && totalVoltage >= ledThreshold;
+            const brightness = isLit ? Math.min((totalVoltage - ledThreshold) / (fullBright - ledThreshold), 1) : 0;
+
+            // LED glow
+            const ledMat = ledBulb.material;
+            if (isLit) {
+                const pulse = 0.8 + Math.sin(elapsed * 4) * 0.2;
+                ledMat.emissive.setHex(0xFF2222);
+                ledMat.emissiveIntensity = brightness * pulse * 2;
+                ledMat.opacity = 0.7 + brightness * 0.3;
+                ledLight.intensity = brightness * 3 * pulse;
+
+                if (brightness < 0.4) {
+                    ledIndicator.className = 'led-indicator dim';
+                    ledIndicator.innerHTML = '\u{1F4A1} LED DIM';
+                } else {
+                    ledIndicator.className = 'led-indicator on';
+                    ledIndicator.innerHTML = '\u{1F4A1} LED ON!';
+                }
+            } else {
+                ledMat.emissive.setHex(0x000000);
+                ledMat.emissiveIntensity = 0;
+                ledMat.opacity = 0.85;
+                ledLight.intensity = 0;
+                ledIndicator.className = 'led-indicator off';
+                ledIndicator.innerHTML = '\u{1F4A1} LED OFF';
+            }
+
+            // Bubbles inside lemons (when circuit is closed)
+            for (let i = 0; i < MAX_LEMONS; i++) {
+                const bubbles = allBubbles[i];
+                const visible = i < numLemons && circuitClosed;
+
+                bubbles.forEach(b => {
+                    if (visible) {
+                        b.mesh.visible = true;
+                        b.y += b.speed * dt;
+                        if (b.y > 1) b.y = 0;
+
+                        const lemonX = allLemonGroups[i].xPos;
+                        const wobble = Math.sin(elapsed * 3 + b.phase) * 0.05;
+                        b.mesh.position.set(
+                            lemonX + b.offsetX + wobble,
+                            0.25 + b.y * 0.6,
+                            b.offsetZ
+                        );
+                        b.mesh.material.opacity = (1 - b.y) * 0.6;
+                    } else {
+                        b.mesh.visible = false;
+                    }
+                });
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+        updateVisibility();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

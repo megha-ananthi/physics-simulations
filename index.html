@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Science Lab - Effects of Electric Current | Sri Krish International School</title>
+    <meta name="description" content="Interactive physics simulations exploring Magnetic, Heating, and Chemical effects of electric current. By Megha Ananthi B, Sri Krish International School (CBSE).">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F9EA;</text></svg>">
+</head>
+<body>
+    <canvas id="particle-canvas"></canvas>
+
+    <div class="content-layer">
+        <!-- Header -->
+        <header class="lab-header">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-icon">&#x1F9EA;</span>
+                    <h1>Science Lab</h1>
+                </div>
+                <p class="tagline">Discover the Amazing Effects of Electric Current!</p>
+                <p class="teacher-credit">Presented by Megha Ananthi B &mdash; Sri Krish International School (CBSE)</p>
+            </div>
+        </header>
+
+        <!-- Welcome Section -->
+        <main>
+            <section class="welcome-section">
+                <h2>&#x1F44B; Welcome, Young Scientist!</h2>
+                <p class="welcome-text">
+                    Did you know that electricity can do incredible things? When electric current flows through a wire,
+                    it can create <strong>magnets</strong>, produce <strong>heat</strong>, and even cause
+                    <strong>chemical reactions</strong>! Explore these 4 fun experiments to see the magic of electricity
+                    in action. Click any experiment card below to start your journey!
+                </p>
+                <div class="category-legend">
+                    <span class="legend-badge magnetic">
+                        <span class="badge-icon">&#x1F9F2;</span> Magnetic Effect
+                    </span>
+                    <span class="legend-badge heating">
+                        <span class="badge-icon">&#x1F525;</span> Heating Effect
+                    </span>
+                    <span class="legend-badge chemical">
+                        <span class="badge-icon">&#x1F34B;</span> Chemical Effect
+                    </span>
+                </div>
+            </section>
+
+            <!-- Experiment Cards -->
+            <section class="experiments-grid">
+                <!-- Card 1: Oersted's Compass -->
+                <a href="experiments/oersted.html" class="experiment-card magnetic">
+                    <div class="card-badge">Magnetic Effect</div>
+                    <div class="card-icon">&#x1F9ED;</div>
+                    <h3>&#x00D8;rsted's Compass</h3>
+                    <p>Watch a compass needle dance and spin when electricity flows through a nearby wire! Discover how electric current creates invisible magnetic fields.</p>
+                    <div class="card-cta">Start Experiment <span class="arrow">&rarr;</span></div>
+                </a>
+
+                <!-- Card 2: Electromagnet -->
+                <a href="experiments/electromagnet.html" class="experiment-card magnetic">
+                    <div class="card-badge">Magnetic Effect</div>
+                    <div class="card-icon">&#x1F9F2;</div>
+                    <h3>The Iron Nail Electromagnet</h3>
+                    <p>Build a powerful magnet from just a nail and some wire! Control the voltage and coil turns to pick up paper clips like a real scientist.</p>
+                    <div class="card-cta">Start Experiment <span class="arrow">&rarr;</span></div>
+                </a>
+
+                <!-- Card 3: Heating Effect -->
+                <a href="experiments/heating.html" class="experiment-card heating">
+                    <div class="card-badge">Heating Effect</div>
+                    <div class="card-icon">&#x1F525;</div>
+                    <h3>Nichrome Wire Heater</h3>
+                    <p>See a thin wire glow red-hot as electricity heats it up! Use the thermal camera view to watch the temperature rise in amazing colors.</p>
+                    <div class="card-cta">Start Experiment <span class="arrow">&rarr;</span></div>
+                </a>
+
+                <!-- Card 4: Lemon Battery -->
+                <a href="experiments/lemon-battery.html" class="experiment-card chemical">
+                    <div class="card-badge">Chemical Effect</div>
+                    <div class="card-icon">&#x1F34B;</div>
+                    <h3>The Lemon Battery</h3>
+                    <p>Turn ordinary lemons into batteries! Connect them together and watch a tiny LED light up powered by nothing but fruit juice chemistry.</p>
+                    <div class="card-cta">Start Experiment <span class="arrow">&rarr;</span></div>
+                </a>
+            </section>
+
+            <!-- Fun Facts -->
+            <section class="fun-facts">
+                <h2>&#x26A1; Did You Know?</h2>
+                <div class="fact-card">
+                    <p class="fact-text" id="fact-text">
+                        <span class="fact-icon">&#x1F4A1;</span>
+                        Loading a fun fact...
+                    </p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="lab-footer">
+            <p class="school-name">Sri Krish International School (CBSE)</p>
+            <p class="teacher-name">Created by Megha Ananthi B &mdash; Science Teacher (Physics)</p>
+            <p class="powered-by">Made with &#x26A1; for young scientists everywhere</p>
+        </footer>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
