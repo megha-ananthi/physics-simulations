@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oersted's Compass - Science Lab</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F9ED;</text></svg>">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: #0a0a1a;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #three-canvas { display: block; width: 100%; height: 100%; }
+
+        .ui-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 10; }
+        .ui-overlay > * { pointer-events: auto; }
+
+        .back-btn {
+            position: fixed; top: 1rem; left: 1rem;
+            background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2); color: #fff;
+            padding: 0.6rem 1.2rem; border-radius: 50px;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.9rem;
+            cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;
+            transition: background 0.3s; z-index: 20;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.25); }
+
+        .exp-title {
+            position: fixed; top: 1rem; left: 50%; transform: translateX(-50%);
+            font-family: 'Fredoka One', cursive; font-size: 1.3rem; text-align: center;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.5); z-index: 20; white-space: nowrap;
+        }
+
+        .control-panel {
+            position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+            background: rgba(15, 15, 35, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.12); border-radius: 20px;
+            padding: 1.2rem 1.8rem; display: flex; align-items: center; gap: 1.5rem;
+            flex-wrap: wrap; justify-content: center; max-width: 95vw; z-index: 20;
+        }
+        .control-group { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+        .control-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
+        .control-value { font-family: 'Fredoka One', cursive; font-size: 1.1rem; color: #4A90D9; }
+
+        input[type="range"] {
+            -webkit-appearance: none; appearance: none; width: 120px; height: 8px;
+            border-radius: 4px; background: rgba(255,255,255,0.15); outline: none; cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 24px; height: 24px;
+            border-radius: 50%; background: #4A90D9; border: 3px solid #fff; cursor: pointer;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 24px; height: 24px; border-radius: 50%;
+            background: #4A90D9; border: 3px solid #fff; cursor: pointer;
+        }
+
+        .power-switch { position: relative; width: 70px; height: 36px; cursor: pointer; }
+        .power-switch input { display: none; }
+        .switch-track {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(255,255,255,0.15); border-radius: 18px; transition: background 0.3s;
+        }
+        .power-switch input:checked + .switch-track { background: #4CAF50; box-shadow: 0 0 15px rgba(76,175,80,0.5); }
+        .switch-knob {
+            position: absolute; top: 3px; left: 3px; width: 30px; height: 30px;
+            background: #fff; border-radius: 50%; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        .power-switch input:checked ~ .switch-knob { transform: translateX(34px); }
+
+        .info-display {
+            position: fixed; top: 1rem; right: 1rem;
+            background: rgba(15, 15, 35, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.12); border-radius: 15px;
+            padding: 1rem 1.2rem; font-size: 0.85rem; z-index: 20; min-width: 160px;
+        }
+        .info-row { display: flex; justify-content: space-between; gap: 1rem; padding: 0.2rem 0; }
+        .info-label { opacity: 0.6; }
+        .info-val { font-weight: 700; color: #4A90D9; }
+        .info-val.active { color: #4CAF50; }
+        .info-val.inactive { color: #E86830; }
+
+        .hint {
+            position: fixed; bottom: 7rem; left: 50%; transform: translateX(-50%);
+            font-size: 0.8rem; opacity: 0.5; text-align: center; z-index: 20; white-space: nowrap;
+        }
+
+        @media (max-width: 600px) {
+            .exp-title { font-size: 1rem; top: 0.6rem; }
+            .back-btn { padding: 0.5rem 0.8rem; font-size: 0.8rem; }
+            .control-panel { padding: 1rem; gap: 1rem; bottom: 0.8rem; border-radius: 16px; }
+            input[type="range"] { width: 90px; }
+            .info-display { top: 3.2rem; right: 0.5rem; padding: 0.7rem 0.9rem; font-size: 0.75rem; min-width: 130px; }
+            .hint { bottom: 6rem; font-size: 0.7rem; }
+        }
+    </style>
+</head>
+<body>
+    <div id="three-canvas"></div>
+
+    <div class="ui-overlay">
+        <a href="../index.html" class="back-btn">&larr; Back to Lab</a>
+        <div class="exp-title">&#x1F9ED; &Oslash;rsted's Compass</div>
+
+        <div class="info-display">
+            <div class="info-row">
+                <span class="info-label">Voltage</span>
+                <span class="info-val" id="info-voltage">5V</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Needle Angle</span>
+                <span class="info-val" id="info-angle">0&deg;</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Distance</span>
+                <span class="info-val" id="info-distance">1.2</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Status</span>
+                <span class="info-val inactive" id="info-status">OFF</span>
+            </div>
+        </div>
+
+        <p class="hint">&#x1F9ED; Drag the compass around the wire to explore the magnetic field!</p>
+
+        <div class="control-panel">
+            <div class="control-group">
+                <span class="control-label">Voltage</span>
+                <span class="control-value" id="voltage-display">5V</span>
+                <input type="range" id="voltage-slider" min="1" max="10" value="5" step="1">
+            </div>
+            <div class="control-group">
+                <span class="control-label">Power</span>
+                <label class="power-switch">
+                    <input type="checkbox" id="power-switch">
+                    <div class="switch-track"></div>
+                    <div class="switch-knob"></div>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- Scene ---
+        const container = document.getElementById('three-canvas');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1a1a2e);
+        scene.fog = new THREE.Fog(0x1a1a2e, 15, 30);
+
+        const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(4, 5, 5);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.2;
+        container.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.08;
+        controls.minDistance = 2;
+        controls.maxDistance = 12;
+        controls.maxPolarAngle = Math.PI * 0.85;
+        controls.target.set(0, 0.8, 0);
+
+        // --- Lighting ---
+        scene.add(new THREE.AmbientLight(0x404060, 0.6));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        dirLight.position.set(5, 8, 5);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.set(1024, 1024);
+        scene.add(dirLight);
+        const fillLight = new THREE.DirectionalLight(0x6688cc, 0.4);
+        fillLight.position.set(-3, 4, -3);
+        scene.add(fillLight);
+
+        const powerLight = new THREE.PointLight(0x4A90D9, 0, 8);
+        powerLight.position.set(0, 2, 0);
+        scene.add(powerLight);
+
+        // --- Materials ---
+        const matTable = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.8, metalness: 0.05 });
+        const matWireCopper = new THREE.MeshStandardMaterial({ color: 0xCC6633, roughness: 0.4, metalness: 0.7 });
+        const matBatteryRed = new THREE.MeshStandardMaterial({ color: 0xCC2222, roughness: 0.5, metalness: 0.2 });
+        const matBatteryBlack = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.5, metalness: 0.2 });
+        const matTerminal = new THREE.MeshStandardMaterial({ color: 0xCCCCCC, roughness: 0.3, metalness: 0.9 });
+        const matCompassBody = new THREE.MeshStandardMaterial({ color: 0xDDCCAA, roughness: 0.4, metalness: 0.3 });
+        const matCompassGlass = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.15, roughness: 0.1, metalness: 0.0 });
+        const matNeedleRed = new THREE.MeshStandardMaterial({ color: 0xDD3333, roughness: 0.3, metalness: 0.7 });
+        const matNeedleBlue = new THREE.MeshStandardMaterial({ color: 0x3355DD, roughness: 0.3, metalness: 0.7 });
+        const matFieldLine = new THREE.MeshBasicMaterial({ color: 0x4A90D9, transparent: true, opacity: 0.0 });
+        const matElectron = new THREE.MeshBasicMaterial({ color: 0x66BBFF });
+        const matWireRed = new THREE.MeshStandardMaterial({ color: 0xCC3333, roughness: 0.5, metalness: 0.3 });
+        const matWireBlack = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.5, metalness: 0.3 });
+
+        // --- Table ---
+        const tableTop = new THREE.Mesh(new THREE.BoxGeometry(8, 0.3, 6), matTable);
+        tableTop.position.y = -0.15;
+        tableTop.receiveShadow = true;
+        scene.add(tableTop);
+
+        const gridHelper = new THREE.GridHelper(8, 16, 0x333355, 0x222244);
+        gridHelper.position.y = 0.01;
+        scene.add(gridHelper);
+
+        // --- Battery ---
+        const batteryGroup = new THREE.Group();
+        const batBot = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.7, 16), matBatteryBlack);
+        batBot.position.y = 0.35;
+        batBot.castShadow = true;
+        batteryGroup.add(batBot);
+        const batTop = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.7, 16), matBatteryRed);
+        batTop.position.y = 1.05;
+        batTop.castShadow = true;
+        batteryGroup.add(batTop);
+        const tPlus = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.12, 12), matTerminal);
+        tPlus.position.y = 1.46;
+        batteryGroup.add(tPlus);
+        batteryGroup.position.set(-3, 0, 0);
+        scene.add(batteryGroup);
+
+        // --- Thick Wire (horizontal along X-axis at y=1.2, z=0) ---
+        const WIRE_Y = 1.2;
+        const WIRE_Z = 0;
+        const wirePoints = [];
+        for (let i = 0; i <= 30; i++) {
+            wirePoints.push(new THREE.Vector3(-2 + i * (4 / 30), WIRE_Y, WIRE_Z));
+        }
+        const wireCurve = new THREE.CatmullRomCurve3(wirePoints);
+        const wireGeo = new THREE.TubeGeometry(wireCurve, 30, 0.06, 8, false);
+        const wireMesh = new THREE.Mesh(wireGeo, matWireCopper);
+        wireMesh.castShadow = true;
+        scene.add(wireMesh);
+
+        // Wire supports
+        const postGeo = new THREE.CylinderGeometry(0.04, 0.04, 1.2, 8);
+        const postMat = new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.5, metalness: 0.5 });
+        const postL = new THREE.Mesh(postGeo, postMat);
+        postL.position.set(-2, 0.6, 0);
+        postL.castShadow = true;
+        scene.add(postL);
+        const postR = new THREE.Mesh(postGeo, postMat);
+        postR.position.set(2, 0.6, 0);
+        postR.castShadow = true;
+        scene.add(postR);
+
+        // Connecting wires from battery to main wire
+        function makeCurveWire(from, to, mat) {
+            const mid = new THREE.Vector3((from.x + to.x) / 2, Math.max(from.y, to.y) + 0.4, (from.z + to.z) / 2);
+            const c = new THREE.CatmullRomCurve3([from, mid, to]);
+            const g = new THREE.TubeGeometry(c, 20, 0.025, 8, false);
+            const m = new THREE.Mesh(g, mat);
+            m.castShadow = true;
+            scene.add(m);
+        }
+        makeCurveWire(new THREE.Vector3(-3, 1.46, 0), new THREE.Vector3(-2, 1.2, 0), matWireRed);
+        makeCurveWire(new THREE.Vector3(-3, 0, 0), new THREE.Vector3(2, 1.2, 0), matWireBlack);
+
+        // --- Compass (draggable) ---
+        const compassGroup = new THREE.Group();
+
+        // Outer ring
+        const compassRing = new THREE.Mesh(
+            new THREE.TorusGeometry(0.6, 0.08, 16, 32),
+            matCompassBody
+        );
+        compassRing.rotation.x = Math.PI / 2;
+        compassRing.castShadow = true;
+        compassGroup.add(compassRing);
+
+        // Base disc
+        const compassDisc = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.58, 0.58, 0.05, 32),
+            new THREE.MeshStandardMaterial({ color: 0xFFF8E7, roughness: 0.6, metalness: 0.1 })
+        );
+        compassDisc.castShadow = true;
+        compassGroup.add(compassDisc);
+
+        // Direction markers
+        const markerGeo = new THREE.BoxGeometry(0.04, 0.06, 0.15);
+        [
+            { pos: [0, 0.03, -0.45], color: 0xDD3333 },
+            { pos: [0, 0.03, 0.45], color: 0x333333 },
+            { pos: [0.45, 0.03, 0], color: 0x333333 },
+            { pos: [-0.45, 0.03, 0], color: 0x333333 },
+        ].forEach(d => {
+            const marker = new THREE.Mesh(markerGeo, new THREE.MeshStandardMaterial({ color: d.color }));
+            marker.position.set(...d.pos);
+            compassGroup.add(marker);
+        });
+
+        // Glass dome
+        const glassDome = new THREE.Mesh(
+            new THREE.SphereGeometry(0.55, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2),
+            matCompassGlass
+        );
+        glassDome.position.y = 0.03;
+        compassGroup.add(glassDome);
+
+        // Needle pivot
+        const needleGroup = new THREE.Group();
+        needleGroup.position.y = 0.06;
+
+        const needleRed = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.02, 0.4), matNeedleRed);
+        needleRed.position.z = -0.2;
+        needleGroup.add(needleRed);
+
+        const needleBlue = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.02, 0.4), matNeedleBlue);
+        needleBlue.position.z = 0.2;
+        needleGroup.add(needleBlue);
+
+        const pin = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.08, 8), matTerminal);
+        needleGroup.add(pin);
+
+        compassGroup.add(needleGroup);
+        compassGroup.position.set(0, 0.15, 1.2);
+        scene.add(compassGroup);
+
+        // --- Invisible drag plane (table surface at y=0.15) ---
+        const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.15);
+
+        // --- Magnetic Field Lines (torus rings around wire) ---
+        const fieldLines = [];
+        const fieldLineCount = 7;
+        for (let i = 0; i < fieldLineCount; i++) {
+            const x = -2 + i * (4 / (fieldLineCount - 1));
+            const torus = new THREE.Mesh(
+                new THREE.TorusGeometry(0.8, 0.01, 8, 48),
+                matFieldLine.clone()
+            );
+            torus.position.set(x, WIRE_Y, WIRE_Z);
+            torus.rotation.y = Math.PI / 2;
+            scene.add(torus);
+            fieldLines.push(torus);
+        }
+
+        // --- Electron Particles ---
+        const electrons = [];
+        const electronCount = 14;
+        for (let i = 0; i < electronCount; i++) {
+            const sphere = new THREE.Mesh(
+                new THREE.SphereGeometry(0.04, 8, 8),
+                matElectron.clone()
+            );
+            sphere.visible = false;
+            scene.add(sphere);
+            electrons.push({ mesh: sphere, t: i / electronCount, speed: 0.3 });
+        }
+
+        // --- State ---
+        let powerOn = false;
+        let voltage = 5;
+        let needleTargetAngle = 0;
+        let currentNeedleAngle = 0;
+        let isDragging = false;
+
+        // --- Raycaster for compass dragging ---
+        const raycaster = new THREE.Raycaster();
+        const pointer = new THREE.Vector2();
+        const intersectPoint = new THREE.Vector3();
+
+        // All meshes in compassGroup that should be clickable
+        function getCompassMeshes() {
+            const meshes = [];
+            compassGroup.traverse(child => { if (child.isMesh) meshes.push(child); });
+            return meshes;
+        }
+
+        function getPointerPos(event) {
+            const x = event.touches ? event.touches[0].clientX : event.clientX;
+            const y = event.touches ? event.touches[0].clientY : event.clientY;
+            pointer.x = (x / window.innerWidth) * 2 - 1;
+            pointer.y = -(y / window.innerHeight) * 2 + 1;
+        }
+
+        function onPointerDown(event) {
+            getPointerPos(event);
+            raycaster.setFromCamera(pointer, camera);
+            const hits = raycaster.intersectObjects(getCompassMeshes());
+            if (hits.length > 0) {
+                isDragging = true;
+                controls.enabled = false;
+                event.preventDefault();
+            }
+        }
+
+        function onPointerMove(event) {
+            if (!isDragging) return;
+            event.preventDefault();
+            getPointerPos(event);
+            raycaster.setFromCamera(pointer, camera);
+            if (raycaster.ray.intersectPlane(dragPlane, intersectPoint)) {
+                // Clamp to table bounds
+                const cx = THREE.MathUtils.clamp(intersectPoint.x, -3.5, 3.5);
+                const cz = THREE.MathUtils.clamp(intersectPoint.z, -2.5, 2.5);
+                compassGroup.position.x = cx;
+                compassGroup.position.z = cz;
+            }
+        }
+
+        function onPointerUp() {
+            if (isDragging) {
+                isDragging = false;
+                controls.enabled = true;
+            }
+        }
+
+        renderer.domElement.addEventListener('pointerdown', onPointerDown);
+        renderer.domElement.addEventListener('pointermove', onPointerMove);
+        renderer.domElement.addEventListener('pointerup', onPointerUp);
+        renderer.domElement.addEventListener('pointerleave', onPointerUp);
+        // Touch support
+        renderer.domElement.addEventListener('touchstart', onPointerDown, { passive: false });
+        renderer.domElement.addEventListener('touchmove', onPointerMove, { passive: false });
+        renderer.domElement.addEventListener('touchend', onPointerUp);
+
+        // --- Physics: compute needle angle from magnetic field ---
+        //
+        // The wire runs along the X-axis at (y=WIRE_Y, z=WIRE_Z).
+        // For a long straight wire carrying current in the +X direction,
+        // the magnetic field B at any point forms concentric circles
+        // around the wire (right-hand rule).
+        //
+        // At the compass position P, we find the closest point on the
+        // wire, compute the radial vector R from wire to compass,
+        // then B = cross(wireDir, R).normalized / |R|
+        //
+        // The compass needle rotates on the XZ table plane (around Y-axis),
+        // so we project B onto the XZ plane and use atan2 to find
+        // the angle the needle should point.
+        //
+        // When power is OFF, needle points to "magnetic north" (default: -Z, angle=0).
+
+        function computeNeedleAngle() {
+            if (!powerOn) return 0;
+
+            const cx = compassGroup.position.x;
+            const cy = compassGroup.position.y;
+            const cz = compassGroup.position.z;
+
+            // Closest point on wire to compass (wire is along X from -2 to +2)
+            const wireX = THREE.MathUtils.clamp(cx, -2, 2);
+
+            // Radial vector from wire point to compass (in 3D)
+            const rx = cx - wireX;
+            const ry = cy - WIRE_Y;
+            const rz = cz - WIRE_Z;
+            const dist = Math.sqrt(rx * rx + ry * ry + rz * rz);
+
+            if (dist < 0.1) return 0;
+
+            // B field direction = cross(wireDir, radial)
+            // wireDir = (1, 0, 0), radial = (rx, ry, rz)
+            // cross = (0*rz - 0*ry, 0*rx - 1*rz, 1*ry - 0*rx)
+            //       = (0, -rz, ry)
+            const bx = 0;
+            const by = -rz;
+            const bz = ry;
+
+            // Project B onto XZ plane (the table). The needle rotates around Y.
+            // On the XZ plane: Bx = 0, Bz = ry
+            // But we also want to account for the effect when compass is
+            // offset in X from the wire segment — for finite wire, there's
+            // a slight X-component contribution. For a more realistic feel:
+            //
+            // Use the full 3D field at points offset from wire ends:
+            // Compute field from two semi-infinite wire segments ending at
+            // wire endpoints, but for simplicity just use the infinite wire
+            // approximation with the closest-point radial.
+
+            // Needle angle on XZ plane = atan2(Bx_proj, Bz_proj)
+            // Since Bx_proj = 0 and Bz_proj = ry:
+            //   ry < 0 (compass below wire) → Bz < 0 → angle = PI (needle flips)
+            //   ry > 0 (compass above wire) → Bz > 0 → angle = 0 (needle points north)
+            //
+            // This is correct but only shows flip above/below.
+            // The VISUAL effect we want (matching the reference) is for the
+            // needle to rotate smoothly around as the compass circles the wire.
+            //
+            // The trick: the needle on the table should point along the TANGENT
+            // to the field circle projected onto the table.
+            //
+            // The field circle lies in the YZ plane (perpendicular to wire).
+            // The tangent at point (ry, rz) is (-rz, ry) (perpendicular to radial).
+            // Project this tangent onto the table (XZ plane):
+            //   tangent_3D = (0, -rz, ry) → on XZ plane: (0, _, ry)
+            //
+            // For a compass on the table (fixed Y), as it moves in X and Z:
+            //   - The radial in YZ is (ry, rz)
+            //   - The tangent in YZ is (-rz, ry)
+            //   - The Z-component of tangent = ry → this determines left/right
+            //   - But X-component of tangent on table = 0 for infinite wire
+            //
+            // To get the full circular behavior visible on the TABLE (XZ plane),
+            // we should think of it differently:
+            //
+            // Looking DOWN at the table from above (top view, XZ plane):
+            // The wire is a point at (wireX, WIRE_Z) = (wireX, 0).
+            // The compass is at (cx, cz).
+            // The field lines form circles in the plane perpendicular to wire.
+            // But viewed from above on the table, these circles project as:
+            //   - the needle should point PERPENDICULAR to the line from
+            //     the wire's projection to the compass position on the table.
+            //
+            // Vector from wire projection to compass on table: (cx - wireX, cz - WIRE_Z)
+            // Perpendicular (tangent, right-hand rule) = (-dz, dx) for current in +X
+            // But wait — the right-hand rule for current in +X:
+            //   Below the wire (y < WIRE_Y), field points in -Z for z>0 side → needle points left
+            //   Above the wire (y > WIRE_Y), field points in +Z → needle points right
+            //
+            // Since compass is always on the table (below the wire), let's compute:
+
+            // 2D radial from wire to compass on table
+            const dx_table = cx - wireX;
+            const dz_table = cz - WIRE_Z;
+            const dist_table = Math.sqrt(dx_table * dx_table + dz_table * dz_table);
+
+            // Perpendicular distance from wire (YZ plane)
+            const perpDist = Math.sqrt(ry * ry + rz * rz);
+
+            if (perpDist < 0.1) return 0;
+
+            // Field strength: proportional to voltage, falls off as 1/distance
+            const fieldStrength = (voltage / 10) / perpDist;
+            const strength = Math.min(fieldStrength, 1);
+
+            // The key: from TOP view, at any point around the wire,
+            // the field direction is tangent to the circle.
+            // On the TABLE (XZ plane), looking from above:
+            //
+            //   The compass is at angle theta from the wire (in XZ):
+            //     theta = atan2(dz_table, dx_table)
+            //   The tangent direction at that angle is perpendicular:
+            //     tangent_angle = theta + PI/2 (or - PI/2 depending on current direction)
+            //
+            // For current flowing in +X direction and compass BELOW the wire:
+            //   Right-hand rule: curl fingers from +X toward radially outward
+            //   Below wire → field goes clockwise when viewed from +X end
+            //   So tangent = theta - PI/2
+
+            const theta = Math.atan2(dz_table, dx_table);
+
+            // Clockwise tangent for current in +X, compass below wire
+            const fieldAngle = theta - Math.PI / 2;
+
+            // The needle's Y-rotation: angle 0 = pointing along -Z (north)
+            // We want the needle to point along fieldAngle direction on XZ plane
+            // needleGroup.rotation.y: 0 = -Z, PI/2 = -X, PI = +Z, -PI/2 = +X
+            // fieldAngle: 0 = +X direction, PI/2 = +Z, PI = -X, -PI/2 = -Z
+            //
+            // Convert: needleRotation = -(fieldAngle + PI/2)
+            // When fieldAngle = -PI/2 (field points -Z/north): needleRot = 0 ✓
+            // When fieldAngle = 0 (field points +X/east): needleRot = -PI/2 ✓
+            // When fieldAngle = PI/2 (field points +Z/south): needleRot = -PI ✓
+
+            const needleRot = -(fieldAngle + Math.PI / 2);
+
+            // Blend between default north (0) and field direction based on strength
+            return needleRot * strength;
+        }
+
+        // --- UI ---
+        const voltageSlider = document.getElementById('voltage-slider');
+        const powerSwitch = document.getElementById('power-switch');
+        const voltageDisplay = document.getElementById('voltage-display');
+        const infoVoltage = document.getElementById('info-voltage');
+        const infoAngle = document.getElementById('info-angle');
+        const infoDistance = document.getElementById('info-distance');
+        const infoStatus = document.getElementById('info-status');
+
+        voltageSlider.addEventListener('input', (e) => {
+            voltage = parseInt(e.target.value);
+            voltageDisplay.textContent = voltage + 'V';
+            infoVoltage.textContent = voltage + 'V';
+        });
+
+        powerSwitch.addEventListener('change', (e) => {
+            powerOn = e.target.checked;
+            infoStatus.textContent = powerOn ? 'ON' : 'OFF';
+            infoStatus.className = 'info-val ' + (powerOn ? 'active' : 'inactive');
+        });
+
+        // --- Animation ---
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const dt = Math.min(clock.getDelta(), 0.05);
+            const elapsed = clock.elapsedTime;
+            controls.update();
+
+            // Compute needle angle from physics
+            needleTargetAngle = computeNeedleAngle();
+
+            // Smooth needle rotation
+            currentNeedleAngle += (needleTargetAngle - currentNeedleAngle) * 5 * dt;
+            needleGroup.rotation.y = currentNeedleAngle;
+
+            // Update info display
+            const degrees = Math.round(currentNeedleAngle * (180 / Math.PI));
+            infoAngle.textContent = degrees + '\u00B0';
+
+            // Distance from compass to wire
+            const dy = compassGroup.position.y - WIRE_Y;
+            const dz = compassGroup.position.z - WIRE_Z;
+            const dist = Math.sqrt(dy * dy + dz * dz);
+            infoDistance.textContent = dist.toFixed(2);
+
+            // Field lines and electrons visibility
+            if (powerOn) {
+                powerLight.intensity = 1 + voltage * 0.15;
+                fieldLines.forEach(fl => {
+                    fl.material.opacity = 0.15 + (voltage / 10) * 0.35;
+                });
+                electrons.forEach(e => {
+                    e.mesh.visible = true;
+                    e.speed = 0.15 + (voltage / 10) * 0.4;
+                });
+            } else {
+                powerLight.intensity = 0;
+                fieldLines.forEach(fl => { fl.material.opacity = 0; });
+                electrons.forEach(e => { e.mesh.visible = false; });
+            }
+
+            // Animate field lines rotation
+            if (powerOn) {
+                fieldLines.forEach(fl => {
+                    fl.rotation.x = elapsed * (0.5 + voltage * 0.1);
+                });
+            }
+
+            // Animate electrons along wire
+            if (powerOn) {
+                electrons.forEach(e => {
+                    e.t += e.speed * dt;
+                    if (e.t > 1) e.t -= 1;
+                    const wireX = -2 + e.t * 4;
+                    e.mesh.position.set(wireX, WIRE_Y, WIRE_Z);
+                    e.mesh.material.opacity = 0.6 + Math.sin(elapsed * 5 + e.t * 10) * 0.4;
+                });
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

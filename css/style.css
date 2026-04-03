@@ -1,0 +1,535 @@
+/* ============================================
+   Physics Simulations Suite - Hub Page Styles
+   Sri Krish International School (CBSE)
+   ============================================ */
+
+/* --- Design Tokens --- */
+:root {
+    --color-magnetic: #4A90D9;
+    --color-magnetic-light: #E8F2FC;
+    --color-magnetic-glow: rgba(74, 144, 217, 0.3);
+    --color-heating: #E86830;
+    --color-heating-light: #FFF0E8;
+    --color-heating-glow: rgba(232, 104, 48, 0.3);
+    --color-chemical: #4CAF50;
+    --color-chemical-light: #E8F5E9;
+    --color-chemical-glow: rgba(76, 175, 80, 0.3);
+    --color-bg: #F5F0FF;
+    --color-bg-dark: #E8E0F5;
+    --color-text: #2D2D2D;
+    --color-text-light: #666;
+    --color-white: #FFFFFF;
+    --color-header-start: #6B3FA0;
+    --color-header-end: #3F51B5;
+    --font-heading: 'Fredoka One', cursive;
+    --font-body: 'Nunito', sans-serif;
+    --radius-card: 20px;
+    --radius-pill: 50px;
+    --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.12);
+    --shadow-card-hover: 0 16px 40px rgba(0, 0, 0, 0.18);
+    --transition-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* --- Reset & Base --- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    font-family: var(--font-body);
+    background: var(--color-bg);
+    color: var(--color-text);
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* --- Particle Canvas Background --- */
+#particle-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* --- Content Layer (above canvas) --- */
+.content-layer {
+    position: relative;
+    z-index: 1;
+}
+
+/* --- Header --- */
+.lab-header {
+    background: linear-gradient(135deg, var(--color-header-start), var(--color-header-end));
+    color: var(--color-white);
+    padding: 2.5rem 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.lab-header::before {
+    content: '\269B';
+    position: absolute;
+    top: 15px;
+    left: 20px;
+    font-size: 2.5rem;
+    opacity: 0.15;
+    animation: float 4s ease-in-out infinite alternate;
+}
+
+.lab-header::after {
+    content: '\26A1';
+    position: absolute;
+    bottom: 15px;
+    right: 20px;
+    font-size: 2.5rem;
+    opacity: 0.15;
+    animation: float 3s ease-in-out infinite alternate-reverse;
+}
+
+.header-content {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.logo-icon {
+    font-size: 3rem;
+    animation: wiggle 2s ease-in-out infinite;
+}
+
+.logo h1 {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    letter-spacing: 1px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.tagline {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.teacher-credit {
+    font-size: 0.9rem;
+    opacity: 0.75;
+    font-style: italic;
+}
+
+/* --- Welcome Section --- */
+.welcome-section {
+    max-width: 850px;
+    margin: 2.5rem auto;
+    padding: 0 2rem;
+    text-align: center;
+}
+
+.welcome-section h2 {
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    color: var(--color-header-start);
+    margin-bottom: 1rem;
+}
+
+.welcome-text {
+    font-size: 1.1rem;
+    color: var(--color-text-light);
+    margin-bottom: 1.5rem;
+    line-height: 1.8;
+}
+
+/* --- Category Legend --- */
+.category-legend {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.legend-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-radius: var(--radius-pill);
+    padding: 0.5rem 1.2rem;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--color-white);
+    transition: transform 0.3s var(--transition-bounce);
+}
+
+.legend-badge:hover {
+    transform: scale(1.05);
+}
+
+.legend-badge.magnetic {
+    background: var(--color-magnetic);
+}
+
+.legend-badge.heating {
+    background: var(--color-heating);
+}
+
+.legend-badge.chemical {
+    background: var(--color-chemical);
+}
+
+.legend-badge .badge-icon {
+    font-size: 1.1rem;
+}
+
+/* --- Experiment Cards Grid --- */
+.experiments-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+    padding: 1rem 2rem 3rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* --- Individual Card --- */
+.experiment-card {
+    background: var(--color-white);
+    border-radius: var(--radius-card);
+    padding: 2rem;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-card);
+    border-top: 5px solid transparent;
+    transition: transform 0.35s var(--transition-bounce),
+                box-shadow 0.35s ease;
+    cursor: pointer;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(30px);
+    animation: fadeSlideUp 0.6s ease forwards;
+}
+
+.experiment-card:nth-child(1) { animation-delay: 0.1s; }
+.experiment-card:nth-child(2) { animation-delay: 0.2s; }
+.experiment-card:nth-child(3) { animation-delay: 0.3s; }
+.experiment-card:nth-child(4) { animation-delay: 0.4s; }
+
+.experiment-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: var(--shadow-card-hover);
+}
+
+.experiment-card:active {
+    transform: translateY(-2px) scale(0.98);
+}
+
+/* Category border colors */
+.experiment-card.magnetic {
+    border-top-color: var(--color-magnetic);
+}
+
+.experiment-card.heating {
+    border-top-color: var(--color-heating);
+}
+
+.experiment-card.chemical {
+    border-top-color: var(--color-chemical);
+}
+
+/* Category glow on hover */
+.experiment-card.magnetic:hover {
+    box-shadow: 0 8px 30px var(--color-magnetic-glow), var(--shadow-card-hover);
+}
+
+.experiment-card.heating:hover {
+    box-shadow: 0 8px 30px var(--color-heating-glow), var(--shadow-card-hover);
+}
+
+.experiment-card.chemical:hover {
+    box-shadow: 0 8px 30px var(--color-chemical-glow), var(--shadow-card-hover);
+}
+
+/* --- Card Badge --- */
+.card-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    border-radius: var(--radius-pill);
+    padding: 0.3rem 0.8rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-white);
+}
+
+.magnetic .card-badge {
+    background: var(--color-magnetic);
+}
+
+.heating .card-badge {
+    background: var(--color-heating);
+}
+
+.chemical .card-badge {
+    background: var(--color-chemical);
+}
+
+/* --- Card Icon --- */
+.card-icon {
+    font-size: 3.5rem;
+    margin-bottom: 0.8rem;
+    transition: transform 0.4s var(--transition-bounce);
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.experiment-card:hover .card-icon {
+    animation: wiggle 0.5s ease-in-out;
+}
+
+/* --- Card Content --- */
+.experiment-card h3 {
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+    color: var(--color-text);
+}
+
+.experiment-card p {
+    font-size: 0.95rem;
+    color: var(--color-text-light);
+    flex-grow: 1;
+    line-height: 1.6;
+}
+
+/* --- Card CTA --- */
+.card-cta {
+    margin-top: 1.2rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.magnetic .card-cta {
+    color: var(--color-magnetic);
+}
+
+.heating .card-cta {
+    color: var(--color-heating);
+}
+
+.chemical .card-cta {
+    color: var(--color-chemical);
+}
+
+.card-cta .arrow {
+    transition: transform 0.3s ease;
+    display: inline-block;
+}
+
+.experiment-card:hover .card-cta .arrow {
+    transform: translateX(5px);
+}
+
+/* --- Fun Facts Section --- */
+.fun-facts {
+    max-width: 700px;
+    margin: 1rem auto 3rem;
+    padding: 0 2rem;
+    text-align: center;
+}
+
+.fun-facts h2 {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    color: var(--color-header-start);
+    margin-bottom: 1rem;
+}
+
+.fact-card {
+    background: var(--color-white);
+    border-radius: var(--radius-card);
+    padding: 1.5rem 2rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    position: relative;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fact-text {
+    font-size: 1.05rem;
+    color: var(--color-text-light);
+    line-height: 1.6;
+    transition: opacity 0.4s ease;
+}
+
+.fact-icon {
+    font-size: 1.3rem;
+    margin-right: 0.5rem;
+}
+
+/* --- Footer --- */
+.lab-footer {
+    background: linear-gradient(135deg, var(--color-header-start), var(--color-header-end));
+    color: var(--color-white);
+    text-align: center;
+    padding: 1.5rem 2rem;
+    font-size: 0.9rem;
+}
+
+.lab-footer .school-name {
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.lab-footer .teacher-name {
+    opacity: 0.85;
+    margin-top: 0.3rem;
+}
+
+.lab-footer .powered-by {
+    opacity: 0.6;
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+}
+
+/* --- Keyframe Animations --- */
+@keyframes float {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-12px); }
+}
+
+@keyframes wiggle {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-12deg); }
+    50% { transform: rotate(10deg); }
+    75% { transform: rotate(-8deg); }
+}
+
+@keyframes fadeSlideUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* --- Responsive Design --- */
+@media (max-width: 768px) {
+    .lab-header {
+        padding: 2rem 1.5rem;
+    }
+
+    .logo h1 {
+        font-size: 1.8rem;
+    }
+
+    .logo-icon {
+        font-size: 2.2rem;
+    }
+
+    .tagline {
+        font-size: 1rem;
+    }
+
+    .welcome-section h2 {
+        font-size: 1.6rem;
+    }
+
+    .welcome-text {
+        font-size: 1rem;
+    }
+
+    .experiments-grid {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+        padding: 1rem 1.5rem 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .lab-header {
+        padding: 1.5rem 1rem;
+    }
+
+    .logo h1 {
+        font-size: 1.5rem;
+    }
+
+    .logo-icon {
+        font-size: 2rem;
+    }
+
+    .experiments-grid {
+        grid-template-columns: 1fr;
+        gap: 1.2rem;
+        padding: 1rem;
+    }
+
+    .experiment-card {
+        padding: 1.5rem;
+    }
+
+    .card-icon {
+        font-size: 2.8rem;
+    }
+
+    .category-legend {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .fun-facts {
+        padding: 0 1rem;
+    }
+}
+
+/* --- Reduced Motion --- */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    .experiment-card {
+        opacity: 1;
+        transform: none;
+    }
+}
