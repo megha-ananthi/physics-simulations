@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gravitational Force - Types of Forces - Science Lab</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F30D;</text></svg>">
+    <style>
+        /* ===== Shared "Types of Forces" sim-page styles — light, projector-friendly (accent set per page) ===== */
+        :root {
+            --accent: #9575CD;
+            --accent-soft: rgba(149, 117, 205, 0.14);
+            --accent-border: rgba(149, 117, 205, 0.55);
+            --good: #4CAF50;
+            --bad: #E53935;
+            --ink: #2D2D2D;
+            --panel-bg: rgba(255, 255, 255, 0.92);
+            --panel-border: rgba(0, 0, 0, 0.08);
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: #F5F0FF;
+            color: var(--ink);
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+        a { color: inherit; text-decoration: none; }
+
+        .top-bar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.9rem 1.2rem; gap: 0.6rem; flex-wrap: wrap;
+        }
+        .back-btn {
+            background: #fff; border: 1px solid rgba(0,0,0,0.12);
+            color: #444; padding: 0.5rem 1rem; border-radius: 50px;
+            font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem;
+            transition: background 0.3s; cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .back-btn:hover { background: #F0EAFB; }
+        .exp-title {
+            font-family: 'Fredoka One', cursive; font-size: 1.5rem; text-align: center;
+            color: #6B3FA0;
+        }
+        .big-idea {
+            text-align: center; opacity: 0.8; max-width: 720px;
+            margin: 0.2rem auto 0.8rem; padding: 0 1.2rem; font-size: 0.98rem;
+        }
+        .big-idea strong { color: var(--accent); }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; padding: 0 1rem; margin-bottom: 0.9rem; }
+        .tab-btn {
+            background: #fff; border: 1px solid rgba(0,0,0,0.12);
+            color: #444; padding: 0.5rem 1rem; border-radius: 50px;
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.85rem; cursor: pointer;
+            transition: background 0.25s, border-color 0.25s, transform 0.15s;
+        }
+        .tab-btn:hover { transform: translateY(-1px); }
+        .tab-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+        /* Stage */
+        .stage-wrap { position: relative; max-width: 960px; margin: 0 auto; padding: 0 0.8rem; }
+        #sim-canvas {
+            display: block; width: 100%;
+            background: #FBFAFF; border-radius: 16px;
+            border: 1px solid rgba(0,0,0,0.1);
+            box-shadow: 0 4px 18px rgba(0,0,0,0.07);
+            touch-action: none;
+        }
+        .info-display {
+            position: absolute; top: 0.7rem; right: 1.4rem;
+            background: var(--panel-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--panel-border); border-radius: 14px;
+            padding: 0.7rem 0.9rem; font-size: 0.8rem; min-width: 160px;
+            display: none;
+        }
+        .info-display.active { display: block; }
+        .info-row { display: flex; justify-content: space-between; gap: 0.9rem; padding: 0.12rem 0; }
+        .info-label { opacity: 0.6; }
+        .info-val { font-weight: 800; color: var(--accent); }
+
+        /* Panels below stage */
+        .panels { max-width: 960px; margin: 0 auto; padding: 0 0.8rem 2rem; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        .predict-bar {
+            background: var(--accent-soft); border: 1px solid var(--accent-border);
+            border-radius: 14px; padding: 0.85rem 1rem; margin: 0.9rem 0 0.6rem;
+        }
+        .predict-q { font-weight: 800; font-size: 0.95rem; margin-bottom: 0.55rem; }
+        .predict-q .tag {
+            background: var(--accent); color: #fff; border-radius: 50px;
+            font-size: 0.7rem; padding: 0.1rem 0.6rem; margin-right: 0.45rem;
+            text-transform: uppercase; letter-spacing: 0.5px; vertical-align: middle;
+        }
+        .predict-opts { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .predict-opt {
+            background: #fff; border: 1px solid rgba(0,0,0,0.15);
+            color: #333; border-radius: 50px; padding: 0.42rem 0.95rem;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.83rem; cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .predict-opt:hover { background: rgba(0,0,0,0.05); }
+        .predict-opt.chosen { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+        .predict-opt.right { border-color: var(--good); background: rgba(76,175,80,0.14); color: #2E7D32; }
+        .predict-opt.wrong { border-color: var(--bad); background: rgba(229,57,53,0.12); color: #C62828; }
+        .predict-reveal { margin-top: 0.55rem; font-size: 0.88rem; display: none; }
+        .predict-reveal.show { display: block; animation: popIn 0.3s ease; }
+
+        .control-panel {
+            background: var(--panel-bg); border: 1px solid var(--panel-border);
+            border-radius: 18px; padding: 1rem 1.3rem;
+            display: flex; align-items: center; gap: 1.3rem;
+            flex-wrap: wrap; justify-content: center; margin-top: 0.7rem;
+        }
+        .control-group { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+        .control-label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
+        .control-value { font-family: 'Fredoka One', cursive; font-size: 1rem; color: var(--accent); }
+
+        input[type="range"] {
+            -webkit-appearance: none; appearance: none; width: 130px; height: 8px;
+            border-radius: 4px; background: rgba(0,0,0,0.12); outline: none; cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 24px; height: 24px;
+            border-radius: 50%; background: var(--accent); border: 3px solid #fff; cursor: pointer;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 24px; height: 24px; border-radius: 50%;
+            background: var(--accent); border: 3px solid #fff; cursor: pointer;
+        }
+        select {
+            background: #fff; color: #333;
+            border: 1px solid rgba(0,0,0,0.2); border-radius: 10px;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.85rem;
+            padding: 0.4rem 0.6rem; cursor: pointer;
+        }
+        select option { background: #fff; }
+        .action-btn {
+            background: var(--accent); color: #fff; border: none; border-radius: 50px;
+            padding: 0.55rem 1.3rem; font-family: 'Nunito', sans-serif; font-weight: 800;
+            font-size: 0.9rem; cursor: pointer; transition: transform 0.15s, filter 0.2s;
+        }
+        .action-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        .action-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+        .ghost-btn {
+            background: #fff; color: #444;
+            border: 1px solid rgba(0,0,0,0.15); border-radius: 50px;
+            padding: 0.55rem 1.1rem; font-family: 'Nunito', sans-serif; font-weight: 800;
+            font-size: 0.85rem; cursor: pointer; transition: background 0.2s;
+        }
+        .ghost-btn:hover { background: #F3EFFA; }
+        .hint { text-align: center; font-size: 0.8rem; opacity: 0.5; margin-top: 0.5rem; }
+
+        /* Explanation + challenge */
+        .section-card {
+            background: #fff; border: 1px solid rgba(0,0,0,0.06);
+            border-radius: 18px; padding: 1.3rem 1.4rem; margin-top: 1.6rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        }
+        .section-card h2 { font-family: 'Fredoka One', cursive; font-size: 1.25rem; color: var(--accent); margin-bottom: 0.6rem; }
+        .section-card p, .section-card li { font-size: 0.93rem; opacity: 0.88; line-height: 1.65; }
+        .section-card ul { padding-left: 1.3rem; margin: 0.4rem 0; }
+        .callout-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.7rem; }
+        .callout-chip {
+            background: #F6F2FE; border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 50px; padding: 0.35rem 0.85rem; font-size: 0.8rem; font-weight: 700;
+        }
+
+        .quiz-q { margin-top: 1rem; }
+        .quiz-q .q-text { font-weight: 800; font-size: 0.95rem; margin-bottom: 0.5rem; }
+        .quiz-opts { display: flex; flex-direction: column; gap: 0.45rem; }
+        .quiz-opt {
+            text-align: left; background: #FBFAFF;
+            border: 1px solid rgba(0,0,0,0.14); color: #333;
+            border-radius: 12px; padding: 0.55rem 0.9rem;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.88rem; cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .quiz-opt:hover { background: #F1ECFA; }
+        .quiz-opt.right { border-color: var(--good); background: rgba(76,175,80,0.14); }
+        .quiz-opt.wrong { border-color: var(--bad); background: rgba(229,57,53,0.12); }
+        .quiz-explain { display: none; font-size: 0.85rem; margin-top: 0.4rem; color: #2E7D32; }
+        .quiz-explain.show { display: block; animation: popIn 0.3s ease; }
+        .badge-banner {
+            display: none; text-align: center; margin-top: 1.2rem;
+            background: linear-gradient(135deg, #FFF8E1, #FFECB3);
+            border: 1px solid #F0C24B; border-radius: 16px; padding: 1rem;
+        }
+        .badge-banner.show { display: block; animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .badge-banner .big { font-family: 'Fredoka One', cursive; font-size: 1.3rem; color: #B8860B; }
+
+        .page-footer { text-align: center; padding: 1.2rem; font-size: 0.8rem; opacity: 0.5; }
+
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.92); } 100% { opacity: 1; transform: scale(1); } }
+
+        @media (max-width: 600px) {
+            .exp-title { font-size: 1.15rem; }
+            .top-bar { padding: 0.7rem 0.8rem; }
+            .info-display { position: static; display: none; margin: 0.6rem 0 0; width: 100%; }
+            .info-display.active { display: flex; flex-wrap: wrap; gap: 0.1rem 1.2rem; }
+            .info-display .info-row { flex: 1 1 40%; }
+            .control-panel { padding: 0.8rem; gap: 0.9rem; }
+            input[type="range"] { width: 105px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="index.html" class="back-btn">&larr; Types of Forces</a>
+        <div class="exp-title">&#x1F30D; Gravitational Force</div>
+        <a href="../../index.html" class="back-btn">&#x1F3E0; Lab</a>
+    </div>
+    <p class="big-idea">
+        Gravity is a <strong>non-contact force</strong> &mdash; every object with mass <strong>pulls every other object</strong>,
+        without ever touching it. The Earth pulls you, and you pull the Earth right back!
+    </p>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="drop">&#x1F3D7;&#xFE0F; Drop Race</button>
+        <button class="tab-btn" data-tab="mass">&#x1F91D; Two Masses</button>
+        <button class="tab-btn" data-tab="orbit">&#x1F6F0;&#xFE0F; Why Astronauts Float</button>
+    </div>
+
+    <div class="stage-wrap">
+        <canvas id="sim-canvas"></canvas>
+
+        <div class="info-display" id="info-drop">
+            <div class="info-row"><span class="info-label">Gravity g</span><span class="info-val" id="drop-g">9.8 m/s&sup2;</span></div>
+            <div class="info-row"><span class="info-label">Air</span><span class="info-val" id="drop-air-val">ON</span></div>
+            <div class="info-row"><span class="info-label">Time &#x1F170;&#xFE0F;</span><span class="info-val" id="drop-ta">-</span></div>
+            <div class="info-row"><span class="info-label">Time &#x1F171;&#xFE0F;</span><span class="info-val" id="drop-tb">-</span></div>
+            <div class="info-row"><span class="info-label">Streak</span><span class="info-val" id="drop-streak">0</span></div>
+        </div>
+        <div class="info-display" id="info-mass">
+            <div class="info-row"><span class="info-label">Mass A</span><span class="info-val" id="mass-a-val">4 kg</span></div>
+            <div class="info-row"><span class="info-label">Mass B</span><span class="info-val" id="mass-b-val">4 kg</span></div>
+            <div class="info-row"><span class="info-label">Distance</span><span class="info-val" id="mass-d-val">-</span></div>
+            <div class="info-row"><span class="info-label">Force</span><span class="info-val" id="mass-f-val">-</span></div>
+        </div>
+        <div class="info-display" id="info-orbit">
+            <div class="info-row"><span class="info-label">Sideways speed</span><span class="info-val" id="orbit-sp">5.0</span></div>
+            <div class="info-row"><span class="info-label">Altitude</span><span class="info-val" id="orbit-alt">-</span></div>
+            <div class="info-row"><span class="info-label">Status</span><span class="info-val" id="orbit-status">Ready</span></div>
+        </div>
+    </div>
+
+    <div class="panels">
+        <!-- ============ TAB: Drop Race ============ -->
+        <div class="tab-panel active" id="panel-drop">
+            <div class="predict-bar" id="predict-drop"></div>
+            <div class="control-panel">
+                <div class="control-group">
+                    <span class="control-label">Object &#x1F170;&#xFE0F;</span>
+                    <select id="drop-obja">
+                        <option value="hammer" selected>&#x1F528; Hammer</option>
+                        <option value="ball">&#x1F3CF; Cricket ball</option>
+                        <option value="coin">&#x1FA99; Coin</option>
+                        <option value="feather">&#x1FAB6; Feather</option>
+                        <option value="paper">&#x1F4C4; Flat paper</option>
+                        <option value="crumple">&#x1F5DE;&#xFE0F; Crumpled paper</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Object &#x1F171;&#xFE0F;</span>
+                    <select id="drop-objb">
+                        <option value="hammer">&#x1F528; Hammer</option>
+                        <option value="ball">&#x1F3CF; Cricket ball</option>
+                        <option value="coin">&#x1FA99; Coin</option>
+                        <option value="feather" selected>&#x1FAB6; Feather</option>
+                        <option value="paper">&#x1F4C4; Flat paper</option>
+                        <option value="crumple">&#x1F5DE;&#xFE0F; Crumpled paper</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Planet</span>
+                    <select id="drop-planet">
+                        <option value="earth" selected>&#x1F30D; Earth (g = 9.8)</option>
+                        <option value="moon">&#x1F315; Moon (g = 1.62)</option>
+                        <option value="jupiter">&#x1FA90; Jupiter (g = 24.8)</option>
+                    </select>
+                </div>
+                <button class="ghost-btn" id="drop-air">&#x1F32C;&#xFE0F; Air: ON</button>
+                <div class="control-group">
+                    <span class="control-label">Predict: who lands first?</span>
+                    <div style="display: flex; gap: 0.4rem;">
+                        <button class="ghost-btn" id="drop-pa">&#x1F170;&#xFE0F; first</button>
+                        <button class="ghost-btn" id="drop-pb">&#x1F171;&#xFE0F; first</button>
+                        <button class="ghost-btn" id="drop-pt">&#x1F91D; Together</button>
+                    </div>
+                </div>
+                <button class="action-btn" id="drop-go">&#x2B07;&#xFE0F; Drop!</button>
+                <button class="ghost-btn" id="drop-reset">&#x1F504; Reset</button>
+            </div>
+            <p class="hint">Pick two objects and a planet, make your &#x1F170;&#xFE0F;/&#x1F171;&#xFE0F;/&#x1F91D; call, then press Drop! Build the longest streak you can.</p>
+        </div>
+
+        <!-- ============ TAB: Two Masses ============ -->
+        <div class="tab-panel" id="panel-mass">
+            <div class="predict-bar" id="predict-mass"></div>
+            <div class="control-panel">
+                <div class="control-group">
+                    <span class="control-label">Mass A</span>
+                    <span class="control-value" id="mass-a-display">4 kg</span>
+                    <input type="range" id="mass-a" min="1" max="10" value="4" step="1">
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Mass B</span>
+                    <span class="control-value" id="mass-b-display">4 kg</span>
+                    <input type="range" id="mass-b" min="1" max="10" value="4" step="1">
+                </div>
+                <button class="ghost-btn" id="mass-reset">&#x1F504; Reset</button>
+            </div>
+            <p class="hint">Drag the balls closer or further apart with your finger or mouse &mdash; the two pull-arrows always stay twins!</p>
+        </div>
+
+        <!-- ============ TAB: Why Astronauts Float ============ -->
+        <div class="tab-panel" id="panel-orbit">
+            <div class="predict-bar" id="predict-orbit"></div>
+            <div class="control-panel">
+                <div class="control-group">
+                    <span class="control-label">Sideways speed</span>
+                    <span class="control-value" id="orbit-speed-display">5.0</span>
+                    <input type="range" id="orbit-speed" min="0" max="10" value="5" step="0.5">
+                </div>
+                <button class="action-btn" id="orbit-go">&#x1F680; Launch</button>
+                <button class="ghost-btn" id="orbit-reset">&#x1F504; Reset</button>
+            </div>
+            <p class="hint">Too slow &rarr; crash. Too fast &rarr; escape. Find the speed where the satellite falls AROUND the Earth!</p>
+        </div>
+
+        <!-- ============ Explanation ============ -->
+        <div class="section-card">
+            <h2>&#x1F4A1; What did we discover?</h2>
+            <ul>
+                <li>Gravity is a <strong>non-contact force</strong> &mdash; it acts between <strong>ANY two objects with mass</strong>, without touching, even across empty space.</li>
+                <li><strong>More mass = stronger pull. More distance = weaker pull.</strong> That is why you feel the Earth's gravity but not your friend's!</li>
+                <li><strong>Weight = mass &times; g</strong>, and g changes on other worlds &mdash; on the Moon it is about <strong>1/6th of Earth's</strong>, so you would weigh less there.</li>
+                <li>In a vacuum <strong>all objects fall together</strong> &mdash; it is <strong>air resistance, not weight</strong>, that makes feathers and paper drift down slowly.</li>
+                <li><strong>Orbiting = perpetual free fall</strong> &mdash; satellites and astronauts are falling around the Earth all the time, moving sideways so fast they keep missing it.</li>
+            </ul>
+            <div class="callout-chips">
+                <span class="callout-chip">&#x1F680; Chandrayaan orbits the Moon</span>
+                <span class="callout-chip">&#x1F30A; Moon's pull makes ocean tides</span>
+                <span class="callout-chip">&#x1F34E; Newton's falling apple</span>
+                <span class="callout-chip">&#x2696;&#xFE0F; Your mass is the same on the Moon &mdash; your weight is not!</span>
+            </div>
+        </div>
+
+        <!-- ============ Challenge ============ -->
+        <div class="section-card" id="challenge-card">
+            <h2>&#x1F3C6; Gravity Challenge</h2>
+            <p>Answer all three correctly to earn the <strong>Gravity badge</strong>!</p>
+            <div id="challenge-root"></div>
+            <div class="badge-banner" id="badge-banner">
+                <div class="big">&#x1F396;&#xFE0F; Gravity Badge earned!</div>
+                <p>Head back to <a href="index.html" style="text-decoration: underline;">Types of Forces</a> to see your progress.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <footer class="page-footer">Types of Forces &bull; Simplified model for learning &mdash; values are illustrative</footer>
+
+    <script>
+    'use strict';
+
+    // ================= Shared helpers =================
+    const PROGRESS_KEY = 'forces-lab-progress';
+    function setBadge(name) {
+        let p = {};
+        try { p = JSON.parse(localStorage.getItem(PROGRESS_KEY)) || {}; } catch (e) {}
+        p[name] = true;
+        localStorage.setItem(PROGRESS_KEY, JSON.stringify(p));
+    }
+
+    const canvas = document.getElementById('sim-canvas');
+    const ctx = canvas.getContext('2d');
+    const W = 900, H = 560;           // logical drawing space
+    let viewScale = 1;
+
+    function fitCanvas() {
+        const wrap = canvas.parentElement;
+        const w = wrap.clientWidth - 0;
+        const cssW = w;
+        const cssH = Math.round(w * H / W);
+        canvas.style.height = cssH + 'px';
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(cssW * dpr);
+        canvas.height = Math.round(cssH * dpr);
+        viewScale = canvas.width / W;
+    }
+    window.addEventListener('resize', fitCanvas);
+    fitCanvas();
+
+    function ptr(e) {
+        const r = canvas.getBoundingClientRect();
+        return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height };
+    }
+
+    function drawArrow(x1, y1, x2, y2, color, width, label, labelSide) {
+        const dx = x2 - x1, dy = y2 - y1;
+        const len = Math.hypot(dx, dy);
+        if (len < 2) return;
+        const ang = Math.atan2(dy, dx);
+        const head = Math.min(14, 6 + width * 1.4);
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = width;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2 - Math.cos(ang) * head * 0.7, y2 - Math.sin(ang) * head * 0.7);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - Math.cos(ang - 0.45) * head, y2 - Math.sin(ang - 0.45) * head);
+        ctx.lineTo(x2 - Math.cos(ang + 0.45) * head, y2 - Math.sin(ang + 0.45) * head);
+        ctx.closePath();
+        ctx.fill();
+        if (label) {
+            ctx.font = '800 15px Nunito, sans-serif';
+            ctx.textAlign = 'center';
+            const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+            ctx.fillText(label, mx, my + (labelSide === 'below' ? 24 : -12));
+        }
+    }
+
+    function emoji(txt, x, y, size) {
+        ctx.font = size + 'px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(txt, x, y);
+        ctx.textBaseline = 'alphabetic';
+    }
+
+    // Predict-Observe-Explain widget
+    function makePredict(rootId, question, options, correctIdx, revealText) {
+        const root = document.getElementById(rootId);
+        root.innerHTML = '<div class="predict-q"><span class="tag">Predict first!</span>' + question + '</div>' +
+            '<div class="predict-opts"></div><div class="predict-reveal"></div>';
+        const optsEl = root.querySelector('.predict-opts');
+        const revealEl = root.querySelector('.predict-reveal');
+        const btns = options.map((o, i) => {
+            const b = document.createElement('button');
+            b.className = 'predict-opt';
+            b.textContent = o;
+            b.addEventListener('click', () => {
+                if (state.revealed) return;
+                state.chosen = i;
+                btns.forEach(x => x.classList.remove('chosen'));
+                b.classList.add('chosen');
+            });
+            optsEl.appendChild(b);
+            return b;
+        });
+        const state = {
+            chosen: null,
+            revealed: false,
+            reveal() {
+                if (state.revealed) return;
+                state.revealed = true;
+                btns[correctIdx].classList.add('right');
+                let verdict = '';
+                if (state.chosen === null) verdict = '🔍 ';
+                else if (state.chosen === correctIdx) verdict = '🎉 Your prediction was right! ';
+                else { btns[state.chosen].classList.add('wrong'); verdict = '🤯 Surprised? '; }
+                revealEl.innerHTML = verdict + revealText;
+                revealEl.classList.add('show');
+            },
+        };
+        return state;
+    }
+
+    // ================= Physics data =================
+    const OBJECTS = {
+        hammer:  { name: 'Hammer',          emoji: '🔨', m: 5,     cd: 0.8, area: 0.03 },
+        ball:    { name: 'Cricket ball',    emoji: '🏏', m: 0.16,  cd: 0.5, area: 0.004 },
+        coin:    { name: 'Coin',            emoji: '🪙', m: 0.01,  cd: 0.5, area: 0.0005 },
+        feather: { name: 'Feather',         emoji: '🪶', m: 0.005, cd: 1.3, area: 0.02 },
+        paper:   { name: 'Flat paper',      emoji: '📄', m: 0.005, cd: 1.4, area: 0.06 },
+        crumple: { name: 'Crumpled paper',  emoji: '🗞️', m: 0.005, cd: 0.6, area: 0.003 },
+    };
+    const PLANETS = {
+        earth:   { name: 'Earth',   g: 9.8,  emoji: '🌍' },
+        moon:    { name: 'Moon',    g: 1.62, emoji: '🌕' },
+        jupiter: { name: 'Jupiter', g: 24.8, emoji: '🪐' },
+    };
+
+    function clearPredButtons() {
+        ['drop-pa', 'drop-pb', 'drop-pt'].forEach(id => {
+            const b = document.getElementById(id);
+            b.style.borderColor = '';
+            b.style.color = '';
+        });
+    }
+
+    // =====================================================
+    // TAB 1 — Drop Race (free fall, with & without air)
+    // =====================================================
+    const drop = {
+        objA: 'hammer', objB: 'feather', planet: 'earth', air: true,
+        running: false, done: false,
+        A: { h: 45, v: 0, t: 0, landed: false, puff: 0 },
+        B: { h: 45, v: 0, t: 0, landed: false, puff: 0 },
+        prediction: null, result: null, predRight: null,
+        banner: '', predVerdict: '',
+        streak: 0,
+        best: (function () {
+            let b = 0;
+            try { b = parseInt(localStorage.getItem('forces-drop-best'), 10) || 0; } catch (e) {}
+            return b;
+        })(),
+
+        reset() {
+            this.running = false; this.done = false;
+            this.A = { h: 45, v: 0, t: 0, landed: false, puff: 0 };
+            this.B = { h: 45, v: 0, t: 0, landed: false, puff: 0 };
+            this.result = null; this.predRight = null;
+            this.banner = ''; this.predVerdict = '';
+        },
+
+        start() {
+            this.reset();
+            this.running = true;
+        },
+
+        update(dt) {
+            this.A.puff = Math.max(0, this.A.puff - dt);
+            this.B.puff = Math.max(0, this.B.puff - dt);
+            if (!this.running) return;
+            const g = PLANETS[this.planet].g;
+            const rho = this.air ? 1.2 : 0;
+            const step = (body, spec) => {
+                if (body.landed) return;
+                const a = g - 0.5 * rho * spec.cd * spec.area * body.v * body.v / spec.m;
+                body.v += a * dt;                 // semi-implicit Euler
+                body.h -= body.v * dt;
+                body.t += dt;
+                if (body.h <= 0) { body.h = 0; body.landed = true; body.puff = 0.8; }
+            };
+            step(this.A, OBJECTS[this.objA]);
+            step(this.B, OBJECTS[this.objB]);
+
+            if (this.A.landed && this.B.landed) {
+                this.running = false; this.done = true;
+                const diff = this.A.t - this.B.t;
+                this.result = Math.abs(diff) <= 0.15 ? 2 : (diff < 0 ? 0 : 1);
+                const specA = OBJECTS[this.objA], specB = OBJECTS[this.objB];
+                if (this.result === 2) {
+                    this.banner = (!this.air && specA.m !== specB.m)
+                        ? 'They land TOGETHER — heavier does NOT fall faster!'
+                        : '🤝 They land together!';
+                } else if (this.result === 0) {
+                    this.banner = '🅰 ' + specA.name + ' lands first!';
+                } else {
+                    this.banner = '🅱 ' + specB.name + ' lands first!';
+                }
+                if (this.prediction !== null) {
+                    if (this.prediction === this.result) {
+                        this.streak++;
+                        this.predRight = true;
+                        this.predVerdict = '✅ You called it! Streak +1';
+                    } else {
+                        this.streak = 0;
+                        this.predRight = false;
+                        this.predVerdict = '❌ Not this time — streak reset.';
+                    }
+                    if (this.streak > this.best) {
+                        this.best = this.streak;
+                        try { localStorage.setItem('forces-drop-best', String(this.best)); } catch (e) {}
+                    }
+                    this.prediction = null;
+                    clearPredButtons();
+                }
+                if (!this.air && specA.m !== specB.m) predicts.drop.reveal();
+            }
+        },
+
+        draw() {
+            drawBackdrop();
+            const g = PLANETS[this.planet].g;
+            const pInfo = PLANETS[this.planet];
+
+            // altitude scale on the left
+            ctx.fillStyle = 'rgba(0,0,0,0.35)';
+            ctx.font = '700 12px Nunito, sans-serif';
+            ctx.textAlign = 'left';
+            for (let m = 0; m <= 45; m += 15) {
+                const y = 90 + (45 - m) * 8;
+                ctx.fillRect(56, y - 1, 24, 2);
+                ctx.fillText(m + ' m', 88, y + 4);
+            }
+
+            // ground strip
+            ctx.fillStyle = '#E6E1F2';
+            ctx.fillRect(0, 450, W, H - 450);
+            ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(0, 450); ctx.lineTo(W, 450); ctx.stroke();
+
+            // planet indicator (right side)
+            emoji(pInfo.emoji, 800, 250, 54);
+            ctx.fillStyle = 'rgba(0,0,0,0.55)';
+            ctx.font = '800 14px Nunito, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(pInfo.name + '  g = ' + pInfo.g + ' m/s²', 800, 292);
+            if (this.planet === 'moon') {
+                ctx.font = '700 12px Nunito, sans-serif';
+                ctx.fillStyle = 'rgba(0,0,0,0.55)';
+                ctx.fillText('(no air up here — vacuum!)', 800, 312);
+            }
+
+            const lanes = [
+                { x: 300, tag: '🅰', spec: OBJECTS[this.objA], body: this.A },
+                { x: 560, tag: '🅱', spec: OBJECTS[this.objB], body: this.B },
+            ];
+            lanes.forEach(lane => {
+                // release platform
+                ctx.fillStyle = '#9E93C7';
+                ctx.fillRect(lane.x - 58, 62, 116, 10);
+                // name label
+                ctx.fillStyle = '#333';
+                ctx.font = '800 14px Nunito, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(lane.tag + ' ' + lane.spec.name, lane.x, 52);
+                // target
+                emoji('🎯', lane.x, 468, 26);
+                // falling object
+                const y = 90 + (45 - lane.body.h) * 8;
+                emoji(lane.spec.emoji, lane.x, y, 38);
+                // weight arrow (down)
+                const wN = lane.spec.m * g;
+                const wLen = Math.min(16 + 30 * Math.sqrt(wN), 120);
+                drawArrow(lane.x + 48, y, lane.x + 48, y + wLen, '#E67700', 4, null);
+                ctx.fillStyle = '#E67700';
+                ctx.font = '700 12px Nunito, sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText((wN < 0.05 ? wN.toFixed(2) : wN.toFixed(1)) + ' N', lane.x + 58, y + wLen / 2);
+                // drag arrow (up) when air is on and falling
+                if (this.air && !lane.body.landed && lane.body.v > 0.2) {
+                    const dragF = 0.5 * 1.2 * lane.spec.cd * lane.spec.area * lane.body.v * lane.body.v;
+                    const dLen = Math.min(16 + 30 * Math.sqrt(dragF), 120);
+                    drawArrow(lane.x - 48, y, lane.x - 48, y - dLen, '#0288D1', 4, null);
+                    ctx.fillStyle = '#0288D1';
+                    ctx.textAlign = 'right';
+                    ctx.fillText('drag', lane.x - 58, y - dLen / 2);
+                }
+                // timer under lane
+                if (lane.body.t > 0) {
+                    ctx.fillStyle = lane.body.landed ? '#4CAF50' : '#333';
+                    ctx.font = '800 15px Nunito, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('⏱ ' + lane.body.t.toFixed(2) + ' s', lane.x, 502);
+                }
+                // landing puff
+                if (lane.body.puff > 0) {
+                    ctx.globalAlpha = lane.body.puff / 0.8;
+                    emoji('💨', lane.x + 28, 436, 28);
+                    ctx.globalAlpha = 1;
+                }
+            });
+
+            // verdict banner
+            if (this.done && this.banner) {
+                ctx.font = "800 21px 'Fredoka One', cursive";
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#E67700';
+                ctx.fillText(this.banner, W / 2, 34);
+            }
+            if (this.predVerdict) {
+                ctx.font = '800 15px Nunito, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = this.predRight ? '#4CAF50' : '#FF5252';
+                ctx.fillText(this.predVerdict, W / 2, 535);
+            }
+            if (!this.running && !this.done) {
+                ctx.font = "800 18px 'Fredoka One', cursive";
+                ctx.textAlign = 'center';
+                ctx.fillStyle = 'rgba(0,0,0,0.55)';
+                ctx.fillText('Make your prediction, then press Drop!', W / 2, 260);
+            }
+
+            // streak
+            ctx.font = '800 14px Nunito, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#E67700';
+            ctx.fillText('🔥 Streak: ' + this.streak + ' (best ' + this.best + ')', 24, 545);
+
+            // info panel
+            setText('drop-g', g + ' m/s²');
+            setText('drop-air-val', this.air ? 'ON' : 'OFF (vacuum)');
+            setText('drop-ta', this.A.t > 0 ? this.A.t.toFixed(2) + ' s' : '-');
+            setText('drop-tb', this.B.t > 0 ? this.B.t.toFixed(2) + ' s' : '-');
+            setText('drop-streak', this.streak + ' (best ' + this.best + ')');
+        },
+    };
+
+    // =====================================================
+    // TAB 2 — Two Masses (equal & opposite pulls)
+    // =====================================================
+    const mass = {
+        a: { x: 300, y: 280, m: 4 },
+        b: { x: 620, y: 280, m: 4 },
+        dragging: null, interacted: false, obsTimer: 0,
+
+        reset() {
+            this.a.x = 300; this.a.y = 280; this.a.m = 4;
+            this.b.x = 620; this.b.y = 280; this.b.m = 4;
+            this.dragging = null;
+        },
+
+        update(dt) {
+            if (this.interacted) {
+                this.obsTimer += dt;
+                if (this.obsTimer > 2) predicts.mass.reveal();
+            }
+        },
+
+        draw() {
+            drawBackdrop();
+            const dr = Math.hypot(this.b.x - this.a.x, this.b.y - this.a.y);
+            const d = Math.max(dr, 30);                    // clamp — no divide-by-zero
+            const F = 4000 * this.a.m * this.b.m / (d * d);
+            const L = 20 + Math.min(F, 60) * 2.2;
+            const rA = 16 + this.a.m * 2.4;
+            const rB = 16 + this.b.m * 2.4;
+            const ux = dr > 1 ? (this.b.x - this.a.x) / dr : 1;
+            const uy = dr > 1 ? (this.b.y - this.a.y) / dr : 0;
+
+            // top caption
+            ctx.font = '800 15px Nunito, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#333';
+            ctx.fillText("Both arrows are ALWAYS the same size — the pulls are equal! (Newton's third law)", W / 2, 48);
+
+            // dashed line between centres + distance label
+            ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([6, 5]);
+            ctx.beginPath();
+            ctx.moveTo(this.a.x, this.a.y);
+            ctx.lineTo(this.b.x, this.b.y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.font = '700 13px Nunito, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = 'rgba(0,0,0,0.55)';
+            ctx.fillText((d / 50).toFixed(1) + ' distance units apart', (this.a.x + this.b.x) / 2, (this.a.y + this.b.y) / 2 - 14);
+
+            // spheres
+            const drawBall = (p, r, fill, stroke, letter) => {
+                ctx.fillStyle = fill;
+                ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = stroke;
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                ctx.fillStyle = '#12122a';
+                ctx.font = "800 18px 'Fredoka One', cursive";
+                ctx.textAlign = 'center';
+                ctx.fillText(letter, p.x, p.y + 6);
+                ctx.fillStyle = '#333';
+                ctx.font = '800 13px Nunito, sans-serif';
+                ctx.fillText(p.m + ' kg', p.x, p.y + r + 20);
+            };
+            drawBall(this.a, rA, '#FF8A65', '#C75B3A', 'A');
+            drawBall(this.b, rB, '#4FC3F7', '#2A8CBF', 'B');
+
+            // equal & opposite force arrows
+            drawArrow(this.a.x + ux * (rA + 4), this.a.y + uy * (rA + 4),
+                this.a.x + ux * (rA + 4 + L), this.a.y + uy * (rA + 4 + L),
+                '#E67700', 5, F.toFixed(1) + ' units');
+            drawArrow(this.b.x - ux * (rB + 4), this.b.y - uy * (rB + 4),
+                this.b.x - ux * (rB + 4 + L), this.b.y - uy * (rB + 4 + L),
+                '#E67700', 5, F.toFixed(1) + ' units', 'below');
+
+            // bottom caption
+            ctx.font = '700 14px Nunito, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = 'rgba(0,0,0,0.55)';
+            ctx.fillText('Every mass attracts every other mass — even YOU pull the Earth back!', W / 2, H - 24);
+
+            // info panel
+            setText('mass-a-val', this.a.m + ' kg');
+            setText('mass-b-val', this.b.m + ' kg');
+            setText('mass-d-val', (d / 50).toFixed(1) + ' units');
+            setText('mass-f-val', F.toFixed(1) + ' units');
+        },
+    };
+
+    // =====================================================
+    // TAB 3 — Why Astronauts Float (orbit toy)
+    // =====================================================
+    const orbit = {
+        EARTH: { x: 450, y: 320, r: 46 },
+        GM: 533000,      // px^3/s^2 → circular speed ≈ 56 px/s at r = 170
+        TS: 3,           // time scale so an orbit takes seconds, not half a minute
+        speed: 5,
+        x: 450, y: 150, vx: 0, vy: 0,
+        flying: false, crashed: false, escaped: false, orbited: false,
+        swept: 0, lastAng: 0, trail: [], crashX: 0, crashY: 0,
+        msg: 'Set the sideways speed and press Launch!',
+        short: 'Ready',
+
+        reset() {
+            this.x = 450; this.y = 150; this.vx = 0; this.vy = 0;
+            this.flying = false; this.crashed = false; this.escaped = false; this.orbited = false;
+            this.swept = 0; this.trail = [];
+            this.msg = 'Set the sideways speed and press Launch!';
+            this.short = 'Ready';
+        },
+
+        launch() {
+            this.reset();
+            this.vx = this.speed * 10;
+            this.vy = 0;
+            this.flying = true;
+            this.lastAng = Math.atan2(this.y - this.EARTH.y, this.x - this.EARTH.x);
+            this.msg = 'Falling…';
+            this.short = 'Flying';
+        },
+
+        update(dt) {
+            if (!this.flying) return;
+            const steps = 4;
+            const h = dt * this.TS / steps;
+            for (let i = 0; i < steps && this.flying; i++) {
+                let dx = this.x - this.EARTH.x, dy = this.y - this.EARTH.y;
+                let r = Math.max(Math.hypot(dx, dy), 20);   // guard r → 0
+                const acc = -this.GM / (r * r);
+                this.vx += acc * (dx / r) * h;
+                this.vy += acc * (dy / r) * h;
+                this.x += this.vx * h;
+                this.y += this.vy * h;
+                dx = this.x - this.EARTH.x; dy = this.y - this.EARTH.y;
+                const dist = Math.hypot(dx, dy);
+                const ang = Math.atan2(dy, dx);
+                let dAng = ang - this.lastAng;
+                if (dAng > Math.PI) dAng -= Math.PI * 2;
+                if (dAng < -Math.PI) dAng += Math.PI * 2;
+                this.swept += Math.abs(dAng);
+                this.lastAng = ang;
+                if (dist < this.EARTH.r + 10) {
+                    this.flying = false; this.crashed = true;
+                    this.crashX = this.x; this.crashY = this.y;
+                    this.msg = 'Crashed — too slow! Gravity pulled it straight down.';
+                    this.short = 'Crashed 💥';
+                } else if (dist > 640) {
+                    this.flying = false; this.escaped = true;
+                    this.msg = 'Escaped — too fast!';
+                    this.short = 'Escaped 🚀';
+                } else if (!this.orbited && this.swept > Math.PI * 2) {
+                    this.orbited = true;
+                    this.msg = 'ORBIT! 🎉';
+                    this.short = 'ORBIT! 🎉';
+                    predicts.orbit.reveal();
+                }
+            }
+            if (this.flying) {
+                this.trail.push({ x: this.x, y: this.y });
+                if (this.trail.length > 600) this.trail.shift();
+            }
+        },
+
+        draw() {
+            drawBackdrop();
+            // faint space specks
+            ctx.fillStyle = 'rgba(0,0,0,0.12)';
+            for (let i = 0; i < 40; i++) {
+                const sx = (i * 211 + 37) % W;
+                const sy = (i * 137 + 89) % H;
+                ctx.fillRect(sx, sy, 2, 2);
+            }
+            // trail (fading dots)
+            this.trail.forEach((p, i) => {
+                ctx.globalAlpha = 0.08 + 0.45 * (i / this.trail.length);
+                ctx.fillStyle = '#0288D1';
+                ctx.beginPath(); ctx.arc(p.x, p.y, 2.2, 0, Math.PI * 2); ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+            // Earth
+            ctx.fillStyle = '#2E7DD1';
+            ctx.beginPath(); ctx.arc(this.EARTH.x, this.EARTH.y, this.EARTH.r, 0, Math.PI * 2); ctx.fill();
+            emoji('🌍', this.EARTH.x, this.EARTH.y, 78);
+
+            // satellite / crash
+            if (this.crashed) {
+                emoji('💥', this.crashX, this.crashY, 40);
+            } else {
+                emoji('🛰️', this.x, this.y, 26);
+            }
+
+            // gravity arrow toward Earth while in flight
+            if (this.flying) {
+                const dx = this.EARTH.x - this.x, dy = this.EARTH.y - this.y;
+                const r = Math.max(Math.hypot(dx, dy), 1);
+                const len = Math.min(20 + (this.GM / (r * r)) * 3, 110);
+                drawArrow(this.x + dx / r * 16, this.y + dy / r * 16,
+                    this.x + dx / r * (16 + len), this.y + dy / r * (16 + len),
+                    '#E67700', 4, 'gravity');
+            }
+
+            // pre-launch sideways-speed preview
+            if (!this.flying && !this.crashed && !this.escaped && this.speed > 0) {
+                drawArrow(this.x + 20, this.y, this.x + 20 + this.speed * 10, this.y,
+                    '#0288D1', 4, 'sideways push', 'below');
+            }
+
+            // caption while orbiting
+            if (this.orbited && this.flying) {
+                ctx.font = '800 16px Nunito, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#E67700';
+                ctx.fillText('It is FALLING the whole time — but moving sideways so fast it keeps missing the Earth!', W / 2, 42);
+            }
+
+            // status line
+            ctx.font = "800 19px 'Fredoka One', cursive";
+            ctx.textAlign = 'center';
+            if (this.crashed) ctx.fillStyle = '#FF5252';
+            else if (this.escaped) ctx.fillStyle = '#F57C00';
+            else if (this.orbited) ctx.fillStyle = '#4CAF50';
+            else ctx.fillStyle = 'rgba(0,0,0,0.55)';
+            ctx.fillText(this.msg, W / 2, H - 26);
+
+            // info panel
+            const dist = Math.hypot(this.x - this.EARTH.x, this.y - this.EARTH.y);
+            setText('orbit-sp', this.speed.toFixed(1));
+            setText('orbit-alt', (this.crashed ? 0 : Math.max(0, dist - this.EARTH.r)).toFixed(0) + ' km');
+            setText('orbit-status', this.short);
+        },
+    };
+
+    // ================= Shared drawing =================
+    function drawBackdrop() {
+        ctx.fillStyle = '#FBFAFF';
+        ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = 'rgba(0,0,0,0.04)';
+        for (let x = 0; x < W; x += 45) ctx.fillRect(x, 0, 1, H);
+        for (let y = 0; y < H; y += 45) ctx.fillRect(0, y, W, 1);
+    }
+    function setText(id, txt) {
+        const el = document.getElementById(id);
+        if (el && el.textContent !== txt) el.textContent = txt;
+    }
+
+    // ================= Predictions (POE) =================
+    const predicts = {
+        drop: makePredict('predict-drop',
+            'Drop a HAMMER and a FEATHER in a vacuum (no air). Which lands first?',
+            ['The heavy hammer', 'The light feather', 'Both land together'], 2,
+            '<strong>Without air, everything falls at the same rate!</strong> Astronaut David Scott proved this on the Moon with a real hammer and feather. Air resistance — not weight — is what slows the feather on Earth.'),
+        mass: makePredict('predict-mass',
+            'Ball A is much heavier than ball B. Which one feels the stronger gravitational pull?',
+            ['The heavy ball pulls harder, the light one hardly pulls', 'The light ball feels a stronger pull', 'Both feel exactly equal and opposite pulls'], 2,
+            'Gravity is a matched pair: A pulls B exactly as hard as B pulls A. Watch the arrows — they always stay the same length, however you change the masses!'),
+        orbit: makePredict('predict-orbit',
+            'Why do astronauts in the space station float?',
+            ['There is no gravity in space', 'They are falling around Earth all the time', "The station's engines push them up"], 1,
+            'Gravity up there is still about 90% as strong as on the ground! Astronauts float because they and their station are in constant <strong>free fall</strong> around Earth — falling together, always missing.'),
+    };
+
+    // ================= Controls wiring =================
+    const $ = (id) => document.getElementById(id);
+
+    // Tab 1
+    function syncAirButton() {
+        const b = $('drop-air');
+        if (drop.planet === 'moon') {
+            drop.air = false;
+            b.disabled = true;
+            b.style.opacity = '0.4';
+            b.style.cursor = 'default';
+        } else {
+            b.disabled = false;
+            b.style.opacity = '';
+            b.style.cursor = '';
+        }
+        b.textContent = drop.air ? '🌬 Air: ON' : '🚫 Air: OFF (vacuum)';
+    }
+    $('drop-obja').addEventListener('change', e => { drop.objA = e.target.value; drop.reset(); });
+    $('drop-objb').addEventListener('change', e => { drop.objB = e.target.value; drop.reset(); });
+    $('drop-planet').addEventListener('change', e => { drop.planet = e.target.value; syncAirButton(); drop.reset(); });
+    $('drop-air').addEventListener('click', () => { drop.air = !drop.air; syncAirButton(); drop.reset(); });
+    [['drop-pa', 0], ['drop-pb', 1], ['drop-pt', 2]].forEach(([id, idx]) => {
+        $(id).addEventListener('click', () => {
+            drop.prediction = idx;
+            clearPredButtons();
+            $(id).style.borderColor = '#9575CD';
+            $(id).style.color = '#7E57C2';
+        });
+    });
+    $('drop-go').addEventListener('click', () => drop.start());
+    $('drop-reset').addEventListener('click', () => {
+        drop.reset();
+        drop.prediction = null;
+        clearPredButtons();
+    });
+
+    // Tab 2
+    $('mass-a').addEventListener('input', e => {
+        mass.a.m = +e.target.value;
+        $('mass-a-display').textContent = mass.a.m + ' kg';
+        mass.interacted = true;
+    });
+    $('mass-b').addEventListener('input', e => {
+        mass.b.m = +e.target.value;
+        $('mass-b-display').textContent = mass.b.m + ' kg';
+        mass.interacted = true;
+    });
+    $('mass-reset').addEventListener('click', () => {
+        mass.reset();
+        $('mass-a').value = 4;
+        $('mass-b').value = 4;
+        $('mass-a-display').textContent = '4 kg';
+        $('mass-b-display').textContent = '4 kg';
+    });
+
+    // Tab 2 — dragging the spheres
+    canvas.addEventListener('pointerdown', e => {
+        if (active !== 'mass') return;
+        const p = ptr(e);
+        const dA = Math.hypot(p.x - mass.a.x, p.y - mass.a.y);
+        const dB = Math.hypot(p.x - mass.b.x, p.y - mass.b.y);
+        let pick = null;
+        if (dA <= dB) { if (dA < 60) pick = mass.a; }
+        else if (dB < 60) pick = mass.b;
+        if (!pick) return;
+        mass.dragging = pick;
+        mass.interacted = true;
+        canvas.setPointerCapture(e.pointerId);
+        e.preventDefault();
+    });
+    canvas.addEventListener('pointermove', e => {
+        if (active !== 'mass' || !mass.dragging) return;
+        const p = ptr(e);
+        mass.dragging.x = Math.min(780, Math.max(120, p.x));
+        mass.dragging.y = Math.min(420, Math.max(120, p.y));
+    });
+    canvas.addEventListener('pointerup', () => { mass.dragging = null; });
+    canvas.addEventListener('pointercancel', () => { mass.dragging = null; });
+
+    // Tab 3
+    $('orbit-speed').addEventListener('input', e => {
+        orbit.speed = +e.target.value;
+        $('orbit-speed-display').textContent = orbit.speed.toFixed(1);
+    });
+    $('orbit-go').addEventListener('click', () => orbit.launch());
+    $('orbit-reset').addEventListener('click', () => orbit.reset());
+
+    syncAirButton();
+
+    // ================= Tabs =================
+    const sims = { drop, mass, orbit };
+    let active = 'drop';
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            active = btn.dataset.tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + active));
+            document.querySelectorAll('.info-display').forEach(i => i.classList.toggle('active', i.id === 'info-' + active));
+        });
+    });
+    document.getElementById('info-drop').classList.add('active');
+
+    // ================= Challenge quiz =================
+    function buildChallenge(rootId, questions, badgeName, bannerId) {
+        const root = document.getElementById(rootId);
+        const solved = new Set();
+        questions.forEach((q, qi) => {
+            const qEl = document.createElement('div');
+            qEl.className = 'quiz-q';
+            qEl.innerHTML = '<div class="q-text">' + (qi + 1) + '. ' + q.q + '</div>';
+            const opts = document.createElement('div');
+            opts.className = 'quiz-opts';
+            const explain = document.createElement('div');
+            explain.className = 'quiz-explain';
+            q.opts.forEach((o, oi) => {
+                const b = document.createElement('button');
+                b.className = 'quiz-opt';
+                b.textContent = o;
+                b.addEventListener('click', () => {
+                    if (solved.has(qi)) return;
+                    if (oi === q.correct) {
+                        b.classList.add('right');
+                        explain.textContent = '✅ ' + q.explain;
+                        explain.classList.add('show');
+                        solved.add(qi);
+                        if (solved.size === questions.length) {
+                            setBadge(badgeName);
+                            document.getElementById(bannerId).classList.add('show');
+                        }
+                    } else {
+                        b.classList.add('wrong');
+                        setTimeout(() => b.classList.remove('wrong'), 900);
+                    }
+                });
+                opts.appendChild(b);
+            });
+            qEl.appendChild(opts);
+            qEl.appendChild(explain);
+            root.appendChild(qEl);
+        });
+    }
+
+    buildChallenge('challenge-root', [
+        {
+            q: 'In a vacuum tube, a hammer and a feather are released together. What happens?',
+            opts: ['The hammer lands first', 'The feather lands first', 'They land at exactly the same time'],
+            correct: 2,
+            explain: 'With no air resistance, ALL objects fall at the same rate — mass does not matter.',
+        },
+        {
+            q: 'Astronauts float inside the space station because…',
+            opts: ['There is no gravity in space', 'They and the station are falling around Earth together', 'They wear special anti-gravity suits'],
+            correct: 1,
+            explain: 'Gravity there is nearly as strong as on the ground — floating is free fall, not zero gravity.',
+        },
+        {
+            q: 'Gravitational force acts…',
+            opts: ['Only between the Earth and objects', 'Only on very heavy objects', 'Between ANY two objects that have mass'],
+            correct: 2,
+            explain: 'Every mass pulls every other mass — the force is just too tiny to notice unless one object is huge, like a planet.',
+        },
+    ], 'gravity', 'badge-banner');
+
+    // ================= Main loop =================
+    let last = performance.now();
+    function frame(now) {
+        const dt = Math.min((now - last) / 1000, 0.033);
+        last = now;
+        const sim = sims[active];
+        sim.update(dt);
+        ctx.setTransform(viewScale, 0, 0, viewScale, 0, 0);
+        sim.draw();
+        requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+    </script>
+</body>
+</html>

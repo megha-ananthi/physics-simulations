@@ -1,8 +1,8 @@
 # Physics Simulations Lab
 
-Interactive 3D physics simulations demonstrating the **Magnetic**, **Heating**, and **Chemical** effects of electric current. Built for students to explore and learn through hands-on experimentation in their browser.
+Interactive physics simulations demonstrating the **Magnetic**, **Heating**, and **Chemical** effects of electric current, plus a **Types of Forces** module. Built for students to explore and learn through hands-on experimentation in their browser.
 
-**Presented by Megha Ananthi B** — Science Teacher (Physics), Sri Krish International School (CBSE)
+**A personal portfolio project by Megha Ananthi B**
 
 **Live Site**: [megha-ananthi.github.io/physics-simulations](https://megha-ananthi.github.io/physics-simulations/)
 
@@ -16,11 +16,30 @@ Interactive 3D physics simulations demonstrating the **Magnetic**, **Heating**, 
 | 2 | **Iron Nail Electromagnet** | Magnetic | Control voltage and coil turns to pick up paper clips with an electromagnet |
 | 3 | **Nichrome Wire Heater** | Heating | Watch a wire glow red-hot with adjustable voltage and a thermal camera toggle |
 | 4 | **Lemon Battery** | Chemical | Connect lemons in series to generate enough voltage to light an LED |
+| 5 | **Voltaic Cell** | Chemical | Choose electrode metals and watch reactivity difference create electricity to light a bulb |
+
+## Types of Forces Module
+
+A second mini-lab covering **friction, gravitational, magnetic and electrostatic forces**. Its hub opens with a
+"Sort the Force" contact vs non-contact drag-and-drop game, and each simulation follows a
+**predict → try → observe → explain** loop with a 3-question challenge and collectible badges (stored in
+`localStorage`).
+
+| Sim | Force | What you do |
+|-----|-------|-------------|
+| **Friction** (4 mini-sims) | Contact | Pull a block past the static-friction breakaway point, race sliding vs rolling crates, drop a parachute to terminal velocity, and zoom into surface bumps |
+| **Gravitational** (3 mini-sims) | Non-contact | Race a hammer vs a feather in air/vacuum on Earth, Moon or Jupiter; drag two masses to see equal-and-opposite pulls; launch a satellite to learn why astronauts float |
+| **Magnetic** (2 mini-sims) | Non-contact | Drag a bar magnet over 8 objects (only iron/steel/nickel respond!), toggle field lines, and push two magnets' like/unlike poles together |
+| **Electrostatic** | Non-contact | Rub a balloon on a sweater, then lift neutral paper bits, bend a water stream, stick it to a wall, or repel a second balloon — with a humidity slider |
+
+Unlike the 3D electricity experiments, the forces sims are lightweight **2D Canvas** pages (no Three.js) so they run
+smoothly on low-end devices, and they use a **light theme** so they stay readable on classroom projectors.
 
 ## Tech Stack
 
 - **HTML5 / CSS3 / Vanilla JavaScript** — no build tools, no frameworks
-- **Three.js** (v0.164.1 via CDN) — 3D rendering with WebGL
+- **Three.js** (v0.164.1 via CDN) — 3D rendering with WebGL (electricity experiments)
+- **Canvas 2D** — dependency-free rendering for the Types of Forces module
 - **OrbitControls** — click-drag to rotate, scroll to zoom, pinch on mobile
 - **Google Fonts** — Fredoka One (headings) + Nunito (body)
 - **GitHub Pages** — static hosting, always live
@@ -38,7 +57,14 @@ physics-simulations/
 │   ├── oersted.html              # Experiment 1: Oersted's Compass
 │   ├── electromagnet.html        # Experiment 2: Iron Nail Electromagnet
 │   ├── heating.html              # Experiment 3: Nichrome Wire Heater
-│   └── lemon-battery.html        # Experiment 4: Lemon Battery
+│   ├── lemon-battery.html        # Experiment 4: Lemon Battery
+│   ├── voltaic-cell.html         # Experiment 5: Voltaic Cell
+│   └── forces/                   # Types of Forces module (2D Canvas, light theme)
+│       ├── index.html            # Module hub + "Sort the Force" game
+│       ├── friction.html         # Static/sliding/rolling/fluid friction (4 tabs)
+│       ├── gravity.html          # Drop race, two-mass attraction, orbits (3 tabs)
+│       ├── magnetic.html         # Magnet playground + two magnets (2 tabs)
+│       └── electrostatic.html    # Charge-the-balloon sandbox
 ├── CLAUDE.md                     # AI agent context file
 └── README.md                     # This file
 ```
@@ -87,4 +113,4 @@ Requires a modern browser with WebGL and ES Module support:
 
 ## License
 
-This project is for educational purposes at Sri Krish International School (CBSE).
+This is a personal educational portfolio project by Megha Ananthi B.
