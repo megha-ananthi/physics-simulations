@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electrostatic Force - Types of Forces - Science Lab</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F388;</text></svg>">
+    <style>
+        /* ===== Shared "Types of Forces" sim-page styles — light, projector-friendly (accent set per page) ===== */
+        :root {
+            --accent: #E8A000;
+            --accent-soft: rgba(232, 160, 0, 0.14);
+            --accent-border: rgba(232, 160, 0, 0.55);
+            --good: #4CAF50;
+            --bad: #E53935;
+            --ink: #2D2D2D;
+            --panel-bg: rgba(255, 255, 255, 0.92);
+            --panel-border: rgba(0, 0, 0, 0.08);
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: #F5F0FF;
+            color: var(--ink);
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+        a { color: inherit; text-decoration: none; }
+
+        .top-bar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.9rem 1.2rem; gap: 0.6rem; flex-wrap: wrap;
+        }
+        .back-btn {
+            background: #fff; border: 1px solid rgba(0,0,0,0.12);
+            color: #444; padding: 0.5rem 1rem; border-radius: 50px;
+            font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem;
+            transition: background 0.3s; cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .back-btn:hover { background: #F0EAFB; }
+        .exp-title {
+            font-family: 'Fredoka One', cursive; font-size: 1.5rem; text-align: center;
+            color: #6B3FA0;
+        }
+        .big-idea {
+            text-align: center; opacity: 0.8; max-width: 720px;
+            margin: 0.2rem auto 0.8rem; padding: 0 1.2rem; font-size: 0.98rem;
+        }
+        .big-idea strong { color: var(--accent); }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; padding: 0 1rem; margin-bottom: 0.9rem; }
+        .tab-btn {
+            background: #fff; border: 1px solid rgba(0,0,0,0.12);
+            color: #444; padding: 0.5rem 1rem; border-radius: 50px;
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.85rem; cursor: pointer;
+            transition: background 0.25s, border-color 0.25s, transform 0.15s;
+        }
+        .tab-btn:hover { transform: translateY(-1px); }
+        .tab-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+        /* Stage */
+        .stage-wrap { position: relative; max-width: 960px; margin: 0 auto; padding: 0 0.8rem; }
+        #sim-canvas {
+            display: block; width: 100%;
+            background: #FBFAFF; border-radius: 16px;
+            border: 1px solid rgba(0,0,0,0.1);
+            box-shadow: 0 4px 18px rgba(0,0,0,0.07);
+            touch-action: none;
+        }
+        .info-display {
+            position: absolute; top: 0.7rem; right: 1.4rem;
+            background: var(--panel-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--panel-border); border-radius: 14px;
+            padding: 0.7rem 0.9rem; font-size: 0.8rem; min-width: 160px;
+            display: none;
+        }
+        .info-display.active { display: block; }
+        .info-row { display: flex; justify-content: space-between; gap: 0.9rem; padding: 0.12rem 0; }
+        .info-label { opacity: 0.6; }
+        .info-val { font-weight: 800; color: var(--accent); }
+
+        /* Panels below stage */
+        .panels { max-width: 960px; margin: 0 auto; padding: 0 0.8rem 2rem; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        .predict-bar {
+            background: var(--accent-soft); border: 1px solid var(--accent-border);
+            border-radius: 14px; padding: 0.85rem 1rem; margin: 0.9rem 0 0.6rem;
+        }
+        .predict-q { font-weight: 800; font-size: 0.95rem; margin-bottom: 0.55rem; }
+        .predict-q .tag {
+            background: var(--accent); color: #fff; border-radius: 50px;
+            font-size: 0.7rem; padding: 0.1rem 0.6rem; margin-right: 0.45rem;
+            text-transform: uppercase; letter-spacing: 0.5px; vertical-align: middle;
+        }
+        .predict-opts { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .predict-opt {
+            background: #fff; border: 1px solid rgba(0,0,0,0.15);
+            color: #333; border-radius: 50px; padding: 0.42rem 0.95rem;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.83rem; cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .predict-opt:hover { background: rgba(0,0,0,0.05); }
+        .predict-opt.chosen { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+        .predict-opt.right { border-color: var(--good); background: rgba(76,175,80,0.14); color: #2E7D32; }
+        .predict-opt.wrong { border-color: var(--bad); background: rgba(229,57,53,0.12); color: #C62828; }
+        .predict-reveal { margin-top: 0.55rem; font-size: 0.88rem; display: none; }
+        .predict-reveal.show { display: block; animation: popIn 0.3s ease; }
+
+        .control-panel {
+            background: var(--panel-bg); border: 1px solid var(--panel-border);
+            border-radius: 18px; padding: 1rem 1.3rem;
+            display: flex; align-items: center; gap: 1.3rem;
+            flex-wrap: wrap; justify-content: center; margin-top: 0.7rem;
+        }
+        .control-group { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+        .control-label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
+        .control-value { font-family: 'Fredoka One', cursive; font-size: 1rem; color: var(--accent); }
+
+        input[type="range"] {
+            -webkit-appearance: none; appearance: none; width: 130px; height: 8px;
+            border-radius: 4px; background: rgba(0,0,0,0.12); outline: none; cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 24px; height: 24px;
+            border-radius: 50%; background: var(--accent); border: 3px solid #fff; cursor: pointer;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 24px; height: 24px; border-radius: 50%;
+            background: var(--accent); border: 3px solid #fff; cursor: pointer;
+        }
+        select {
+            background: #fff; color: #333;
+            border: 1px solid rgba(0,0,0,0.2); border-radius: 10px;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.85rem;
+            padding: 0.4rem 0.6rem; cursor: pointer;
+        }
+        select option { background: #fff; }
+        .action-btn {
+            background: var(--accent); color: #fff; border: none; border-radius: 50px;
+            padding: 0.55rem 1.3rem; font-family: 'Nunito', sans-serif; font-weight: 800;
+            font-size: 0.9rem; cursor: pointer; transition: transform 0.15s, filter 0.2s;
+        }
+        .action-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        .action-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+        .ghost-btn {
+            background: #fff; color: #444;
+            border: 1px solid rgba(0,0,0,0.15); border-radius: 50px;
+            padding: 0.55rem 1.1rem; font-family: 'Nunito', sans-serif; font-weight: 800;
+            font-size: 0.85rem; cursor: pointer; transition: background 0.2s;
+        }
+        .ghost-btn:hover { background: #F3EFFA; }
+        .hint { text-align: center; font-size: 0.8rem; opacity: 0.5; margin-top: 0.5rem; }
+
+        /* Explanation + challenge */
+        .section-card {
+            background: #fff; border: 1px solid rgba(0,0,0,0.06);
+            border-radius: 18px; padding: 1.3rem 1.4rem; margin-top: 1.6rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        }
+        .section-card h2 { font-family: 'Fredoka One', cursive; font-size: 1.25rem; color: var(--accent); margin-bottom: 0.6rem; }
+        .section-card p, .section-card li { font-size: 0.93rem; opacity: 0.88; line-height: 1.65; }
+        .section-card ul { padding-left: 1.3rem; margin: 0.4rem 0; }
+        .callout-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.7rem; }
+        .callout-chip {
+            background: #F6F2FE; border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 50px; padding: 0.35rem 0.85rem; font-size: 0.8rem; font-weight: 700;
+        }
+
+        .quiz-q { margin-top: 1rem; }
+        .quiz-q .q-text { font-weight: 800; font-size: 0.95rem; margin-bottom: 0.5rem; }
+        .quiz-opts { display: flex; flex-direction: column; gap: 0.45rem; }
+        .quiz-opt {
+            text-align: left; background: #FBFAFF;
+            border: 1px solid rgba(0,0,0,0.14); color: #333;
+            border-radius: 12px; padding: 0.55rem 0.9rem;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.88rem; cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .quiz-opt:hover { background: #F1ECFA; }
+        .quiz-opt.right { border-color: var(--good); background: rgba(76,175,80,0.14); }
+        .quiz-opt.wrong { border-color: var(--bad); background: rgba(229,57,53,0.12); }
+        .quiz-explain { display: none; font-size: 0.85rem; margin-top: 0.4rem; color: #2E7D32; }
+        .quiz-explain.show { display: block; animation: popIn 0.3s ease; }
+        .badge-banner {
+            display: none; text-align: center; margin-top: 1.2rem;
+            background: linear-gradient(135deg, #FFF8E1, #FFECB3);
+            border: 1px solid #F0C24B; border-radius: 16px; padding: 1rem;
+        }
+        .badge-banner.show { display: block; animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .badge-banner .big { font-family: 'Fredoka One', cursive; font-size: 1.3rem; color: #B8860B; }
+
+        .page-footer { text-align: center; padding: 1.2rem; font-size: 0.8rem; opacity: 0.5; }
+
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.92); } 100% { opacity: 1; transform: scale(1); } }
+
+        @media (max-width: 600px) {
+            .exp-title { font-size: 1.15rem; }
+            .top-bar { padding: 0.7rem 0.8rem; }
+            .info-display { position: static; display: none; margin: 0.6rem 0 0; width: 100%; }
+            .info-display.active { display: flex; flex-wrap: wrap; gap: 0.1rem 1.2rem; }
+            .info-display .info-row { flex: 1 1 40%; }
+            .control-panel { padding: 0.8rem; gap: 0.9rem; }
+            input[type="range"] { width: 105px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="index.html" class="back-btn">&larr; Types of Forces</a>
+        <div class="exp-title">&#x1F388; Electrostatic Force</div>
+        <a href="../../index.html" class="back-btn">&#x1F3E0; Lab</a>
+    </div>
+    <p class="big-idea">
+        Rub a balloon and it gains an <strong>electric charge</strong> &mdash; a <strong>non-contact force</strong>
+        that can pull paper, bend water and push another balloon!
+    </p>
+
+    <div class="stage-wrap">
+        <canvas id="sim-canvas"></canvas>
+
+        <div class="info-display active" id="info-main">
+            <div class="info-row"><span class="info-label">Charge</span><span class="info-val" id="es-charge">0</span></div>
+            <div class="info-row"><span class="info-label">Day</span><span class="info-val" id="es-day">DRY</span></div>
+            <div class="info-row"><span class="info-label">Force</span><span class="info-val" id="es-force">NONE</span></div>
+            <div class="info-row"><span class="info-label">Paper stuck</span><span class="info-val" id="es-paper">0 / 8</span></div>
+        </div>
+    </div>
+
+    <div class="panels">
+        <div class="tab-panel active" id="panel-main">
+            <div class="predict-bar" id="predict-main"></div>
+            <div class="control-panel">
+                <div class="control-group">
+                    <span class="control-label">Bring near</span>
+                    <select id="es-target">
+                        <option value="paper" selected>&#x1F4C4; Paper bits</option>
+                        <option value="wall">&#x1F9F1; Wall</option>
+                        <option value="water">&#x1F6B0; Water stream</option>
+                        <option value="balloon2">&#x1F388; Another balloon</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Humidity</span>
+                    <span class="control-value" id="es-humidity-display">20% (dry day)</span>
+                    <input type="range" id="es-humidity" min="0" max="100" value="20" step="1">
+                </div>
+                <button class="ghost-btn" id="es-discharge">&#x26A1; Discharge</button>
+                <button class="ghost-btn" id="es-reset">&#x1F504; Reset</button>
+            </div>
+            <p class="hint">Drag the balloon onto the sweater and rub it side to side &mdash; then bring it near the target!</p>
+        </div>
+
+        <!-- ============ Explanation ============ -->
+        <div class="section-card">
+            <h2>&#x1F4A1; What did we discover?</h2>
+            <ul>
+                <li><strong>Rubbing transfers charge</strong> &mdash; electrons move from the sweater onto the balloon. Charge is <strong>transferred, never created</strong>: the sweater's + marks always match the balloon's &minus; marks.</li>
+                <li><strong>Like charges repel, unlike charges attract</strong> &mdash; two balloons rubbed on the same sweater push each other away.</li>
+                <li>A charged object attracts even <strong>NEUTRAL</strong> objects &mdash; it shifts the charges inside them (<strong>induction</strong>): paper bits jump up, a wall holds the balloon and a water stream bends.</li>
+                <li>Electrostatic force is a <strong>non-contact force</strong> &mdash; it acts at a distance, no touching needed.</li>
+                <li><strong>Dry air keeps the charge, humid air leaks it away</strong> &mdash; that is why static tricks work best in dry weather.</li>
+            </ul>
+            <div class="callout-chips">
+                <span class="callout-chip">&#x26A1; Lightning is a giant spark</span>
+                <span class="callout-chip">&#x1F487; Hair stands up after combing</span>
+                <span class="callout-chip">&#x1F3ED; Smoke precipitators clean factory chimneys</span>
+                <span class="callout-chip">&#x1F6AA; Winter door-handle zap!</span>
+                <span class="callout-chip">&#x1F388; Balloon-on-the-wall party trick</span>
+            </div>
+        </div>
+
+        <!-- ============ Challenge ============ -->
+        <div class="section-card" id="challenge-card">
+            <h2>&#x1F3C6; Electrostatic Challenge</h2>
+            <p>Answer all three correctly to earn the <strong>Electrostatic badge</strong>!</p>
+            <div id="challenge-root"></div>
+            <div class="badge-banner" id="badge-banner">
+                <div class="big">&#x1F396;&#xFE0F; Electrostatic Badge earned!</div>
+                <p>Head back to <a href="index.html" style="text-decoration: underline;">Types of Forces</a> to see your progress.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="page-footer">Types of Forces &bull; Simplified model for learning &mdash; values are illustrative</footer>
+
+    <script>
+    'use strict';
+
+    // ================= Shared helpers =================
+    const PROGRESS_KEY = 'forces-lab-progress';
+    function setBadge(name) {
+        let p = {};
+        try { p = JSON.parse(localStorage.getItem(PROGRESS_KEY)) || {}; } catch (e) {}
+        p[name] = true;
+        localStorage.setItem(PROGRESS_KEY, JSON.stringify(p));
+    }
+
+    const canvas = document.getElementById('sim-canvas');
+    const ctx = canvas.getContext('2d');
+    const W = 900, H = 560;           // logical drawing space
+    let viewScale = 1;
+
+    function fitCanvas() {
+        const wrap = canvas.parentElement;
+        const w = wrap.clientWidth - 0;
+        const cssW = w;
+        const cssH = Math.round(w * H / W);
+        canvas.style.height = cssH + 'px';
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(cssW * dpr);
+        canvas.height = Math.round(cssH * dpr);
+        viewScale = canvas.width / W;
+    }
+    window.addEventListener('resize', fitCanvas);
+    fitCanvas();
+
+    function ptr(e) {
+        const r = canvas.getBoundingClientRect();
+        return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height };
+    }
+
+    function drawArrow(x1, y1, x2, y2, color, width, label, labelSide) {
+        const dx = x2 - x1, dy = y2 - y1;
+        const len = Math.hypot(dx, dy);
+        if (len < 2) return;
+        const ang = Math.atan2(dy, dx);
+        const head = Math.min(14, 6 + width * 1.4);
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = width;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2 - Math.cos(ang) * head * 0.7, y2 - Math.sin(ang) * head * 0.7);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - Math.cos(ang - 0.45) * head, y2 - Math.sin(ang - 0.45) * head);
+        ctx.lineTo(x2 - Math.cos(ang + 0.45) * head, y2 - Math.sin(ang + 0.45) * head);
+        ctx.closePath();
+        ctx.fill();
+        if (label) {
+            ctx.font = '800 15px Nunito, sans-serif';
+            ctx.textAlign = 'center';
+            const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+            ctx.fillText(label, mx, my + (labelSide === 'below' ? 24 : -12));
+        }
+    }
+
+    function emoji(txt, x, y, size) {
+        ctx.font = size + 'px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(txt, x, y);
+        ctx.textBaseline = 'alphabetic';
+    }
+
+    // Predict-Observe-Explain widget
+    function makePredict(rootId, question, options, correctIdx, revealText) {
+        const root = document.getElementById(rootId);
+        root.innerHTML = '<div class="predict-q"><span class="tag">Predict first!</span>' + question + '</div>' +
+            '<div class="predict-opts"></div><div class="predict-reveal"></div>';
+        const optsEl = root.querySelector('.predict-opts');
+        const revealEl = root.querySelector('.predict-reveal');
+        const btns = options.map((o, i) => {
+            const b = document.createElement('button');
+            b.className = 'predict-opt';
+            b.textContent = o;
+            b.addEventListener('click', () => {
+                if (state.revealed) return;
+                state.chosen = i;
+                btns.forEach(x => x.classList.remove('chosen'));
+                b.classList.add('chosen');
+            });
+            optsEl.appendChild(b);
+            return b;
+        });
+        const state = {
+            chosen: null,
+            revealed: false,
+            reveal() {
+                if (state.revealed) return;
+                state.revealed = true;
+                btns[correctIdx].classList.add('right');
+                let verdict = '';
+                if (state.chosen === null) verdict = '🔍 ';
+                else if (state.chosen === correctIdx) verdict = '🎉 Your prediction was right! ';
+                else { btns[state.chosen].classList.add('wrong'); verdict = '🤯 Surprised? '; }
+                revealEl.innerHTML = verdict + revealText;
+                revealEl.classList.add('show');
+            },
+        };
+        return state;
+    }
+
+    // ================= Shared drawing =================
+    function drawBackdrop() {
+        ctx.fillStyle = '#FBFAFF';
+        ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = 'rgba(0,0,0,0.04)';
+        for (let x = 0; x < W; x += 45) ctx.fillRect(x, 0, 1, H);
+        for (let y = 0; y < H; y += 45) ctx.fillRect(0, y, W, 1);
+    }
+    function setText(id, txt) {
+        const el = document.getElementById(id);
+        if (el && el.textContent !== txt) el.textContent = txt;
+    }
+
+    // ================= Stable pseudo-random decorations =================
+    function seededRand(seed) {
+        let s = seed >>> 0;
+        return function () {
+            s = (s * 1664525 + 1013904223) >>> 0;
+            return s / 4294967296;
+        };
+    }
+    const rng = seededRand(20260719);
+
+    const SWEATER = { x: 40, y: 150, w: 170, h: 280 };
+
+    // "+" spots on the sweater (max needed = floor(100/12) = 8)
+    const sweaterSpots = [];
+    for (let i = 0; i < 9; i++) {
+        sweaterSpots.push({
+            x: SWEATER.x + 22 + rng() * (SWEATER.w - 44),
+            y: SWEATER.y + 28 + rng() * (SWEATER.h - 50),
+        });
+    }
+    // "−" offsets inside the balloon ellipse (rx 44, ry 54)
+    const balloonSpots = [];
+    for (let i = 0; i < 9; i++) {
+        const a = rng() * Math.PI * 2;
+        const r = 0.25 + 0.65 * Math.sqrt(rng());
+        balloonSpots.push({ x: Math.cos(a) * r * 34, y: Math.sin(a) * r * 42 });
+    }
+    // induced "+" vertical offsets on the wall, clustered around the balloon's y
+    const WALL_DYS = [-70, -45, -22, 0, 22, 45, 70, -95];
+
+    // 8 paper bits with stable homes, rotations and stick angles
+    const paperBits = [];
+    for (let i = 0; i < 8; i++) {
+        paperBits.push({
+            hx: 636 + i * 28 + (rng() - 0.5) * 10,
+            hy: 424,
+            rot: (rng() - 0.5) * 0.55,
+            stuckAngle: rng() * Math.PI * 2,
+            x: 0, y: 0, vx: 0, vy: 0, stuck: false,
+        });
+    }
+    paperBits.forEach(b => { b.x = b.hx; b.y = b.hy; });
+
+    function rr(x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.arcTo(x + w, y, x + w, y + h, r);
+        ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r);
+        ctx.arcTo(x, y, x + w, y, r);
+        ctx.closePath();
+    }
+
+    function drawBalloonShape(x, y, color, count, knotDir) {
+        // wavy string (only for the hand-held balloon, knot below)
+        if (knotDir === 1) {
+            ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x, y + 64);
+            ctx.quadraticCurveTo(x + 11, y + 80, x, y + 96);
+            ctx.quadraticCurveTo(x - 11, y + 112, x, y + 128);
+            ctx.stroke();
+        }
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.ellipse(x, y, 44, 54, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // highlight
+        ctx.fillStyle = 'rgba(255,255,255,0.30)';
+        ctx.beginPath();
+        ctx.ellipse(x - 14, y - 20, 11, 17, -0.4, 0, Math.PI * 2);
+        ctx.fill();
+        // knot triangle
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(x - 8, y + 52 * knotDir);
+        ctx.lineTo(x + 8, y + 52 * knotDir);
+        ctx.lineTo(x, y + 64 * knotDir);
+        ctx.closePath();
+        ctx.fill();
+        // "−" charge symbols
+        ctx.fillStyle = '#01579B';
+        ctx.font = '900 18px Nunito, sans-serif';
+        ctx.textAlign = 'center';
+        for (let i = 0; i < count && i < balloonSpots.length; i++) {
+            ctx.fillText('−', x + balloonSpots[i].x, y + balloonSpots[i].y + 6);
+        }
+    }
+
+    // =====================================================
+    // THE SIM — rub a balloon, bring it near four targets
+    // =====================================================
+    const es = {
+        balloon: { x: 430, y: 270 },
+        home: { x: 430, y: 270 },
+        charge: 0,
+        humidity: 20,
+        target: 'paper',
+        // dragging
+        dragging: false, grabDX: 0, grabDY: 0, lastPX: 0,
+        rubFlash: 0,
+        // wall state
+        wallStuck: false, wallFalling: false, wallFell: false, fallV: 0,
+        // water state
+        drops: [], dropTimer: 0, poolX: 750,
+        // second balloon (pendulum), fixed charge −60
+        theta: 0, omega: 0, b2F: 0,
+        bits: paperBits,
+
+        resetBits() {
+            for (const b of this.bits) {
+                b.x = b.hx; b.y = b.hy; b.vx = 0; b.vy = 0; b.stuck = false;
+            }
+        },
+
+        setTarget(v) {
+            this.target = v;
+            this.resetBits();
+            this.drops = []; this.dropTimer = 0; this.poolX = 750;
+            this.wallStuck = false; this.wallFalling = false; this.wallFell = false;
+        },
+
+        reset() {
+            this.charge = 0;
+            this.balloon.x = this.home.x; this.balloon.y = this.home.y;
+            this.resetBits();
+            this.theta = 0; this.omega = 0; this.b2F = 0;
+            this.drops = []; this.dropTimer = 0; this.poolX = 750;
+            this.wallStuck = false; this.wallFalling = false; this.wallFell = false;
+            this.rubFlash = 0;
+        },
+
+        update(dt) {
+            // humid air leaks the charge away
+            // slow leak on a dry day, fast leak on a humid one (quadratic so the slider has bite at the top)
+            const hum = this.humidity / 100;
+            this.charge -= this.charge * (0.0002 + hum * hum * 0.012) * dt * 60;
+            if (this.charge < 0.05) this.charge = 0;
+            if (this.rubFlash > 0) this.rubFlash -= dt;
+
+            if (this.target === 'wall') {
+                if (this.wallStuck) {
+                    this.balloon.x = 810 - 44;
+                    if (this.charge < 25) { this.wallStuck = false; this.wallFalling = true; this.fallV = 0; }
+                } else if (this.wallFalling && !this.dragging) {
+                    this.fallV += 300 * dt;
+                    this.balloon.y += this.fallV * dt;
+                    this.balloon.x -= 18 * dt;
+                    if (this.balloon.y >= 430) { this.balloon.y = 430; this.wallFalling = false; this.wallFell = true; }
+                }
+            } else if (this.target === 'paper') {
+                this.updateBits(dt);
+            } else if (this.target === 'water') {
+                this.updateWater(dt);
+            } else if (this.target === 'balloon2') {
+                this.updateBalloon2(dt);
+            }
+        },
+
+        updateBits(dt) {
+            const bx = this.balloon.x, by = this.balloon.y;
+            for (const b of this.bits) {
+                if (b.stuck) {
+                    b.x = bx + Math.cos(b.stuckAngle) * 48;
+                    b.y = by + Math.sin(b.stuckAngle) * 58;
+                    if (this.charge < 12) { b.stuck = false; b.vx = 0; b.vy = 0; }
+                    continue;
+                }
+                const dx = bx - b.x, dy = by - b.y;
+                const d = Math.max(Math.hypot(dx, dy), 40);
+                const f = this.charge * 2600 / (d * d);
+                if (f > 22) {
+                    const acc = Math.min(f * 14, 2600);
+                    b.vx += (dx / d) * acc * dt;
+                    b.vy += (dy / d) * acc * dt;
+                    const damp = Math.exp(-2.2 * dt);
+                    b.vx *= damp; b.vy *= damp;
+                    b.x += b.vx * dt; b.y += b.vy * dt;
+                    if (Math.hypot(bx - b.x, by - b.y) < 55) {
+                        b.stuck = true; b.vx = 0; b.vy = 0;
+                        predicts.main.reveal();
+                    }
+                } else if (b.y < b.hy - 0.5) {
+                    // fall back to the table
+                    b.vy += 500 * dt;
+                    b.vx *= Math.exp(-2.5 * dt);
+                    b.x += b.vx * dt;
+                    b.y += b.vy * dt;
+                    if (b.y >= b.hy) { b.y = b.hy; b.vy = 0; b.vx = 0; }
+                } else {
+                    // rest on the table, ease back to home spot
+                    b.y = b.hy; b.vy = 0; b.vx = 0;
+                    b.x += (b.hx - b.x) * Math.min(1, 6 * dt);
+                }
+            }
+        },
+
+        updateWater(dt) {
+            this.dropTimer += dt;
+            while (this.dropTimer >= 0.05) {
+                this.dropTimer -= 0.05;
+                this.drops.push({ x: 750, y: 105, vx: 0, vy: 140 });
+            }
+            const bx = this.balloon.x, by = this.balloon.y;
+            for (const p of this.drops) {
+                const dx = bx - p.x, dy = by - p.y;
+                const d = Math.max(Math.hypot(dx, dy), 40);
+                const a = Math.min(this.charge * 9000 / (d * d), 400);
+                p.vx += (dx / d) * a * dt;
+                p.vy += (dy / d) * a * dt + 300 * dt;
+                p.x += p.vx * dt;
+                p.y += p.vy * dt;
+            }
+            for (let i = this.drops.length - 1; i >= 0; i--) {
+                if (this.drops[i].y > 470) {
+                    this.poolX += (this.drops[i].x - this.poolX) * 0.1;
+                    this.drops.splice(i, 1);
+                }
+            }
+        },
+
+        updateBalloon2(dt) {
+            const x2 = 740 + Math.sin(this.theta) * 210;
+            const y2 = Math.cos(this.theta) * 210;
+            const dx = x2 - this.balloon.x, dy = y2 - this.balloon.y;
+            const d = Math.max(Math.hypot(dx, dy), 60);
+            const F = Math.min(this.charge * 60 * 2200 / (d * d), 1600);
+            const Fx = F * (dx / d); // horizontal push AWAY from the main balloon
+            const alpha = -(900 / 210) * Math.sin(this.theta) - 1.2 * this.omega + Fx / 210;
+            this.omega += alpha * dt;
+            this.theta += this.omega * dt;
+            if (this.theta > 1.35) { this.theta = 1.35; this.omega = Math.min(this.omega, 0); }
+            if (this.theta < -1.35) { this.theta = -1.35; this.omega = Math.max(this.omega, 0); }
+            this.b2F = F;
+        },
+
+        forceLevel() {
+            const bx = this.balloon.x, by = this.balloon.y;
+            let f = 0;
+            if (this.target === 'paper') {
+                let dm = 1e9;
+                for (const b of this.bits) dm = Math.min(dm, Math.hypot(bx - b.x, by - b.y));
+                dm = Math.max(dm, 40);
+                f = this.charge * 2600 / (dm * dm);
+                return f < 8 ? 'NONE' : f < 22 ? 'WEAK' : 'STRONG';
+            }
+            if (this.target === 'wall') {
+                const d = Math.max(810 - bx, 40);
+                f = this.charge * 2600 / (d * d);
+                return f < 8 ? 'NONE' : f < 30 ? 'WEAK' : 'STRONG';
+            }
+            if (this.target === 'water') {
+                const d = Math.max(Math.abs(750 - bx), 40);
+                f = this.charge * 2600 / (d * d);
+                return f < 8 ? 'NONE' : f < 30 ? 'WEAK' : 'STRONG';
+            }
+            return this.b2F < 30 ? 'NONE' : this.b2F < 200 ? 'WEAK' : 'STRONG';
+        },
+
+        drawSweater() {
+            const s = SWEATER;
+            rr(s.x, s.y, s.w, s.h, 26);
+            ctx.fillStyle = '#8E4FA8';
+            ctx.fill();
+            // knit texture: rows of small arcs in a darker shade
+            ctx.save();
+            rr(s.x, s.y, s.w, s.h, 26);
+            ctx.clip();
+            ctx.strokeStyle = '#6F3B85';
+            ctx.lineWidth = 2;
+            for (let ky = s.y + 14; ky < s.y + s.h; ky += 20) {
+                for (let kx = s.x + 8; kx < s.x + s.w; kx += 16) {
+                    ctx.beginPath();
+                    ctx.arc(kx, ky, 6, Math.PI, 0);
+                    ctx.stroke();
+                }
+            }
+            ctx.restore();
+            // "+" charges left behind by the lost electrons
+            const n = Math.floor(this.charge / 12);
+            ctx.fillStyle = '#fff';
+            ctx.font = '900 20px Nunito, sans-serif';
+            ctx.textAlign = 'center';
+            for (let i = 0; i < n && i < sweaterSpots.length; i++) {
+                ctx.fillText('+', sweaterSpots[i].x, sweaterSpots[i].y);
+            }
+            ctx.fillStyle = 'rgba(0,0,0,0.55)';
+            ctx.font = '800 14px Nunito, sans-serif';
+            ctx.fillText('Wool sweater 🧶', s.x + s.w / 2, s.y + s.h + 26);
+        },
+
+        drawTableAndBits(layer) {
+            if (layer === 'back') {
+                ctx.fillStyle = '#8B6534';
+                ctx.fillRect(620, 430, 240, 14);
+                ctx.fillStyle = '#6E4B1E';
+                ctx.fillRect(636, 444, 10, 76);
+                ctx.fillRect(834, 444, 10, 76);
+                ctx.fillStyle = 'rgba(0,0,0,0.55)';
+                ctx.font = '800 13px Nunito, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('tiny paper bits', 740, 466);
+            }
+            for (const b of this.bits) {
+                if ((layer === 'front') !== b.stuck) continue;
+                ctx.save();
+                ctx.translate(b.x, b.y);
+                ctx.rotate(b.rot);
+                ctx.fillStyle = '#F2EFE9';
+                ctx.fillRect(-5, -3.5, 10, 7);
+                ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(-5, -3.5, 10, 7);
+                ctx.restore();
+            }
+        },
+
+        drawWall() {
+            ctx.fillStyle = '#4E5A75';
+            ctx.fillRect(810, 0, 90, H);
+            ctx.strokeStyle = 'rgba(0,0,0,0.28)';
+            ctx.lineWidth = 2;
+            for (let y = 0; y <= H; y += 36) {
+                ctx.beginPath(); ctx.moveTo(810, y); ctx.lineTo(900, y); ctx.stroke();
+                const jx = (y / 36) % 2 === 0 ? 840 : 870;
+                ctx.beginPath(); ctx.moveTo(jx, y); ctx.lineTo(jx, y + 36); ctx.stroke();
+            }
+            if (this.balloon.x > 640 && this.charge > 25) {
+                // induced + charges shift to the edge nearest the balloon
+                const n = 5 + Math.min(3, Math.floor(this.charge / 30));
+                ctx.fillStyle = '#fff';
+                ctx.font = '900 18px Nunito, sans-serif';
+                ctx.textAlign = 'center';
+                for (let i = 0; i < n && i < WALL_DYS.length; i++) {
+                    const yy = Math.min(Math.max(this.balloon.y + WALL_DYS[i], 18), H - 12);
+                    ctx.fillText('+', 822, yy);
+                }
+                if (!this.wallStuck && this.balloon.x + 60 < 802) {
+                    drawArrow(this.balloon.x + 52, this.balloon.y, 802, this.balloon.y, '#E67700', 5, null);
+                }
+            }
+        },
+
+        drawWater() {
+            emoji('🚰', 750, 80, 42);
+            // pool where the stream lands
+            ctx.fillStyle = 'rgba(2,136,209,0.45)';
+            ctx.beginPath();
+            ctx.ellipse(this.poolX, 472, 36, 7, 0, 0, Math.PI * 2);
+            ctx.fill();
+            // droplets
+            ctx.fillStyle = '#0288D1';
+            for (const p of this.drops) {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        },
+
+        drawBalloon2() {
+            const x2 = 740 + Math.sin(this.theta) * 210;
+            const y2 = Math.cos(this.theta) * 210;
+            ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(740, 0);
+            ctx.lineTo(x2 - Math.sin(this.theta) * 58, y2 - Math.cos(this.theta) * 58);
+            ctx.stroke();
+            drawBalloonShape(x2, y2, '#4DB6AC', 5, -1); // fixed charge −60 → 5 symbols
+        },
+
+        drawMeter() {
+            ctx.font = '800 13px Nunito, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#333';
+            ctx.fillText('Charge', 24, 30);
+            ctx.fillStyle = 'rgba(0,0,0,0.08)';
+            ctx.fillRect(24, 38, 200, 12);
+            ctx.fillStyle = '#0288D1';
+            ctx.fillRect(24, 38, 200 * Math.min(this.charge, 100) / 100, 12);
+            ctx.fillStyle = '#333';
+            ctx.fillText('⚡ ' + Math.round(this.charge), 236, 49);
+        },
+
+        draw() {
+            drawBackdrop();
+            this.drawSweater();
+
+            if (this.target === 'paper') this.drawTableAndBits('back');
+            else if (this.target === 'wall') this.drawWall();
+            else if (this.target === 'water') this.drawWater();
+            else this.drawBalloon2();
+
+            drawBalloonShape(this.balloon.x, this.balloon.y, '#FF8A65', Math.floor(this.charge / 12), 1);
+            if (this.target === 'paper') this.drawTableAndBits('front');
+
+            if (this.rubFlash > 0 && this.dragging) {
+                ctx.fillStyle = '#E67700';
+                ctx.font = "800 18px 'Fredoka One', cursive";
+                ctx.textAlign = 'center';
+                ctx.fillText('rub rub! ✨', this.balloon.x, this.balloon.y - 78);
+            }
+
+            this.drawMeter();
+
+            // caption
+            let caption = '';
+            const stuckCount = this.bits.filter(b => b.stuck).length;
+            if (this.target === 'paper' && stuckCount >= 3) {
+                caption = 'The paper is NEUTRAL — yet it still jumps to the charged balloon!';
+            } else if (this.target === 'wall') {
+                if (this.wallStuck) caption = "It sticks! The wall's charges shifted — opposites face each other.";
+                else if (this.wallFell) caption = 'The charge leaked away… the balloon let go!';
+            } else if (this.target === 'water') {
+                if (this.charge > 30 && Math.abs(this.balloon.x - 750) < 260) {
+                    caption = 'The neutral water stream BENDS toward the balloon!';
+                }
+            } else if (this.target === 'balloon2') {
+                if (Math.abs(this.theta) > 0.25) caption = 'Both balloons are negative — like charges REPEL!';
+            }
+            if (caption) {
+                ctx.fillStyle = '#E67700';
+                ctx.font = "800 19px 'Fredoka One', cursive";
+                ctx.textAlign = 'center';
+                ctx.fillText(caption, W / 2, 140);
+            }
+
+            // info panel
+            setText('es-charge', Math.round(this.charge) + ' / 100');
+            setText('es-day', this.humidity > 55 ? 'HUMID' : 'DRY');
+            setText('es-force', this.charge < 3 ? 'NONE' : this.forceLevel());
+            setText('es-paper', this.target === 'paper' ? stuckCount + ' / 8' : '-');
+        },
+    };
+
+    // ================= Predictions (POE) =================
+    const predicts = {
+        main: makePredict('predict-main',
+            'The paper bits have NO charge at all. Will the rubbed balloon lift them?',
+            ['No — only charged things feel electric force', 'Yes — a charged object attracts even uncharged things', 'Only if the paper were metal'], 1,
+            'A charged balloon pulls on neutral paper by <strong>shifting the charges inside it</strong> — the nearer side becomes opposite, and opposites attract. That is why a comb picks up paper bits on a dry day!'),
+    };
+
+    // ================= Pointer interaction =================
+    canvas.addEventListener('pointerdown', e => {
+        const p = ptr(e);
+        if (Math.hypot(p.x - es.balloon.x, p.y - es.balloon.y) < 70) {
+            es.dragging = true;
+            es.grabDX = es.balloon.x - p.x;
+            es.grabDY = es.balloon.y - p.y;
+            es.lastPX = p.x;
+            es.wallStuck = false; es.wallFalling = false; es.wallFell = false;
+            canvas.setPointerCapture(e.pointerId);
+            e.preventDefault();
+        }
+    });
+    canvas.addEventListener('pointermove', e => {
+        if (!es.dragging) return;
+        const p = ptr(e);
+        es.balloon.x = Math.min(Math.max(p.x + es.grabDX, 44), W - 44);
+        es.balloon.y = Math.min(Math.max(p.y + es.grabDY, 54), H - 54);
+        const inZone = es.balloon.x > SWEATER.x - 30 && es.balloon.x < SWEATER.x + SWEATER.w + 30 &&
+                       es.balloon.y > SWEATER.y - 30 && es.balloon.y < SWEATER.y + SWEATER.h + 30;
+        if (inZone) {
+            const dx = p.x - es.lastPX;
+            if (Math.abs(dx) > 0.5) {
+                es.charge = Math.min(100, es.charge + Math.abs(dx) * 0.15);
+                es.rubFlash = 0.4;
+            }
+        }
+        es.lastPX = p.x;
+    });
+    function endDrag() {
+        if (!es.dragging) return;
+        es.dragging = false;
+        if (es.target === 'wall' && es.charge > 25 && es.balloon.x > 810 - 120) {
+            es.wallStuck = true;
+            es.balloon.x = 810 - 44;
+        }
+    }
+    canvas.addEventListener('pointerup', endDrag);
+    canvas.addEventListener('pointercancel', endDrag);
+
+    // ================= Controls wiring =================
+    const $ = (id) => document.getElementById(id);
+
+    $('es-target').addEventListener('change', e => es.setTarget(e.target.value));
+    $('es-humidity').addEventListener('input', e => {
+        es.humidity = +e.target.value;
+        $('es-humidity-display').textContent = es.humidity + '% ' + (es.humidity > 55 ? '(humid day)' : '(dry day)');
+    });
+    $('es-discharge').addEventListener('click', () => { es.charge = 0; });
+    $('es-reset').addEventListener('click', () => es.reset());
+
+    // ================= Single scene (no tabs) =================
+    const sims = { main: es };
+    const active = 'main';
+
+    // ================= Challenge quiz =================
+    function buildChallenge(rootId, questions, badgeName, bannerId) {
+        const root = document.getElementById(rootId);
+        const solved = new Set();
+        questions.forEach((q, qi) => {
+            const qEl = document.createElement('div');
+            qEl.className = 'quiz-q';
+            qEl.innerHTML = '<div class="q-text">' + (qi + 1) + '. ' + q.q + '</div>';
+            const opts = document.createElement('div');
+            opts.className = 'quiz-opts';
+            const explain = document.createElement('div');
+            explain.className = 'quiz-explain';
+            q.opts.forEach((o, oi) => {
+                const b = document.createElement('button');
+                b.className = 'quiz-opt';
+                b.textContent = o;
+                b.addEventListener('click', () => {
+                    if (solved.has(qi)) return;
+                    if (oi === q.correct) {
+                        b.classList.add('right');
+                        explain.textContent = '✅ ' + q.explain;
+                        explain.classList.add('show');
+                        solved.add(qi);
+                        if (solved.size === questions.length) {
+                            setBadge(badgeName);
+                            document.getElementById(bannerId).classList.add('show');
+                        }
+                    } else {
+                        b.classList.add('wrong');
+                        setTimeout(() => b.classList.remove('wrong'), 900);
+                    }
+                });
+                opts.appendChild(b);
+            });
+            qEl.appendChild(opts);
+            qEl.appendChild(explain);
+            root.appendChild(qEl);
+        });
+    }
+
+    buildChallenge('challenge-root', [
+        {
+            q: 'Two balloons rubbed on the SAME sweater are brought close. They will…',
+            opts: ['Pull toward each other', 'Push away from each other', 'Do nothing'],
+            correct: 1,
+            explain: 'Both picked up the same kind of charge — and like charges repel.',
+        },
+        {
+            q: 'A comb picks up paper bits best on a…',
+            opts: ['Rainy, humid day', 'Dry day', 'It makes no difference'],
+            correct: 1,
+            explain: 'On humid days the charge leaks away through moist air before it can act.',
+        },
+        {
+            q: 'Electrostatic force and magnetic force are…',
+            opts: ['The same force with two names', 'Different forces — a charged comb does not behave like a magnet', 'Both created by rubbing iron'],
+            correct: 1,
+            explain: 'A magnet pulls iron but ignores paper; a charged comb lifts paper but ignores an unmagnetised iron nail sitting still. Two different non-contact forces!',
+        },
+    ], 'electrostatic', 'badge-banner');
+
+    // ================= Main loop =================
+    let last = performance.now();
+    function frame(now) {
+        const dt = Math.min((now - last) / 1000, 0.033);
+        last = now;
+        const sim = sims[active];
+        sim.update(dt);
+        ctx.setTransform(viewScale, 0, 0, viewScale, 0, 0);
+        sim.draw();
+        requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+    </script>
+</body>
+</html>

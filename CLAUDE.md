@@ -6,7 +6,9 @@ This file provides comprehensive context for AI agents (Claude Code, Copilot, Cu
 
 ## Project Overview
 
-An interactive physics simulations suite for children (Class 8 CBSE level), demonstrating the **Magnetic**, **Heating**, and **Chemical** effects of electric current. Hosted on GitHub Pages for **Megha Ananthi B**, Science Teacher (Physics) at **Sri Krish International School (CBSE)**.
+An interactive physics simulations suite demonstrating the **Magnetic**, **Heating**, and **Chemical** effects of electric current, plus a **Types of Forces** module. This is the **personal portfolio site of Megha Ananthi B** — she presents and explains the experiments herself.
+
+**Branding rule (owner request):** do NOT put school names, "CBSE", class/grade levels, curriculum chapter references, or "For Teachers" sections on any user-facing page. Credit lines say only "Megha Ananthi B".
 
 - **Live URL**: https://megha-ananthi.github.io/physics-simulations/
 - **Repo**: https://github.com/megha-ananthi/physics-simulations
@@ -40,7 +42,14 @@ physics-simulations/
 │   ├── oersted.html                # Exp 1: Oersted's Compass (Magnetic Effect)
 │   ├── electromagnet.html          # Exp 2: Iron Nail Electromagnet (Magnetic Effect)
 │   ├── heating.html                # Exp 3: Nichrome Wire Heating (Heating Effect)
-│   └── lemon-battery.html          # Exp 4: Lemon Battery (Chemical Effect)
+│   ├── lemon-battery.html          # Exp 4: Lemon Battery (Chemical Effect)
+│   ├── voltaic-cell.html           # Exp 5: Voltaic Cell (Chemical Effect)
+│   └── forces/                     # "Types of Forces" module (Canvas 2D, no Three.js)
+│       ├── index.html              # Module hub + "Sort the Force" contact/non-contact game
+│       ├── friction.html           # Tabs: pull-block, rolling race, parachute drop, zoom-in
+│       ├── gravity.html            # Tabs: drop race, two-mass attraction, orbit view
+│       ├── magnetic.html           # Tabs: magnet playground, two magnets
+│       └── electrostatic.html      # Single scene: balloon + 4 selectable targets
 ├── CLAUDE.md                       # This file — AI agent context
 ├── README.md                       # Human-readable project docs
 └── .claude/
@@ -69,10 +78,10 @@ physics-simulations/
 ### Hub Page Structure
 - `<canvas id="particle-canvas">` — fullscreen background with floating colored dots (js/main.js)
 - `.content-layer` — positioned above canvas with `z-index: 1`
-- `.lab-header` — gradient header with teacher attribution
+- `.lab-header` — gradient header with author credit
 - `.experiments-grid` — CSS Grid (`auto-fit, minmax(280px, 1fr)`) of `.experiment-card` links
 - `.fun-facts` — rotating electricity facts (js/main.js, 5-second interval)
-- `.lab-footer` — school name and teacher credit
+- `.lab-footer` — author credit only (no school name — see branding rule)
 
 ### Adding a New Card to the Hub
 Add a new `<a>` tag inside `.experiments-grid` in `index.html`:
@@ -228,6 +237,38 @@ controls.enableDamping = true;
 
 ---
 
+## "Types of Forces" Module (`experiments/forces/`)
+
+A second mini-lab covering **friction, gravitational, magnetic and electrostatic forces**. It deliberately
+does NOT use Three.js — every sim is plain **Canvas 2D** in a single self-contained HTML file, so the pages
+stay light for low-end devices. Unlike the dark 3D electricity experiments, the forces pages use a
+**light theme** (white canvas `#FBFAFF`, lavender page background) because dark canvases wash out on
+classroom projectors — keep any new forces page light. Key conventions (all established by `friction.html`,
+the canonical template):
+
+- **Page skeleton**: `.top-bar` (back to module hub + back to main lab), `.big-idea` one-liner, `.tabs`
+  pill row, `.stage-wrap` with `<canvas id="sim-canvas">` plus per-tab `.info-display` panels, per-tab
+  `.tab-panel` (a `.predict-bar` + `.control-panel`), then explanation `.section-card`, a 3-question
+  challenge `.section-card`, and a footer.
+- **Logical canvas space is 900×560**; `fitCanvas()` scales for width/devicePixelRatio and the main loop
+  sets the transform each frame. Pointer coords map through `ptr(e)`.
+- **Accent color per page** via `--accent` custom property only (the rest of the style block is shared):
+  friction `#FF7043`, gravity `#9575CD`, magnetic `#4A90D9`, electrostatic `#E8A000`. The module hub uses
+  `--color-forces: #7E57C2` (also added to the main hub's `css/style.css`). On the white canvas use
+  `#E67700` instead of light yellows and `#0288D1` instead of light blues for text/arrows.
+- **Predict → Observe → Explain**: every sim tab has a `makePredict(...)` bar; the sim calls `.reveal()`
+  when the observable event happens (breakaway, race finish, terminal velocity, first paper-bit jump...).
+  Never reveal on a timer alone — tie it to the discrepant event.
+- **Badges**: `localStorage` key `forces-lab-progress` holds `{sorter, friction, gravity, magnetic,
+  electrostatic}`. Sim pages call `setBadge(name)` when the 3-question challenge is fully correct; the
+  module hub renders ✅ tags and a "Force Master" banner when all five are earned.
+- **Physics is simplified on purpose** (g = 10, toy drag coefficients, stylized field lines). Keep values
+  qualitative/illustrative — the footer on every page says so. Don't "fix" them to exact real-world values
+  at the cost of readability.
+- Each page targets a documented misconception (friction acts only when moving; heavier falls faster;
+  no gravity in space; magnets attract all metals; electric = magnetic attraction). If you add a sim,
+  pick its misconception first and design the reveal around it.
+
 ## How to Add a New Experiment
 
 ### Step 1: Create the HTML file
@@ -330,7 +371,7 @@ Every experiment must include this in the `<head>`:
 
 ## Future Experiments (planned)
 
-The following experiments may be added in future iterations. They follow the same CBSE Class 8 Science curriculum on effects of electric current:
+The following experiments may be added in future iterations. They continue the same middle-school physics themes on effects of electric current:
 
 - **Electric Bell** — demonstrates electromagnet + spring mechanism
 - **Electroplating** — chemical effect, coating a metal object

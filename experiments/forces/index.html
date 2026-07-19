@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Types of Forces - Science Lab</title>
+    <meta name="description" content="Interactive Types of Forces module: friction, gravitational, magnetic and electrostatic forces. Sort contact vs non-contact forces and explore four simulations.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F4AA;</text></svg>">
+    <style>
+        :root {
+            --color-friction: #FF7043;
+            --color-friction-glow: rgba(255, 112, 67, 0.3);
+            --color-gravity: #9575CD;
+            --color-gravity-glow: rgba(149, 117, 205, 0.3);
+            --color-magnetic: #4A90D9;
+            --color-magnetic-glow: rgba(74, 144, 217, 0.3);
+            --color-static: #F4B400;
+            --color-static-glow: rgba(244, 180, 0, 0.3);
+            --color-contact: #26A69A;
+            --color-noncontact: #7E57C2;
+            --color-bg: #F5F0FF;
+            --color-text: #2D2D2D;
+            --color-text-light: #666;
+            --color-white: #FFFFFF;
+            --color-header-start: #6B3FA0;
+            --color-header-end: #3F51B5;
+            --font-heading: 'Fredoka One', cursive;
+            --font-body: 'Nunito', sans-serif;
+            --radius-card: 20px;
+            --radius-pill: 50px;
+            --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.12);
+            --shadow-card-hover: 0 16px 40px rgba(0, 0, 0, 0.18);
+            --transition-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        a { text-decoration: none; color: inherit; }
+
+        /* --- Header --- */
+        .lab-header {
+            background: linear-gradient(135deg, var(--color-header-start), var(--color-header-end));
+            color: var(--color-white);
+            padding: 2.5rem 2rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .back-btn {
+            position: absolute; top: 1rem; left: 1rem;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.25); color: #fff;
+            padding: 0.5rem 1.1rem; border-radius: var(--radius-pill);
+            font-weight: 700; font-size: 0.85rem;
+            transition: background 0.3s; z-index: 2;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.3); }
+        .lab-header h1 {
+            font-family: var(--font-heading);
+            font-size: 2.3rem;
+            letter-spacing: 1px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            margin-top: 0.5rem;
+        }
+        .lab-header .tagline { font-size: 1.1rem; opacity: 0.9; font-weight: 600; margin-top: 0.3rem; }
+
+        main { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem 3rem; }
+
+        section h2 {
+            font-family: var(--font-heading);
+            font-size: 1.7rem;
+            color: var(--color-header-start);
+            text-align: center;
+            margin-bottom: 0.8rem;
+        }
+
+        /* --- Intro --- */
+        .intro-section { max-width: 850px; margin: 2.2rem auto 1.5rem; text-align: center; }
+        .intro-section p { font-size: 1.05rem; color: var(--color-text-light); }
+        .force-type-chips { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1.2rem; }
+        .type-chip {
+            border-radius: var(--radius-card);
+            padding: 0.9rem 1.3rem;
+            color: var(--color-white);
+            max-width: 340px;
+            box-shadow: var(--shadow-card);
+            text-align: left;
+            font-size: 0.92rem;
+        }
+        .type-chip strong { font-family: var(--font-heading); font-weight: 400; font-size: 1.05rem; display: block; margin-bottom: 0.2rem; }
+        .type-chip.contact { background: var(--color-contact); }
+        .type-chip.noncontact { background: var(--color-noncontact); }
+
+        /* --- Sorter Game --- */
+        .sorter-section {
+            background: var(--color-white);
+            border-radius: var(--radius-card);
+            box-shadow: var(--shadow-card);
+            padding: 1.8rem 1.5rem;
+            margin: 2rem auto;
+        }
+        .sorter-sub { text-align: center; color: var(--color-text-light); font-size: 0.95rem; margin-bottom: 1rem; }
+        .sorter-score {
+            text-align: center; font-weight: 800; margin-bottom: 1rem;
+            color: var(--color-header-start); font-size: 1rem;
+        }
+        .sort-pool {
+            display: flex; flex-wrap: wrap; gap: 0.7rem; justify-content: center;
+            min-height: 60px; padding: 0.8rem;
+            border: 2px dashed #D5C8F0; border-radius: var(--radius-card);
+        }
+        .sort-card {
+            background: #FBF9FF;
+            border: 2px solid #E0D5F5;
+            border-radius: 14px;
+            padding: 0.55rem 0.9rem;
+            font-weight: 700; font-size: 0.9rem;
+            cursor: grab; user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            display: inline-flex; align-items: center; gap: 0.45rem;
+            transition: transform 0.2s var(--transition-bounce), box-shadow 0.2s, border-color 0.2s;
+        }
+        .sort-card .emoji { font-size: 1.3rem; }
+        .sort-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .sort-card.selected { border-color: var(--color-header-start); box-shadow: 0 0 0 3px rgba(107,63,160,0.25); }
+        .sort-card.dragging { opacity: 0.35; }
+        .sort-card.shake { animation: shake 0.4s ease; border-color: #E53935; }
+        .drag-ghost {
+            position: fixed; z-index: 100; pointer-events: none;
+            transform: translate(-50%, -50%) scale(1.05) rotate(-2deg);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.25);
+        }
+        .sort-bins { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.2rem; }
+        .sort-bin {
+            border-radius: var(--radius-card);
+            border: 3px dashed transparent;
+            padding: 1rem;
+            min-height: 150px;
+            transition: border-color 0.2s, background 0.2s, transform 0.2s;
+        }
+        .sort-bin h3 { font-family: var(--font-heading); font-weight: 400; font-size: 1.1rem; color: #fff; text-align: center; margin-bottom: 0.6rem; }
+        .sort-bin.contact { background: rgba(38,166,154,0.12); border-color: var(--color-contact); }
+        .sort-bin.noncontact { background: rgba(126,87,194,0.12); border-color: var(--color-noncontact); }
+        .sort-bin.contact h3 { color: var(--color-contact); }
+        .sort-bin.noncontact h3 { color: var(--color-noncontact); }
+        .sort-bin.hover-ok { transform: scale(1.02); background: rgba(76,175,80,0.15); }
+        .sort-bin.flash-good { animation: flashGood 0.5s ease; }
+        .sort-bin.flash-bad { animation: flashBad 0.5s ease; }
+        .bin-items { display: flex; flex-direction: column; gap: 0.4rem; }
+        .bin-chip {
+            background: var(--color-white);
+            border-radius: 10px;
+            padding: 0.4rem 0.7rem;
+            font-size: 0.82rem; font-weight: 700;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            animation: popIn 0.35s var(--transition-bounce);
+        }
+        .bin-chip .force-name { color: var(--color-text-light); font-weight: 600; font-size: 0.76rem; }
+        .sorter-result {
+            display: none;
+            text-align: center;
+            margin-top: 1.2rem;
+            padding: 1rem;
+            border-radius: var(--radius-card);
+            background: linear-gradient(135deg, #FFF8E1, #FFECB3);
+            font-weight: 700;
+        }
+        .sorter-result.show { display: block; animation: popIn 0.4s var(--transition-bounce); }
+        .sorter-result .big { font-family: var(--font-heading); font-weight: 400; font-size: 1.3rem; color: var(--color-header-start); }
+        .replay-btn {
+            margin-top: 0.6rem;
+            background: var(--color-header-start); color: #fff;
+            border: none; border-radius: var(--radius-pill);
+            padding: 0.55rem 1.4rem; font-family: var(--font-body);
+            font-weight: 800; font-size: 0.9rem; cursor: pointer;
+            transition: transform 0.2s var(--transition-bounce);
+        }
+        .replay-btn:hover { transform: scale(1.05); }
+
+        /* --- Sim Cards --- */
+        .sims-section { margin-top: 2.5rem; }
+        .sims-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        .sim-card {
+            background: var(--color-white);
+            border-radius: var(--radius-card);
+            padding: 1.8rem;
+            position: relative;
+            display: flex; flex-direction: column;
+            box-shadow: var(--shadow-card);
+            border-top: 5px solid transparent;
+            transition: transform 0.35s var(--transition-bounce), box-shadow 0.35s ease;
+            overflow: hidden;
+        }
+        .sim-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: var(--shadow-card-hover); }
+        .sim-card:active { transform: translateY(-2px) scale(0.98); }
+        .sim-card.friction { border-top-color: var(--color-friction); }
+        .sim-card.gravity { border-top-color: var(--color-gravity); }
+        .sim-card.magnetic { border-top-color: var(--color-magnetic); }
+        .sim-card.static { border-top-color: var(--color-static); }
+        .sim-card.friction:hover { box-shadow: 0 8px 30px var(--color-friction-glow), var(--shadow-card-hover); }
+        .sim-card.gravity:hover { box-shadow: 0 8px 30px var(--color-gravity-glow), var(--shadow-card-hover); }
+        .sim-card.magnetic:hover { box-shadow: 0 8px 30px var(--color-magnetic-glow), var(--shadow-card-hover); }
+        .sim-card.static:hover { box-shadow: 0 8px 30px var(--color-static-glow), var(--shadow-card-hover); }
+        .sim-card .card-badge {
+            position: absolute; top: 1rem; right: 1rem;
+            border-radius: var(--radius-pill); padding: 0.25rem 0.7rem;
+            font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.5px; color: var(--color-white);
+        }
+        .friction .card-badge { background: var(--color-friction); }
+        .gravity .card-badge { background: var(--color-gravity); }
+        .magnetic .card-badge { background: var(--color-magnetic); }
+        .static .card-badge { background: var(--color-static); }
+        .sim-card .card-icon { font-size: 3rem; margin-bottom: 0.7rem; }
+        .sim-card h3 { font-family: var(--font-heading); font-size: 1.2rem; margin-bottom: 0.4rem; }
+        .sim-card p { font-size: 0.9rem; color: var(--color-text-light); flex-grow: 1; }
+        .sim-card .card-cta { margin-top: 1rem; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; gap: 0.4rem; }
+        .friction .card-cta { color: var(--color-friction); }
+        .gravity .card-cta { color: var(--color-gravity); }
+        .magnetic .card-cta { color: var(--color-magnetic); }
+        .static .card-cta { color: var(--color-static); }
+        .mastered-tag {
+            display: none;
+            margin-top: 0.6rem;
+            font-size: 0.8rem; font-weight: 800;
+            color: #2E7D32;
+            background: #E8F5E9;
+            border-radius: var(--radius-pill);
+            padding: 0.25rem 0.8rem;
+            align-self: flex-start;
+        }
+        .sim-card.done .mastered-tag { display: inline-block; }
+
+        /* --- Force Master banner --- */
+        .master-banner {
+            display: none;
+            margin: 2rem auto 0;
+            text-align: center;
+            background: linear-gradient(135deg, #FFD54F, #FFB300);
+            border-radius: var(--radius-card);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-card);
+        }
+        .master-banner.show { display: block; animation: popIn 0.5s var(--transition-bounce); }
+        .master-banner .trophy { font-size: 3rem; }
+        .master-banner h3 { font-family: var(--font-heading); font-size: 1.5rem; color: #6D4C00; }
+        .master-banner p { color: #7A5800; font-weight: 700; }
+
+        /* --- Footer --- */
+        .lab-footer {
+            background: linear-gradient(135deg, var(--color-header-start), var(--color-header-end));
+            color: var(--color-white);
+            text-align: center;
+            padding: 1.5rem 2rem;
+            font-size: 0.9rem;
+        }
+        .lab-footer .school-name { font-weight: 700; font-size: 1rem; }
+        .lab-footer .teacher-name { opacity: 0.85; margin-top: 0.3rem; }
+
+        /* --- Animations --- */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            50% { transform: translateX(6px); }
+            75% { transform: translateX(-4px); }
+        }
+        @keyframes flashGood { 0% { background: rgba(76,175,80,0.4); } 100% { } }
+        @keyframes flashBad { 0% { background: rgba(229,57,53,0.35); } 100% { } }
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.7); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        @media (max-width: 600px) {
+            .lab-header h1 { font-size: 1.6rem; }
+            .lab-header { padding: 3.2rem 1rem 1.5rem; }
+            .sort-bins { grid-template-columns: 1fr; }
+            .sorter-section { padding: 1.2rem 0.9rem; }
+            section h2 { font-size: 1.4rem; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="lab-header">
+        <a href="../../index.html" class="back-btn">&larr; Back to Lab</a>
+        <h1>&#x1F4AA; Types of Forces</h1>
+        <p class="tagline">Push, pull, attract, repel &mdash; discover the forces that move our world!</p>
+    </header>
+
+    <main>
+        <!-- Intro -->
+        <section class="intro-section">
+            <h2>&#x1F914; What is a Force?</h2>
+            <p>
+                A force is a <strong>push or a pull</strong>. Some forces need to <strong>touch</strong> an object to act
+                on it. Others work like magic from a <strong>distance</strong> &mdash; no touching needed!
+            </p>
+            <div class="force-type-chips">
+                <div class="type-chip contact">
+                    <strong>&#x1F91D; Contact Forces</strong>
+                    Must touch the object: muscular force (kicking, pulling) and friction (rubbing surfaces).
+                </div>
+                <div class="type-chip noncontact">
+                    <strong>&#x1FA84; Non-Contact Forces</strong>
+                    Act from a distance: gravitational, magnetic and electrostatic forces.
+                </div>
+            </div>
+        </section>
+
+        <!-- Sort the Force game -->
+        <section class="sorter-section" id="sorter">
+            <h2>&#x1F3AF; Sort the Force!</h2>
+            <p class="sorter-sub">Drag each card into the correct bin (or tap a card, then tap a bin).</p>
+            <div class="sorter-score" id="sorter-score">Sorted: 0 / 8</div>
+            <div class="sort-pool" id="sort-pool"></div>
+            <div class="sort-bins">
+                <div class="sort-bin contact" id="bin-contact" data-bin="contact">
+                    <h3>&#x1F91D; Contact Forces</h3>
+                    <div class="bin-items"></div>
+                </div>
+                <div class="sort-bin noncontact" id="bin-noncontact" data-bin="noncontact">
+                    <h3>&#x1FA84; Non-Contact Forces</h3>
+                    <div class="bin-items"></div>
+                </div>
+            </div>
+            <div class="sorter-result" id="sorter-result"></div>
+        </section>
+
+        <!-- Sim cards -->
+        <section class="sims-section">
+            <h2>&#x1F52C; Explore Each Force</h2>
+            <div class="sims-grid">
+                <a href="friction.html" class="sim-card friction" data-badge="friction">
+                    <div class="card-badge">Contact Force</div>
+                    <div class="card-icon">&#x1F9CA;</div>
+                    <h3>Friction</h3>
+                    <p>Pull a block, race rolling vs sliding crates, drop a parachute, and zoom in to see WHY surfaces grip each other.</p>
+                    <span class="mastered-tag">&#x2705; Mastered!</span>
+                    <div class="card-cta">Start Exploring <span>&rarr;</span></div>
+                </a>
+                <a href="gravity.html" class="sim-card gravity" data-badge="gravity">
+                    <div class="card-badge">Non-Contact</div>
+                    <div class="card-icon">&#x1F30D;</div>
+                    <h3>Gravitational Force</h3>
+                    <p>Race a hammer against a feather in a vacuum, pull two masses together, and find out why astronauts float.</p>
+                    <span class="mastered-tag">&#x2705; Mastered!</span>
+                    <div class="card-cta">Start Exploring <span>&rarr;</span></div>
+                </a>
+                <a href="magnetic.html" class="sim-card magnetic" data-badge="magnetic">
+                    <div class="card-badge">Non-Contact</div>
+                    <div class="card-icon">&#x1F9F2;</div>
+                    <h3>Magnetic Force</h3>
+                    <p>Drag a magnet over coins, nails and buttons &mdash; which ones jump? See invisible field lines and make magnets repel.</p>
+                    <span class="mastered-tag">&#x2705; Mastered!</span>
+                    <div class="card-cta">Start Exploring <span>&rarr;</span></div>
+                </a>
+                <a href="electrostatic.html" class="sim-card static" data-badge="electrostatic">
+                    <div class="card-badge">Non-Contact</div>
+                    <div class="card-icon">&#x1F388;</div>
+                    <h3>Electrostatic Force</h3>
+                    <p>Rub a balloon on a sweater, then lift paper bits, bend water and stick it to a wall &mdash; static electricity in action!</p>
+                    <span class="mastered-tag">&#x2705; Mastered!</span>
+                    <div class="card-cta">Start Exploring <span>&rarr;</span></div>
+                </a>
+            </div>
+
+            <div class="master-banner" id="master-banner">
+                <div class="trophy">&#x1F3C6;</div>
+                <h3>FORCE MASTER!</h3>
+                <p>You completed the sorter and mastered all four forces. Amazing work, young scientist!</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="lab-footer">
+        <p class="teacher-name">Made with &#x1F4AA; by Megha Ananthi B</p>
+    </footer>
+
+    <script>
+        'use strict';
+
+        // ---------- Progress badges (shared localStorage schema) ----------
+        const PROGRESS_KEY = 'forces-lab-progress';
+        function getProgress() {
+            try { return JSON.parse(localStorage.getItem(PROGRESS_KEY)) || {}; }
+            catch (e) { return {}; }
+        }
+        function setBadge(name) {
+            const p = getProgress();
+            p[name] = true;
+            localStorage.setItem(PROGRESS_KEY, JSON.stringify(p));
+        }
+        function refreshBadges() {
+            const p = getProgress();
+            document.querySelectorAll('.sim-card[data-badge]').forEach(card => {
+                card.classList.toggle('done', !!p[card.dataset.badge]);
+            });
+            const all = ['sorter', 'friction', 'gravity', 'magnetic', 'electrostatic'].every(k => p[k]);
+            document.getElementById('master-banner').classList.toggle('show', all);
+        }
+        refreshBadges();
+
+        // ---------- Sort the Force game ----------
+        const ITEMS = [
+            { emoji: '⚽', label: 'Kicking a football', force: 'Muscular force', bin: 'contact' },
+            { emoji: '📚', label: 'A sliding book slows down', force: 'Friction', bin: 'contact' },
+            { emoji: '🍎', label: 'An apple falls from a tree', force: 'Gravitational force', bin: 'noncontact' },
+            { emoji: '🧲', label: 'A magnet lifts steel pins', force: 'Magnetic force', bin: 'noncontact' },
+            { emoji: '💇', label: 'A comb picks up paper bits', force: 'Electrostatic force', bin: 'noncontact' },
+            { emoji: '🌙', label: 'Earth pulls the Moon', force: 'Gravitational force', bin: 'noncontact' },
+            { emoji: '🐂', label: 'A bullock pulls a cart', force: 'Muscular force', bin: 'contact' },
+            { emoji: '🚲', label: 'Brakes stop a bicycle wheel', force: 'Friction', bin: 'contact' },
+        ];
+
+        const pool = document.getElementById('sort-pool');
+        const scoreEl = document.getElementById('sorter-score');
+        const resultEl = document.getElementById('sorter-result');
+        const bins = {
+            contact: document.getElementById('bin-contact'),
+            noncontact: document.getElementById('bin-noncontact'),
+        };
+
+        let sortedCount = 0;
+        let mistakes = 0;
+        let selectedCard = null;
+
+        function buildPool() {
+            pool.innerHTML = '';
+            resultEl.classList.remove('show');
+            bins.contact.querySelector('.bin-items').innerHTML = '';
+            bins.noncontact.querySelector('.bin-items').innerHTML = '';
+            sortedCount = 0;
+            mistakes = 0;
+            selectedCard = null;
+            updateScore();
+            const shuffled = ITEMS.slice().sort(() => Math.random() - 0.5);
+            shuffled.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'sort-card';
+                card.innerHTML = '<span class="emoji">' + item.emoji + '</span><span>' + item.label + '</span>';
+                card._item = item;
+                attachDrag(card);
+                pool.appendChild(card);
+            });
+        }
+
+        function updateScore() {
+            scoreEl.textContent = 'Sorted: ' + sortedCount + ' / ' + ITEMS.length +
+                (mistakes ? ' • Oops: ' + mistakes : '');
+        }
+
+        function dropInto(card, binName) {
+            const item = card._item;
+            const bin = bins[binName];
+            if (item.bin === binName) {
+                const chip = document.createElement('div');
+                chip.className = 'bin-chip';
+                chip.innerHTML = item.emoji + ' ' + item.label +
+                    ' <span class="force-name">&mdash; ' + item.force + '</span>';
+                bin.querySelector('.bin-items').appendChild(chip);
+                bin.classList.remove('flash-good');
+                void bin.offsetWidth;
+                bin.classList.add('flash-good');
+                card.remove();
+                sortedCount++;
+                updateScore();
+                if (sortedCount === ITEMS.length) finishGame();
+            } else {
+                mistakes++;
+                updateScore();
+                bin.classList.remove('flash-bad');
+                void bin.offsetWidth;
+                bin.classList.add('flash-bad');
+                card.classList.remove('shake');
+                void card.offsetWidth;
+                card.classList.add('shake');
+            }
+            if (selectedCard) { selectedCard.classList.remove('selected'); selectedCard = null; }
+        }
+
+        function finishGame() {
+            const earned = mistakes <= 2;
+            if (earned) setBadge('sorter');
+            refreshBadges();
+            resultEl.innerHTML =
+                '<div class="big">' + (earned ? '🎉 Sorting Star!' : '👏 All sorted!') + '</div>' +
+                '<p>You sorted all ' + ITEMS.length + ' cards with ' + mistakes + ' mistake' + (mistakes === 1 ? '' : 's') + '.' +
+                (earned ? ' Badge earned!' : ' Get 2 or fewer wrong to earn the badge — try again!') + '</p>' +
+                '<button class="replay-btn" id="replay-btn">🔄 Play Again</button>';
+            resultEl.classList.add('show');
+            document.getElementById('replay-btn').addEventListener('click', buildPool);
+        }
+
+        // Drag with pointer events + tap-to-select fallback
+        function attachDrag(card) {
+            let ghost = null, startX = 0, startY = 0, moved = false;
+
+            card.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                card.setPointerCapture(e.pointerId);
+                startX = e.clientX; startY = e.clientY;
+                moved = false;
+            });
+
+            card.addEventListener('pointermove', (e) => {
+                if (!card.hasPointerCapture(e.pointerId)) return;
+                if (!moved && Math.hypot(e.clientX - startX, e.clientY - startY) < 8) return;
+                if (!moved) {
+                    moved = true;
+                    ghost = card.cloneNode(true);
+                    ghost.classList.add('drag-ghost');
+                    document.body.appendChild(ghost);
+                    card.classList.add('dragging');
+                }
+                ghost.style.left = e.clientX + 'px';
+                ghost.style.top = e.clientY + 'px';
+                Object.values(bins).forEach(b => {
+                    const r = b.getBoundingClientRect();
+                    const over = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+                    b.classList.toggle('hover-ok', over);
+                });
+            });
+
+            card.addEventListener('pointerup', (e) => {
+                if (moved) {
+                    ghost.remove(); ghost = null;
+                    card.classList.remove('dragging');
+                    let dropped = null;
+                    Object.entries(bins).forEach(([name, b]) => {
+                        b.classList.remove('hover-ok');
+                        const r = b.getBoundingClientRect();
+                        if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) dropped = name;
+                    });
+                    if (dropped) dropInto(card, dropped);
+                } else {
+                    // Tap: select / deselect
+                    if (selectedCard === card) {
+                        card.classList.remove('selected');
+                        selectedCard = null;
+                    } else {
+                        if (selectedCard) selectedCard.classList.remove('selected');
+                        selectedCard = card;
+                        card.classList.add('selected');
+                    }
+                }
+            });
+
+            card.addEventListener('pointercancel', () => {
+                if (ghost) { ghost.remove(); ghost = null; }
+                card.classList.remove('dragging');
+                Object.values(bins).forEach(b => b.classList.remove('hover-ok'));
+            });
+        }
+
+        // Tap a bin to place the selected card
+        Object.entries(bins).forEach(([name, bin]) => {
+            bin.addEventListener('click', () => {
+                if (selectedCard) dropInto(selectedCard, name);
+            });
+        });
+
+        buildPool();
+    </script>
+</body>
+</html>

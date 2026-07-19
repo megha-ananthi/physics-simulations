@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friction - Types of Forces - Science Lab</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F9CA;</text></svg>">
+    <style>
+        /* ===== Shared "Types of Forces" sim-page styles — light, projector-friendly (accent set per page) ===== */
+        :root {
+            --accent: #FF7043;
+            --accent-soft: rgba(255, 112, 67, 0.14);
+            --accent-border: rgba(255, 112, 67, 0.55);
+            --good: #4CAF50;
+            --bad: #E53935;
+            --ink: #2D2D2D;
+            --panel-bg: rgba(255, 255, 255, 0.92);
+            --panel-border: rgba(0, 0, 0, 0.08);
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: #F5F0FF;
+            color: var(--ink);
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+        a { color: inherit; text-decoration: none; }
+
+        .top-bar {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.9rem 1.2rem; gap: 0.6rem; flex-wrap: wrap;
+        }
+        .back-btn {
+            background: #fff; border: 1px solid rgba(0,0,0,0.12);
+            color: #444; padding: 0.5rem 1rem; border-radius: 50px;
+            font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem;
+            transition: background 0.3s; cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .back-btn:hover { background: #F0EAFB; }
+        .exp-title {
+            font-family: 'Fredoka One', cursive; font-size: 1.5rem; text-align: center;
+            color: #6B3FA0;
+        }
+        .big-idea {
+            text-align: center; opacity: 0.8; max-width: 720px;
+            margin: 0.2rem auto 0.8rem; padding: 0 1.2rem; font-size: 0.98rem;
+        }
+        .big-idea strong { color: var(--accent); }
+
+        /* Tabs */
+        .tabs { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; padding: 0 1rem; margin-bottom: 0.9rem; }
+        .tab-btn {
+            background: #fff; border: 1px solid rgba(0,0,0,0.12);
+            color: #444; padding: 0.5rem 1rem; border-radius: 50px;
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.85rem; cursor: pointer;
+            transition: background 0.25s, border-color 0.25s, transform 0.15s;
+        }
+        .tab-btn:hover { transform: translateY(-1px); }
+        .tab-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+
+        /* Stage */
+        .stage-wrap { position: relative; max-width: 960px; margin: 0 auto; padding: 0 0.8rem; }
+        #sim-canvas {
+            display: block; width: 100%;
+            background: #FBFAFF; border-radius: 16px;
+            border: 1px solid rgba(0,0,0,0.1);
+            box-shadow: 0 4px 18px rgba(0,0,0,0.07);
+            touch-action: none;
+        }
+        .info-display {
+            position: absolute; top: 0.7rem; right: 1.4rem;
+            background: var(--panel-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--panel-border); border-radius: 14px;
+            padding: 0.7rem 0.9rem; font-size: 0.8rem; min-width: 160px;
+            display: none;
+        }
+        .info-display.active { display: block; }
+        .info-row { display: flex; justify-content: space-between; gap: 0.9rem; padding: 0.12rem 0; }
+        .info-label { opacity: 0.6; }
+        .info-val { font-weight: 800; color: var(--accent); }
+
+        /* Panels below stage */
+        .panels { max-width: 960px; margin: 0 auto; padding: 0 0.8rem 2rem; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        .predict-bar {
+            background: var(--accent-soft); border: 1px solid var(--accent-border);
+            border-radius: 14px; padding: 0.85rem 1rem; margin: 0.9rem 0 0.6rem;
+        }
+        .predict-q { font-weight: 800; font-size: 0.95rem; margin-bottom: 0.55rem; }
+        .predict-q .tag {
+            background: var(--accent); color: #fff; border-radius: 50px;
+            font-size: 0.7rem; padding: 0.1rem 0.6rem; margin-right: 0.45rem;
+            text-transform: uppercase; letter-spacing: 0.5px; vertical-align: middle;
+        }
+        .predict-opts { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .predict-opt {
+            background: #fff; border: 1px solid rgba(0,0,0,0.15);
+            color: #333; border-radius: 50px; padding: 0.42rem 0.95rem;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.83rem; cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .predict-opt:hover { background: rgba(0,0,0,0.05); }
+        .predict-opt.chosen { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+        .predict-opt.right { border-color: var(--good); background: rgba(76,175,80,0.14); color: #2E7D32; }
+        .predict-opt.wrong { border-color: var(--bad); background: rgba(229,57,53,0.12); color: #C62828; }
+        .predict-reveal { margin-top: 0.55rem; font-size: 0.88rem; display: none; }
+        .predict-reveal.show { display: block; animation: popIn 0.3s ease; }
+
+        .control-panel {
+            background: var(--panel-bg); border: 1px solid var(--panel-border);
+            border-radius: 18px; padding: 1rem 1.3rem;
+            display: flex; align-items: center; gap: 1.3rem;
+            flex-wrap: wrap; justify-content: center; margin-top: 0.7rem;
+        }
+        .control-group { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+        .control-label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
+        .control-value { font-family: 'Fredoka One', cursive; font-size: 1rem; color: var(--accent); }
+
+        input[type="range"] {
+            -webkit-appearance: none; appearance: none; width: 130px; height: 8px;
+            border-radius: 4px; background: rgba(0,0,0,0.12); outline: none; cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 24px; height: 24px;
+            border-radius: 50%; background: var(--accent); border: 3px solid #fff; cursor: pointer;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 24px; height: 24px; border-radius: 50%;
+            background: var(--accent); border: 3px solid #fff; cursor: pointer;
+        }
+        select {
+            background: #fff; color: #333;
+            border: 1px solid rgba(0,0,0,0.2); border-radius: 10px;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.85rem;
+            padding: 0.4rem 0.6rem; cursor: pointer;
+        }
+        select option { background: #fff; }
+        .action-btn {
+            background: var(--accent); color: #fff; border: none; border-radius: 50px;
+            padding: 0.55rem 1.3rem; font-family: 'Nunito', sans-serif; font-weight: 800;
+            font-size: 0.9rem; cursor: pointer; transition: transform 0.15s, filter 0.2s;
+        }
+        .action-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        .action-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+        .ghost-btn {
+            background: #fff; color: #444;
+            border: 1px solid rgba(0,0,0,0.15); border-radius: 50px;
+            padding: 0.55rem 1.1rem; font-family: 'Nunito', sans-serif; font-weight: 800;
+            font-size: 0.85rem; cursor: pointer; transition: background 0.2s;
+        }
+        .ghost-btn:hover { background: #F3EFFA; }
+        .hint { text-align: center; font-size: 0.8rem; opacity: 0.5; margin-top: 0.5rem; }
+
+        /* Explanation + challenge */
+        .section-card {
+            background: #fff; border: 1px solid rgba(0,0,0,0.06);
+            border-radius: 18px; padding: 1.3rem 1.4rem; margin-top: 1.6rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        }
+        .section-card h2 { font-family: 'Fredoka One', cursive; font-size: 1.25rem; color: var(--accent); margin-bottom: 0.6rem; }
+        .section-card p, .section-card li { font-size: 0.93rem; opacity: 0.88; line-height: 1.65; }
+        .section-card ul { padding-left: 1.3rem; margin: 0.4rem 0; }
+        .callout-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.7rem; }
+        .callout-chip {
+            background: #F6F2FE; border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 50px; padding: 0.35rem 0.85rem; font-size: 0.8rem; font-weight: 700;
+        }
+
+        .quiz-q { margin-top: 1rem; }
+        .quiz-q .q-text { font-weight: 800; font-size: 0.95rem; margin-bottom: 0.5rem; }
+        .quiz-opts { display: flex; flex-direction: column; gap: 0.45rem; }
+        .quiz-opt {
+            text-align: left; background: #FBFAFF;
+            border: 1px solid rgba(0,0,0,0.14); color: #333;
+            border-radius: 12px; padding: 0.55rem 0.9rem;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.88rem; cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .quiz-opt:hover { background: #F1ECFA; }
+        .quiz-opt.right { border-color: var(--good); background: rgba(76,175,80,0.14); }
+        .quiz-opt.wrong { border-color: var(--bad); background: rgba(229,57,53,0.12); }
+        .quiz-explain { display: none; font-size: 0.85rem; margin-top: 0.4rem; color: #2E7D32; }
+        .quiz-explain.show { display: block; animation: popIn 0.3s ease; }
+        .badge-banner {
+            display: none; text-align: center; margin-top: 1.2rem;
+            background: linear-gradient(135deg, #FFF8E1, #FFECB3);
+            border: 1px solid #F0C24B; border-radius: 16px; padding: 1rem;
+        }
+        .badge-banner.show { display: block; animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .badge-banner .big { font-family: 'Fredoka One', cursive; font-size: 1.3rem; color: #B8860B; }
+
+        .page-footer { text-align: center; padding: 1.2rem; font-size: 0.8rem; opacity: 0.5; }
+
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.92); } 100% { opacity: 1; transform: scale(1); } }
+
+        @media (max-width: 600px) {
+            .exp-title { font-size: 1.15rem; }
+            .top-bar { padding: 0.7rem 0.8rem; }
+            .info-display { position: static; display: none; margin: 0.6rem 0 0; width: 100%; }
+            .info-display.active { display: flex; flex-wrap: wrap; gap: 0.1rem 1.2rem; }
+            .info-display .info-row { flex: 1 1 40%; }
+            .control-panel { padding: 0.8rem; gap: 0.9rem; }
+            input[type="range"] { width: 105px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="index.html" class="back-btn">&larr; Types of Forces</a>
+        <div class="exp-title">&#x1F9CA; Friction</div>
+        <a href="../../index.html" class="back-btn">&#x1F3E0; Lab</a>
+    </div>
+    <p class="big-idea">
+        Friction is a <strong>contact force</strong> that always <strong>opposes motion</strong> between two surfaces.
+        Meet its four faces: <strong>static</strong>, <strong>sliding</strong>, <strong>rolling</strong> and <strong>fluid</strong> friction!
+    </p>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="pull">&#x1F9F1; Pull the Block</button>
+        <button class="tab-btn" data-tab="race">&#x1F3C1; Rolling Race</button>
+        <button class="tab-btn" data-tab="drop">&#x1FA82; Parachute Drop</button>
+        <button class="tab-btn" data-tab="zoom">&#x1F52C; Zoom In</button>
+    </div>
+
+    <div class="stage-wrap">
+        <canvas id="sim-canvas"></canvas>
+
+        <div class="info-display" id="info-pull">
+            <div class="info-row"><span class="info-label">Your pull</span><span class="info-val" id="pull-f">0 N</span></div>
+            <div class="info-row"><span class="info-label">Friction</span><span class="info-val" id="pull-fric">0 N</span></div>
+            <div class="info-row"><span class="info-label">Breakaway at</span><span class="info-val" id="pull-max">-</span></div>
+            <div class="info-row"><span class="info-label">State</span><span class="info-val" id="pull-state">STATIC</span></div>
+            <div class="info-row"><span class="info-label">Distance</span><span class="info-val" id="pull-dist">0 m</span></div>
+        </div>
+        <div class="info-display" id="info-race">
+            <div class="info-row"><span class="info-label">Slope</span><span class="info-val" id="race-slope">20&deg;</span></div>
+            <div class="info-row"><span class="info-label">Sliding &mu;</span><span class="info-val" id="race-muk">0.30</span></div>
+            <div class="info-row"><span class="info-label">Rolling &mu;</span><span class="info-val" id="race-mur">0.03</span></div>
+            <div class="info-row"><span class="info-label">Slider time</span><span class="info-val" id="race-t1">-</span></div>
+            <div class="info-row"><span class="info-label">Wheels time</span><span class="info-val" id="race-t2">-</span></div>
+        </div>
+        <div class="info-display" id="info-drop">
+            <div class="info-row"><span class="info-label">Speed</span><span class="info-val" id="drop-v">0 m/s</span></div>
+            <div class="info-row"><span class="info-label">Weight</span><span class="info-val" id="drop-w">- N</span></div>
+            <div class="info-row"><span class="info-label">Drag</span><span class="info-val" id="drop-drag">0 N</span></div>
+            <div class="info-row"><span class="info-label">Terminal v</span><span class="info-val" id="drop-vt">- m/s</span></div>
+            <div class="info-row"><span class="info-label">Height</span><span class="info-val" id="drop-h">100 m</span></div>
+        </div>
+        <div class="info-display" id="info-zoom">
+            <div class="info-row"><span class="info-label">Roughness</span><span class="info-val" id="zoom-rough">60%</span></div>
+            <div class="info-row"><span class="info-label">Pressing</span><span class="info-val" id="zoom-press">5</span></div>
+            <div class="info-row"><span class="info-label">Friction</span><span class="info-val" id="zoom-fric">MEDIUM</span></div>
+            <div class="info-row"><span class="info-label">Heat made</span><span class="info-val" id="zoom-heat">0</span></div>
+        </div>
+    </div>
+
+    <div class="panels">
+        <!-- ============ TAB: Pull the Block ============ -->
+        <div class="tab-panel active" id="panel-pull">
+            <div class="predict-bar" id="predict-pull"></div>
+            <div class="control-panel">
+                <div class="control-group">
+                    <span class="control-label">Pull Force</span>
+                    <span class="control-value" id="pull-force-display">0 N</span>
+                    <input type="range" id="pull-force-slider" min="0" max="100" value="0" step="1">
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Surface</span>
+                    <select id="pull-surface">
+                        <option value="ice">&#x1F9CA; Ice</option>
+                        <option value="wood" selected>&#x1FAB5; Wood</option>
+                        <option value="carpet">&#x1F9F6; Carpet</option>
+                        <option value="sand">&#x1FAA8; Sandpaper</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Bricks on top</span>
+                    <span class="control-value" id="pull-bricks-display">2</span>
+                    <input type="range" id="pull-bricks-slider" min="1" max="5" value="2" step="1">
+                </div>
+                <button class="ghost-btn" id="pull-reset">&#x1F504; Reset</button>
+            </div>
+            <p class="hint">Slide the pull force up slowly and watch the friction arrow copy you&hellip; until the block breaks free!</p>
+        </div>
+
+        <!-- ============ TAB: Rolling Race ============ -->
+        <div class="tab-panel" id="panel-race">
+            <div class="predict-bar" id="predict-race"></div>
+            <div class="control-panel">
+                <div class="control-group">
+                    <span class="control-label">Slope</span>
+                    <span class="control-value" id="race-slope-display">20&deg;</span>
+                    <input type="range" id="race-slope-slider" min="10" max="35" value="20" step="1">
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Surface</span>
+                    <select id="race-surface">
+                        <option value="ice">&#x1F9CA; Ice</option>
+                        <option value="wood" selected>&#x1FAB5; Wood</option>
+                        <option value="carpet">&#x1F9F6; Carpet</option>
+                        <option value="sand">&#x1FAA8; Sandpaper</option>
+                    </select>
+                </div>
+                <button class="action-btn" id="race-go">&#x1F3C1; Race!</button>
+                <button class="ghost-btn" id="race-reset">&#x1F504; Reset</button>
+            </div>
+            <p class="hint">Same crate, same slope &mdash; one slides, one rolls on wheels. Who wins?</p>
+        </div>
+
+        <!-- ============ TAB: Parachute Drop ============ -->
+        <div class="tab-panel" id="panel-drop">
+            <div class="predict-bar" id="predict-drop"></div>
+            <div class="control-panel">
+                <div class="control-group">
+                    <span class="control-label">Fluid</span>
+                    <select id="drop-fluid">
+                        <option value="air" selected>&#x1F32C;&#xFE0F; Air</option>
+                        <option value="water">&#x1F4A7; Water</option>
+                        <option value="honey">&#x1F36F; Honey</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Shape</span>
+                    <select id="drop-shape">
+                        <option value="stream">&#x1F41F; Streamlined</option>
+                        <option value="ball" selected>&#x26BE; Ball</option>
+                        <option value="flat">&#x1F4C4; Flat sheet</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Mass</span>
+                    <span class="control-value" id="drop-mass-display">3 kg</span>
+                    <input type="range" id="drop-mass-slider" min="1" max="10" value="3" step="1">
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Chute size</span>
+                    <span class="control-value" id="drop-chute-display">1.0</span>
+                    <input type="range" id="drop-chute-slider" min="0.5" max="2" value="1" step="0.1">
+                </div>
+                <button class="action-btn" id="drop-go">&#x2B07;&#xFE0F; Drop</button>
+                <button class="action-btn" id="drop-chute" disabled>&#x1FA82; Open Chute</button>
+                <button class="ghost-btn" id="drop-reset">&#x1F504; Reset</button>
+            </div>
+            <p class="hint">Mission: land slower than 8 m/s. Pick a shape, drop, and open the parachute in time!</p>
+        </div>
+
+        <!-- ============ TAB: Zoom In ============ -->
+        <div class="tab-panel" id="panel-zoom">
+            <div class="predict-bar" id="predict-zoom"></div>
+            <div class="control-panel">
+                <div class="control-group">
+                    <span class="control-label">Roughness</span>
+                    <span class="control-value" id="zoom-rough-display">60%</span>
+                    <input type="range" id="zoom-rough-slider" min="0" max="100" value="60" step="1">
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Pressing force</span>
+                    <span class="control-value" id="zoom-press-display">5</span>
+                    <input type="range" id="zoom-press-slider" min="1" max="10" value="5" step="1">
+                </div>
+                <button class="action-btn" id="zoom-rub">&#x1F91A; Start Rubbing</button>
+            </div>
+            <p class="hint">This is a microscope view! Even "smooth" surfaces have tiny bumps that lock together.</p>
+        </div>
+
+        <!-- ============ Explanation ============ -->
+        <div class="section-card">
+            <h2>&#x1F4A1; What did we discover?</h2>
+            <ul>
+                <li><strong>Friction opposes relative motion</strong> &mdash; it acts even when the block is NOT moving (static friction balances your pull).</li>
+                <li><strong>Static &gt; Sliding &gt; Rolling</strong> &mdash; it takes more force to START moving than to KEEP moving, and rolling beats sliding by far. That is why we invented the wheel and ball bearings!</li>
+                <li>Friction depends on <strong>how rough the surfaces are</strong> and <strong>how hard they press together</strong>.</li>
+                <li>Liquids and gases push back too &mdash; that is <strong>fluid friction (drag)</strong>. It grows with speed, which is why falling objects reach a steady <strong>terminal velocity</strong>. Streamlined shapes cut through with less drag.</li>
+                <li>Friction is a <strong>necessary evil</strong>: we could not walk, write or brake without it, but it also wears out shoe soles and machine parts and wastes energy as heat.</li>
+            </ul>
+            <div class="callout-chips">
+                <span class="callout-chip">&#x1FA80; Carrom powder = less friction</span>
+                <span class="callout-chip">&#x1F6B2; Ball bearings in cycle wheels</span>
+                <span class="callout-chip">&#x1F45F; Shoe treads = more grip</span>
+                <span class="callout-chip">&#x1F3CF; Streamlined cricket ball swing</span>
+                <span class="callout-chip">&#x2708;&#xFE0F; Aeroplanes are streamlined</span>
+                <span class="callout-chip">&#x1F525; Rubbing palms makes heat</span>
+            </div>
+        </div>
+
+        <!-- ============ Challenge ============ -->
+        <div class="section-card" id="challenge-card">
+            <h2>&#x1F3C6; Friction Challenge</h2>
+            <p>Answer all three correctly to earn the <strong>Friction badge</strong>!</p>
+            <div id="challenge-root"></div>
+            <div class="badge-banner" id="badge-banner">
+                <div class="big">&#x1F396;&#xFE0F; Friction Badge earned!</div>
+                <p>Head back to <a href="index.html" style="text-decoration: underline;">Types of Forces</a> to see your progress.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <footer class="page-footer">Types of Forces &bull; Simplified model for learning &mdash; values are illustrative</footer>
+
+    <script>
+    'use strict';
+
+    // ================= Shared helpers =================
+    const PROGRESS_KEY = 'forces-lab-progress';
+    function setBadge(name) {
+        let p = {};
+        try { p = JSON.parse(localStorage.getItem(PROGRESS_KEY)) || {}; } catch (e) {}
+        p[name] = true;
+        localStorage.setItem(PROGRESS_KEY, JSON.stringify(p));
+    }
+
+    const canvas = document.getElementById('sim-canvas');
+    const ctx = canvas.getContext('2d');
+    const W = 900, H = 560;           // logical drawing space
+    let viewScale = 1;
+
+    function fitCanvas() {
+        const wrap = canvas.parentElement;
+        const w = wrap.clientWidth - 0;
+        const cssW = w;
+        const cssH = Math.round(w * H / W);
+        canvas.style.height = cssH + 'px';
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(cssW * dpr);
+        canvas.height = Math.round(cssH * dpr);
+        viewScale = canvas.width / W;
+    }
+    window.addEventListener('resize', fitCanvas);
+    fitCanvas();
+
+    function ptr(e) {
+        const r = canvas.getBoundingClientRect();
+        return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height };
+    }
+
+    function drawArrow(x1, y1, x2, y2, color, width, label, labelSide) {
+        const dx = x2 - x1, dy = y2 - y1;
+        const len = Math.hypot(dx, dy);
+        if (len < 2) return;
+        const ang = Math.atan2(dy, dx);
+        const head = Math.min(14, 6 + width * 1.4);
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = width;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2 - Math.cos(ang) * head * 0.7, y2 - Math.sin(ang) * head * 0.7);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - Math.cos(ang - 0.45) * head, y2 - Math.sin(ang - 0.45) * head);
+        ctx.lineTo(x2 - Math.cos(ang + 0.45) * head, y2 - Math.sin(ang + 0.45) * head);
+        ctx.closePath();
+        ctx.fill();
+        if (label) {
+            ctx.font = '800 15px Nunito, sans-serif';
+            ctx.textAlign = 'center';
+            const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+            ctx.fillText(label, mx, my + (labelSide === 'below' ? 24 : -12));
+        }
+    }
+
+    function emoji(txt, x, y, size) {
+        ctx.font = size + 'px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(txt, x, y);
+        ctx.textBaseline = 'alphabetic';
+    }
+
+    // Predict-Observe-Explain widget
+    function makePredict(rootId, question, options, correctIdx, revealText) {
+        const root = document.getElementById(rootId);
+        root.innerHTML = '<div class="predict-q"><span class="tag">Predict first!</span>' + question + '</div>' +
+            '<div class="predict-opts"></div><div class="predict-reveal"></div>';
+        const optsEl = root.querySelector('.predict-opts');
+        const revealEl = root.querySelector('.predict-reveal');
+        const btns = options.map((o, i) => {
+            const b = document.createElement('button');
+            b.className = 'predict-opt';
+            b.textContent = o;
+            b.addEventListener('click', () => {
+                if (state.revealed) return;
+                state.chosen = i;
+                btns.forEach(x => x.classList.remove('chosen'));
+                b.classList.add('chosen');
+            });
+            optsEl.appendChild(b);
+            return b;
+        });
+        const state = {
+            chosen: null,
+            revealed: false,
+            reveal() {
+                if (state.revealed) return;
+                state.revealed = true;
+                btns[correctIdx].classList.add('right');
+                let verdict = '';
+                if (state.chosen === null) verdict = '🔍 ';
+                else if (state.chosen === correctIdx) verdict = '🎉 Your prediction was right! ';
+                else { btns[state.chosen].classList.add('wrong'); verdict = '🤯 Surprised? '; }
+                revealEl.innerHTML = verdict + revealText;
+                revealEl.classList.add('show');
+            },
+        };
+        return state;
+    }
+
+    // ================= Physics constants =================
+    const G = 10; // simplified gravity, m/s^2
+    const SURFACES = {
+        ice:    { name: 'Ice',       mus: 0.10, muk: 0.05, mur: 0.010, color: '#BFDFF5', tex: '#9FCBE8' },
+        wood:   { name: 'Wood',      mus: 0.45, muk: 0.30, mur: 0.030, color: '#8B6534', tex: '#75521F' },
+        carpet: { name: 'Carpet',    mus: 0.65, muk: 0.45, mur: 0.060, color: '#8E4FA8', tex: '#7A3E93' },
+        sand:   { name: 'Sandpaper', mus: 0.90, muk: 0.70, mur: 0.080, color: '#C9A23F', tex: '#B08A28' },
+    };
+
+    // =====================================================
+    // TAB 1 — Pull the Block (static vs sliding friction)
+    // =====================================================
+    const pull = {
+        F: 0, bricks: 2, surface: 'wood',
+        v: 0, dist: 0, sliding: false, groundOffset: 0,
+        obsTimer: 0,
+        get mass() { return this.bricks * 2; },
+        get N() { return this.mass * G; },
+
+        reset() {
+            this.v = 0; this.dist = 0; this.sliding = false; this.groundOffset = 0;
+        },
+
+        update(dt) {
+            const s = SURFACES[this.surface];
+            const fsMax = s.mus * this.N;
+            const fk = s.muk * this.N;
+            if (!this.sliding) {
+                if (this.F > fsMax) this.sliding = true;
+            }
+            if (this.sliding) {
+                const a = (this.F - fk) / this.mass;
+                this.v += a * dt;
+                if (this.v <= 0) { this.v = 0; if (this.F <= fsMax) this.sliding = false; }
+            }
+            this.dist += this.v * dt;
+            this.groundOffset = (this.groundOffset + this.v * 40 * dt) % 40;
+
+            // POE reveal: they pulled gently and saw friction match while static
+            if (!this.sliding && this.F >= 5) {
+                this.obsTimer += dt;
+                if (this.obsTimer > 1.2) predicts.pull.reveal();
+            }
+            if (this.sliding) predicts.pull.reveal();
+        },
+
+        friction() {
+            const s = SURFACES[this.surface];
+            return this.sliding ? s.muk * this.N : Math.min(this.F, s.mus * this.N);
+        },
+
+        draw() {
+            const s = SURFACES[this.surface];
+            const fsMax = s.mus * this.N;
+            const groundY = 420;
+
+            // sky grid
+            drawBackdrop();
+
+            // ground
+            ctx.fillStyle = s.color;
+            ctx.fillRect(0, groundY, W, 60);
+            ctx.fillStyle = s.tex;
+            for (let x = -40; x < W + 40; x += 40) {
+                const gx = x - this.groundOffset;
+                ctx.fillRect(gx, groundY + 8, 20, 6);
+                ctx.fillRect(gx + 14, groundY + 30, 22, 6);
+            }
+            ctx.fillStyle = 'rgba(0,0,0,0.55)';
+            ctx.font = '800 14px Nunito, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(s.name + ' surface', 16, groundY + 52);
+
+            // block + bricks
+            const bx = 330, by = groundY - 80, bw = 130, bh = 80;
+            ctx.fillStyle = '#A0703C';
+            ctx.fillRect(bx, by, bw, bh);
+            ctx.strokeStyle = '#7A5228';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(bx, by, bw, bh);
+            ctx.beginPath();
+            ctx.moveTo(bx, by + bh / 2); ctx.lineTo(bx + bw, by + bh / 2);
+            ctx.moveTo(bx + bw / 2, by); ctx.lineTo(bx + bw / 2, by + bh);
+            ctx.stroke();
+            for (let i = 0; i < this.bricks - 1; i++) {
+                const col = i % 2, row = Math.floor(i / 2);
+                ctx.fillStyle = '#C0392B';
+                ctx.fillRect(bx + 12 + col * 56, by - 26 - row * 28, 50, 24);
+                ctx.strokeStyle = '#8E2820';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(bx + 12 + col * 56, by - 26 - row * 28, 50, 24);
+            }
+            ctx.fillStyle = '#fff';
+            ctx.font = '800 13px Nunito, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(this.mass + ' kg', bx + bw / 2, by + bh - 10);
+
+            // rope + spring balance + hand
+            const ry = by + 30;
+            ctx.strokeStyle = '#D9C79A';
+            ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(bx + bw, ry); ctx.lineTo(bx + bw + 60, ry); ctx.stroke();
+            const sbx = bx + bw + 60;
+            ctx.fillStyle = '#DDD';
+            ctx.fillRect(sbx, ry - 16, 90, 32);
+            ctx.strokeStyle = '#999';
+            ctx.strokeRect(sbx, ry - 16, 90, 32);
+            ctx.fillStyle = '#C0392B';
+            ctx.fillRect(sbx + 4, ry - 4, (90 - 8) * Math.min(this.F, 100) / 100, 8);
+            ctx.fillStyle = '#222';
+            ctx.font = '800 13px Nunito, sans-serif';
+            ctx.fillText(this.F + ' N', sbx + 45, ry - 22);
+            ctx.strokeStyle = '#D9C79A';
+            ctx.beginPath(); ctx.moveTo(sbx + 90, ry); ctx.lineTo(sbx + 130, ry); ctx.stroke();
+            emoji('✋', sbx + 150, ry, 34);
+
+            // speed lines when sliding
+            if (this.v > 0.1) {
+                ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+                ctx.lineWidth = 3;
+                for (let i = 0; i < 3; i++) {
+                    const ly = by + 15 + i * 25;
+                    ctx.beginPath();
+                    ctx.moveTo(bx - 15 - this.v * 4, ly);
+                    ctx.lineTo(bx - 15, ly);
+                    ctx.stroke();
+                }
+            }
+
+            // arrows
+            const f = this.friction();
+            if (this.F > 0) drawArrow(bx + bw / 2, by - 70 - (this.bricks > 1 ? 28 * Math.ceil((this.bricks - 1) / 2) : 0),
+                bx + bw / 2 + 30 + this.F * 2.2, by - 70 - (this.bricks > 1 ? 28 * Math.ceil((this.bricks - 1) / 2) : 0),
+                '#4CAF50', 6, 'Pull ' + this.F + ' N');
+            if (f > 0.5) drawArrow(bx + bw / 2, groundY + 44, bx + bw / 2 - 30 - f * 2.2, groundY + 44,
+                '#FF5252', 6, 'Friction ' + f.toFixed(0) + ' N', 'below');
+
+            // force meter (top-left)
+            const mx = 24, my = 40, mw = 260;
+            ctx.fillStyle = 'rgba(255,255,255,0.88)';
+            ctx.fillRect(mx - 8, my - 24, mw + 60, 108);
+            ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(mx - 8, my - 24, mw + 60, 108);
+            ctx.font = '800 13px Nunito, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#4CAF50';
+            ctx.fillText('Your pull', mx, my - 6);
+            ctx.fillStyle = 'rgba(0,0,0,0.08)';
+            ctx.fillRect(mx, my, mw, 12);
+            ctx.fillStyle = '#4CAF50';
+            ctx.fillRect(mx, my, mw * Math.min(this.F, 100) / 100, 12);
+            ctx.fillStyle = '#FF5252';
+            ctx.fillText('Friction', mx, my + 34);
+            ctx.fillStyle = 'rgba(0,0,0,0.08)';
+            ctx.fillRect(mx, my + 40, mw, 12);
+            ctx.fillStyle = '#FF5252';
+            ctx.fillRect(mx, my + 40, mw * Math.min(f, 100) / 100, 12);
+            // breakaway tick
+            const tickX = mx + mw * Math.min(fsMax, 100) / 100;
+            ctx.strokeStyle = '#E67700';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([4, 3]);
+            ctx.beginPath(); ctx.moveTo(tickX, my - 4); ctx.lineTo(tickX, my + 56); ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = '#E67700';
+            ctx.fillText('breakaway ' + fsMax.toFixed(0) + ' N', Math.min(tickX + 4, mx + mw - 90), my + 74);
+
+            // state label
+            ctx.font = "800 20px 'Fredoka One', cursive";
+            ctx.textAlign = 'center';
+            if (this.sliding) {
+                ctx.fillStyle = '#4CAF50';
+                ctx.fillText('SLIDING! Friction dropped to ' + f.toFixed(0) + ' N', W / 2, 150);
+            } else if (this.F > 0) {
+                ctx.fillStyle = '#E67700';
+                ctx.fillText('Not moving — friction matches your pull!', W / 2, 150);
+            }
+
+            // info panel
+            setText('pull-f', this.F + ' N');
+            setText('pull-fric', f.toFixed(0) + ' N');
+            setText('pull-max', fsMax.toFixed(0) + ' N');
+            setText('pull-state', this.sliding ? 'SLIDING' : 'STATIC');
+            setText('pull-dist', this.dist.toFixed(1) + ' m');
+        },
+    };
+
+    // =====================================================
+    // TAB 2 — Rolling vs Sliding Race
+    // =====================================================
+    const race = {
+        angle: 20, surface: 'wood',
+        running: false, t: 0,
+        slider: { s: 0, v: 0, done: null, stuck: false },
+        roller: { s: 0, v: 0, done: null },
+        L: 8, banner: '',
+
+        reset() {
+            this.running = false; this.t = 0; this.banner = '';
+            this.slider = { s: 0, v: 0, done: null, stuck: false };
+            this.roller = { s: 0, v: 0, done: null };
+        },
+
+        start() {
+            this.reset();
+            this.running = true;
+        },
+
+        update(dt) {
+            if (!this.running) return;
+            const s = SURFACES[this.surface];
+            const th = this.angle * Math.PI / 180;
+            const aSlide = G * (Math.sin(th) - s.muk * Math.cos(th));
+            const aRoll = G * (Math.sin(th) - s.mur * Math.cos(th));
+            this.t += dt;
+
+            if (this.slider.done === null) {
+                if (aSlide <= 0) { this.slider.stuck = true; }
+                else {
+                    this.slider.v += aSlide * dt;
+                    this.slider.s += this.slider.v * dt;
+                    if (this.slider.s >= this.L) { this.slider.s = this.L; this.slider.done = this.t; }
+                }
+            }
+            if (this.roller.done === null) {
+                this.roller.v += Math.max(aRoll, 0) * dt;
+                this.roller.s += this.roller.v * dt;
+                if (this.roller.s >= this.L) { this.roller.s = this.L; this.roller.done = this.t; }
+            }
+
+            const sliderSettled = this.slider.done !== null || this.slider.stuck;
+            if (sliderSettled && this.roller.done !== null) {
+                this.running = false;
+                if (this.slider.stuck) {
+                    this.banner = '🛞 Wheels win — the sliding crate is STUCK! Friction beat gravity.';
+                } else if (this.roller.done < this.slider.done) {
+                    this.banner = '🏆 Wheels win! Rolling friction is much smaller than sliding friction.';
+                } else {
+                    this.banner = '😲 The slider won — try a rougher surface!';
+                }
+                predicts.race.reveal();
+            }
+        },
+
+        draw() {
+            drawBackdrop();
+            const s = SURFACES[this.surface];
+            const th = this.angle * Math.PI / 180;
+            const rampLen = 560; // px, maps to 8 m
+            const nx = Math.sin(th), ny = -Math.cos(th); // ramp normal (up from surface)
+            // two parallel ramp lanes: slider on the lower one, wheels on the upper one
+            const lanes = [
+                { bx: 120, by: 205 },
+                { bx: 120 + nx * 96, by: 205 + ny * 96 },
+            ];
+
+            // floor
+            ctx.fillStyle = '#E6E1F2';
+            ctx.fillRect(0, H - 70, W, 70);
+
+            lanes.forEach(lane => {
+                const ex = lane.bx + Math.cos(th) * rampLen;
+                const ey = lane.by + Math.sin(th) * rampLen;
+                // support post
+                ctx.fillStyle = '#C7C0DA';
+                ctx.fillRect(ex - 6, ey + 26, 12, Math.max(H - 70 - ey - 26, 0));
+                // ramp body
+                ctx.fillStyle = s.color;
+                ctx.beginPath();
+                ctx.moveTo(lane.bx, lane.by);
+                ctx.lineTo(ex, ey);
+                ctx.lineTo(ex, ey + 26);
+                ctx.lineTo(lane.bx, lane.by + 26);
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = s.tex;
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                // finish flag at ramp end
+                emoji('🏁', ex + 26, ey - 6, 30);
+            });
+
+            const drawCrate = (lane, frac, lift, wheels, vel, label, stuck) => {
+                const cx = lane.bx + Math.cos(th) * frac * rampLen + nx * lift;
+                const cy = lane.by + Math.sin(th) * frac * rampLen + ny * lift;
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(th);
+                const wOff = wheels ? 14 : 0;
+                ctx.fillStyle = wheels ? '#C98F3B' : '#A0703C';
+                ctx.fillRect(-30, -46 - wOff, 60, 44);
+                ctx.strokeStyle = '#6E4B1E';
+                ctx.lineWidth = 2.5;
+                ctx.strokeRect(-30, -46 - wOff, 60, 44);
+                if (wheels) {
+                    const rot = frac * rampLen / 11;
+                    [-17, 17].forEach(wx => {
+                        ctx.fillStyle = '#333';
+                        ctx.beginPath(); ctx.arc(wx, -11, 11, 0, Math.PI * 2); ctx.fill();
+                        ctx.strokeStyle = '#AAA';
+                        ctx.lineWidth = 2.5;
+                        ctx.beginPath();
+                        ctx.moveTo(wx, -11);
+                        ctx.lineTo(wx + Math.cos(rot) * 9, -11 + Math.sin(rot) * 9);
+                        ctx.stroke();
+                    });
+                }
+                ctx.fillStyle = '#333';
+                ctx.font = '800 12px Nunito, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(label, 0, -52 - wOff);
+                if (stuck) { ctx.font = '20px sans-serif'; ctx.fillText('🔒', 0, -70 - wOff); }
+                ctx.restore();
+
+                // friction arrow up-slope
+                const mu = wheels ? s.mur : s.muk;
+                const fLen = 20 + mu * 220;
+                drawArrow(cx + nx * 34, cy + ny * 34,
+                    cx + nx * 34 - Math.cos(th) * fLen, cy + ny * 34 - Math.sin(th) * fLen,
+                    wheels ? '#0288D1' : '#FF5252', 4, null);
+            };
+
+            drawCrate(lanes[0], this.slider.s / this.L, 2, false, this.slider.v, 'SLIDER', this.slider.stuck);
+            drawCrate(lanes[1], this.roller.s / this.L, 2, true, this.roller.v, 'WHEELS', false);
+
+            // legend
+            ctx.font = '800 13px Nunito, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#FF5252';
+            ctx.fillText('■ sliding friction (μ = ' + s.muk.toFixed(2) + ')', 24, H - 44);
+            ctx.fillStyle = '#0288D1';
+            ctx.fillText('■ rolling friction (μ = ' + s.mur.toFixed(3) + ')', 24, H - 22);
+
+            // timer + banner
+            ctx.fillStyle = '#333';
+            ctx.font = "800 18px 'Fredoka One', cursive";
+            ctx.textAlign = 'right';
+            ctx.fillText('⏱ ' + this.t.toFixed(2) + ' s', W - 30, H - 30);
+            if (this.banner) {
+                ctx.font = "800 21px 'Fredoka One', cursive";
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#E67700';
+                ctx.fillText(this.banner, W / 2, 60);
+            }
+
+            setText('race-slope', this.angle + '°');
+            setText('race-muk', s.muk.toFixed(2));
+            setText('race-mur', s.mur.toFixed(3));
+            setText('race-t1', this.slider.stuck ? 'STUCK!' : (this.slider.done ? this.slider.done.toFixed(2) + ' s' : '-'));
+            setText('race-t2', this.roller.done ? this.roller.done.toFixed(2) + ' s' : '-');
+        },
+    };
+
+    // =====================================================
+    // TAB 3 — Parachute Drop (fluid friction / drag)
+    // =====================================================
+    const FLUIDS = {
+        air:   { name: 'Air',   rho: 1.2,  sky: '#DCEEFF', label: '🌤' },
+        water: { name: 'Water', rho: 25,   sky: '#C2E3F7', label: '🐠' },
+        honey: { name: 'Honey', rho: 90,   sky: '#F3E3B0', label: '🍯' },
+    };
+    const SHAPES = {
+        stream: { name: 'Streamlined', cd: 0.10, area: 0.03, emoji: '🐟' },
+        ball:   { name: 'Ball',        cd: 0.50, area: 0.05, emoji: '⚾' },
+        flat:   { name: 'Flat sheet',  cd: 1.50, area: 0.15, emoji: '📄' },
+    };
+    const drop = {
+        fluid: 'air', shape: 'ball', mass: 3, chuteSize: 1,
+        falling: false, landed: false, h: 100, v: 0, t: 0,
+        chuteOpen: false, chuteAnim: 0,
+        graph: [], steadyTimer: 0, landMsg: '',
+
+        reset() {
+            this.falling = false; this.landed = false;
+            this.h = 100; this.v = 0; this.t = 0;
+            this.chuteOpen = false; this.chuteAnim = 0;
+            this.graph = []; this.steadyTimer = 0; this.landMsg = '';
+            document.getElementById('drop-chute').disabled = true;
+        },
+
+        start() { this.reset(); this.falling = true; document.getElementById('drop-chute').disabled = false; },
+        openChute() { if (this.falling) { this.chuteOpen = true; document.getElementById('drop-chute').disabled = true; } },
+
+        dragCoef() {
+            const sh = SHAPES[this.shape];
+            let cdA = sh.cd * sh.area;
+            cdA += this.chuteAnim * 1.3 * this.chuteSize;
+            return 0.5 * FLUIDS[this.fluid].rho * cdA;
+        },
+
+        terminalV() { return Math.sqrt(this.mass * G / this.dragCoef()); },
+
+        update(dt) {
+            if (this.chuteOpen && this.chuteAnim < 1) this.chuteAnim = Math.min(1, this.chuteAnim + dt * 2.5);
+            if (!this.falling) return;
+            const k = this.dragCoef();
+            const dragF = k * this.v * this.v;
+            const a = G - dragF / this.mass;
+            this.v += a * dt;
+            if (this.v < 0) this.v = 0;
+            this.h -= this.v * dt;
+            this.t += dt;
+            if (this.graph.length === 0 || this.t - this.graph[this.graph.length - 1].t > 0.06) {
+                this.graph.push({ t: this.t, v: this.v });
+            }
+            // near terminal velocity → reveal POE
+            const vt = this.terminalV();
+            if (Math.abs(this.v - vt) < vt * 0.03 && this.v > 1) {
+                this.steadyTimer += dt;
+                if (this.steadyTimer > 0.8) predicts.drop.reveal();
+            } else this.steadyTimer = 0;
+
+            if (this.h <= 0) {
+                this.h = 0; this.falling = false; this.landed = true;
+                document.getElementById('drop-chute').disabled = true;
+                this.landMsg = this.v <= 8 ? '🎉 Soft landing at ' + this.v.toFixed(1) + ' m/s — mission success!'
+                                           : '💥 Crashed at ' + this.v.toFixed(1) + ' m/s — try a bigger chute or open it earlier!';
+                predicts.drop.reveal();
+            }
+        },
+
+        draw() {
+            const fl = FLUIDS[this.fluid];
+            const sh = SHAPES[this.shape];
+            // sky column
+            ctx.fillStyle = fl.sky;
+            ctx.fillRect(0, 0, W, H);
+            ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 5; i++) {
+                ctx.beginPath(); ctx.moveTo(0, i * H / 5); ctx.lineTo(W, i * H / 5); ctx.stroke();
+            }
+
+            const objX = 280;
+            const objY = 200;
+            // altitude markers scroll past the object
+            ctx.font = '700 12px Nunito, sans-serif';
+            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+            ctx.textAlign = 'left';
+            for (let m = 0; m <= 100; m += 10) {
+                const y = objY + (this.h - m) * 4.2;
+                if (y > -20 && y < H + 20) {
+                    ctx.fillRect(60, y, 26, 2);
+                    ctx.fillText(m + ' m', 92, y + 4);
+                }
+            }
+            // ground
+            const groundY = objY + this.h * 4.2;
+            if (groundY < H + 60) {
+                ctx.fillStyle = '#2E7D32';
+                ctx.fillRect(0, groundY + 20, W, H);
+                emoji('🎯', objX, groundY + 46, 30);
+            }
+
+            // parachute
+            if (this.chuteAnim > 0.02) {
+                const spread = 30 + 55 * this.chuteAnim * this.chuteSize;
+                const top = objY - 46 - 30 * this.chuteAnim;
+                ctx.fillStyle = '#FF7043';
+                ctx.beginPath();
+                ctx.moveTo(objX - spread, top + 26);
+                ctx.quadraticCurveTo(objX, top - 34, objX + spread, top + 26);
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+                ctx.lineWidth = 1.5;
+                [-1, -0.4, 0.4, 1].forEach(f => {
+                    ctx.beginPath();
+                    ctx.moveTo(objX + spread * f, top + 26);
+                    ctx.lineTo(objX, objY - 16);
+                    ctx.stroke();
+                });
+            }
+            // object
+            emoji(sh.emoji, objX, objY, 40);
+
+            // arrows: weight down, drag up
+            const wN = this.mass * G;
+            const dragF = this.dragCoef() * this.v * this.v;
+            drawArrow(objX - 70, objY - 10, objX - 70, objY - 10 + 30 + wN * 1.1, '#E67700', 5, null);
+            ctx.fillStyle = '#E67700';
+            ctx.font = '800 13px Nunito, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText('weight ' + wN.toFixed(0) + ' N', objX - 82, objY + 30);
+            if (dragF > 0.5) {
+                drawArrow(objX + 70, objY + 10, objX + 70, objY + 10 - 30 - Math.min(dragF, 200) * 1.1, '#0288D1', 5, null);
+                ctx.fillStyle = '#0288D1';
+                ctx.textAlign = 'left';
+                ctx.fillText('drag ' + dragF.toFixed(0) + ' N', objX + 82, objY - 20);
+            }
+
+            // v-t graph inset
+            const gx = 590, gy = 70, gw = 280, gh = 190;
+            ctx.fillStyle = 'rgba(255,255,255,0.92)';
+            ctx.fillRect(gx - 14, gy - 34, gw + 28, gh + 78);
+            ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(gx - 14, gy - 34, gw + 28, gh + 78);
+            ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(gx, gy, gw, gh);
+            ctx.fillStyle = '#333';
+            ctx.font = '800 13px Nunito, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('Speed vs time', gx, gy - 14);
+            const vt = this.terminalV();
+            const vMax = Math.max(vt * 1.3, 10);
+            const tMax = Math.max(this.t * 1.1, 6);
+            // terminal velocity line
+            const vtY = gy + gh - (vt / vMax) * gh;
+            ctx.strokeStyle = '#E67700';
+            ctx.setLineDash([5, 4]);
+            ctx.beginPath(); ctx.moveTo(gx, vtY); ctx.lineTo(gx + gw, vtY); ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = '#E67700';
+            ctx.font = '700 11px Nunito, sans-serif';
+            ctx.fillText('terminal velocity ' + vt.toFixed(1) + ' m/s', gx + 4, vtY - 5);
+            // curve
+            if (this.graph.length > 1) {
+                ctx.strokeStyle = '#0288D1';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                this.graph.forEach((p, i) => {
+                    const x = gx + (p.t / tMax) * gw;
+                    const y = gy + gh - (p.v / vMax) * gh;
+                    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                });
+                ctx.stroke();
+            }
+            ctx.fillStyle = 'rgba(0,0,0,0.5)';
+            ctx.font = '700 11px Nunito, sans-serif';
+            ctx.fillText('0', gx - 8, gy + gh + 12);
+            ctx.fillText('time →', gx + gw - 42, gy + gh + 14);
+            ctx.save();
+            ctx.translate(gx - 6, gy + 60);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('speed →', 0, 0);
+            ctx.restore();
+
+            // status text
+            ctx.font = "800 19px 'Fredoka One', cursive";
+            ctx.textAlign = 'center';
+            if (this.landMsg) {
+                ctx.fillStyle = this.v <= 8 ? '#4CAF50' : '#FF5252';
+                ctx.fillText(this.landMsg, W / 2, H - 26);
+            } else if (!this.falling) {
+                ctx.fillStyle = 'rgba(0,0,0,0.55)';
+                ctx.fillText('Press Drop to release the ' + sh.name.toLowerCase() + ' into ' + fl.name.toLowerCase() + '!', W / 2, H - 26);
+            }
+
+            setText('drop-v', this.v.toFixed(1) + ' m/s');
+            setText('drop-w', (this.mass * G).toFixed(0) + ' N');
+            setText('drop-drag', dragF.toFixed(1) + ' N');
+            setText('drop-vt', vt.toFixed(1) + ' m/s');
+            setText('drop-h', this.h.toFixed(0) + ' m');
+        },
+    };
+
+    // =====================================================
+    // TAB 4 — Zoom In (why friction exists)
+    // =====================================================
+    const zoom = {
+        rough: 60, press: 5, rubbing: false,
+        phase: 0, heat: 0, sparks: [],
+
+        update(dt) {
+            if (this.rubbing) {
+                this.phase += dt * 4;
+                const speed = Math.abs(Math.cos(this.phase));
+                const rate = (this.rough / 100) * (this.press / 10) * speed;
+                this.heat += rate * dt * 22;
+                if (Math.random() < rate * 0.9) {
+                    this.sparks.push({
+                        x: 450 + Math.sin(this.phase) * 150 + (Math.random() - 0.5) * 180,
+                        y: 300 + (Math.random() - 0.5) * 16,
+                        vy: -30 - Math.random() * 60,
+                        life: 1,
+                    });
+                }
+                if (this.rough < 15) predicts.zoom.reveal();
+            } else {
+                this.heat = Math.max(0, this.heat - dt * 6);
+            }
+            this.sparks.forEach(p => { p.y += p.vy * dt; p.life -= dt * 1.4; });
+            this.sparks = this.sparks.filter(p => p.life > 0);
+        },
+
+        teeth(cx, y, amp, dir, colorA, colorB) {
+            // jagged edge across the canvas
+            ctx.fillStyle = colorA;
+            ctx.beginPath();
+            ctx.moveTo(80, y - dir * 130);
+            ctx.lineTo(80, y);
+            const step = 34;
+            for (let x = 80; x <= 820; x += step) {
+                ctx.lineTo(x + step / 2 + cx % step, y + dir * amp);
+                ctx.lineTo(x + step + cx % step, y);
+            }
+            ctx.lineTo(820, y - dir * 130);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = colorB;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        },
+
+        draw() {
+            drawBackdrop();
+            // microscope ring
+            ctx.fillStyle = 'rgba(0,0,0,0.55)';
+            ctx.font = '800 15px Nunito, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('🔬 MICROSCOPE VIEW — surfaces magnified 10,000×', W / 2, 42);
+
+            const amp = 3 + (this.rough / 100) * 15;
+            const overlap = 2 + this.press * 1.1;
+            const shift = this.rubbing ? Math.sin(this.phase) * 150 : 0;
+
+            // bottom surface (fixed) and top block (moves when rubbing)
+            this.teeth(0, 310 + amp - overlap, amp, -1, '#37474F', '#546E7A');   // bottom, teeth point up
+            this.teeth(shift, 310 - amp, amp, 1, '#795548', '#A1887F');          // top, teeth point down
+
+            ctx.fillStyle = 'rgba(255,255,255,0.85)';
+            ctx.font = '800 14px Nunito, sans-serif';
+            ctx.fillText('top object', 450 + shift * 0.2, 168);
+            ctx.fillStyle = 'rgba(0,0,0,0.55)';
+            ctx.fillText('table surface', 450, 462);
+
+            // pressing arrows
+            for (let i = 0; i < this.press; i++) {
+                const ax = 180 + i * (540 / Math.max(this.press - 1, 1));
+                drawArrow(ax, 118, ax, 148, '#E67700', 3.5, null);
+            }
+
+            // sparks (heat)
+            this.sparks.forEach(p => {
+                ctx.globalAlpha = Math.max(p.life, 0);
+                emoji('✨', p.x, p.y, 16 + 8 * p.life);
+                ctx.globalAlpha = 1;
+            });
+
+            // friction + heat meters
+            const fLevel = (this.rough / 100) * (this.press / 10);
+            const mx = 640, my = 500, mw = 220;
+            ctx.font = '800 13px Nunito, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillStyle = '#FF5252';
+            ctx.fillText('Friction meter', mx, my - 8);
+            ctx.fillStyle = 'rgba(0,0,0,0.08)';
+            ctx.fillRect(mx, my, mw, 12);
+            ctx.fillStyle = '#FF5252';
+            ctx.fillRect(mx, my, mw * fLevel, 12);
+            ctx.fillStyle = '#F57C00';
+            ctx.fillText('Heat 🌡 ' + this.heat.toFixed(0), mx, my + 34);
+            ctx.fillStyle = 'rgba(0,0,0,0.08)';
+            ctx.fillRect(mx, my + 40, mw, 8);
+            ctx.fillStyle = '#F57C00';
+            ctx.fillRect(mx, my + 40, mw * Math.min(this.heat / 100, 1), 8);
+
+            const level = fLevel < 0.2 ? 'LOW' : fLevel < 0.55 ? 'MEDIUM' : 'HIGH';
+            setText('zoom-rough', this.rough + '%');
+            setText('zoom-press', String(this.press));
+            setText('zoom-fric', level);
+            setText('zoom-heat', this.heat.toFixed(0));
+        },
+    };
+
+    // ================= Shared drawing =================
+    function drawBackdrop() {
+        ctx.fillStyle = '#FBFAFF';
+        ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = 'rgba(0,0,0,0.04)';
+        for (let x = 0; x < W; x += 45) ctx.fillRect(x, 0, 1, H);
+        for (let y = 0; y < H; y += 45) ctx.fillRect(0, y, W, 1);
+    }
+    function setText(id, txt) {
+        const el = document.getElementById(id);
+        if (el && el.textContent !== txt) el.textContent = txt;
+    }
+
+    // ================= Predictions (POE) =================
+    const predicts = {
+        pull: makePredict('predict-pull',
+            'You pull gently and the block does NOT move. Is friction acting on it?',
+            ['No — friction only acts on moving things', 'Yes — friction exactly balances my pull'], 1,
+            'Even a still block feels friction! <strong>Static friction</strong> grows to match your pull — up to a limit. Past the breakaway point the block slips, and sliding friction is <em>smaller</em> than that peak.'),
+        race: makePredict('predict-race',
+            'Same crate, same slope — one slides, one is on wheels. Which reaches the bottom first?',
+            ['The sliding crate', 'The crate on wheels', 'Both arrive together'], 1,
+            '<strong>Rolling friction is much smaller than sliding friction</strong> — that is why suitcases have wheels and cycle axles have ball bearings!'),
+        drop: makePredict('predict-drop',
+            'As the object falls through the fluid, what happens to its speed?',
+            ['It keeps increasing forever', 'It increases, then becomes steady', 'It slows down to zero'], 1,
+            'Drag grows with speed until it balances the weight. Then the object falls at a steady <strong>terminal velocity</strong> — steady speed, not stopped!'),
+        zoom: makePredict('predict-zoom',
+            'If we polish both surfaces very smooth, friction will…',
+            ['Disappear completely', 'Become much smaller', 'Stay exactly the same'], 1,
+            'Polishing shrinks the bumps so they interlock less — friction drops a lot. But no real surface is perfectly smooth, so friction never fully disappears.'),
+    };
+
+    // ================= Controls wiring =================
+    const $ = (id) => document.getElementById(id);
+
+    // Tab 1
+    $('pull-force-slider').addEventListener('input', e => {
+        pull.F = +e.target.value;
+        $('pull-force-display').textContent = pull.F + ' N';
+    });
+    $('pull-surface').addEventListener('change', e => { pull.surface = e.target.value; pull.reset(); });
+    $('pull-bricks-slider').addEventListener('input', e => {
+        pull.bricks = +e.target.value;
+        $('pull-bricks-display').textContent = String(pull.bricks);
+    });
+    $('pull-reset').addEventListener('click', () => {
+        pull.reset(); pull.F = 0;
+        $('pull-force-slider').value = 0;
+        $('pull-force-display').textContent = '0 N';
+    });
+
+    // Tab 2
+    $('race-slope-slider').addEventListener('input', e => {
+        race.angle = +e.target.value;
+        $('race-slope-display').textContent = race.angle + '°';
+        race.reset();
+    });
+    $('race-surface').addEventListener('change', e => { race.surface = e.target.value; race.reset(); });
+    $('race-go').addEventListener('click', () => race.start());
+    $('race-reset').addEventListener('click', () => race.reset());
+
+    // Tab 3
+    $('drop-fluid').addEventListener('change', e => { drop.fluid = e.target.value; drop.reset(); });
+    $('drop-shape').addEventListener('change', e => { drop.shape = e.target.value; drop.reset(); });
+    $('drop-mass-slider').addEventListener('input', e => {
+        drop.mass = +e.target.value;
+        $('drop-mass-display').textContent = drop.mass + ' kg';
+    });
+    $('drop-chute-slider').addEventListener('input', e => {
+        drop.chuteSize = +e.target.value;
+        $('drop-chute-display').textContent = drop.chuteSize.toFixed(1);
+    });
+    $('drop-go').addEventListener('click', () => drop.start());
+    $('drop-chute').addEventListener('click', () => drop.openChute());
+    $('drop-reset').addEventListener('click', () => drop.reset());
+
+    // Tab 4
+    $('zoom-rough-slider').addEventListener('input', e => {
+        zoom.rough = +e.target.value;
+        $('zoom-rough-display').textContent = zoom.rough + '%';
+    });
+    $('zoom-press-slider').addEventListener('input', e => {
+        zoom.press = +e.target.value;
+        $('zoom-press-display').textContent = String(zoom.press);
+    });
+    $('zoom-rub').addEventListener('click', () => {
+        zoom.rubbing = !zoom.rubbing;
+        $('zoom-rub').textContent = zoom.rubbing ? '✋ Stop Rubbing' : '🤚 Start Rubbing';
+    });
+
+    // ================= Tabs =================
+    const sims = { pull, race, drop, zoom };
+    let active = 'pull';
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            active = btn.dataset.tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + active));
+            document.querySelectorAll('.info-display').forEach(i => i.classList.toggle('active', i.id === 'info-' + active));
+        });
+    });
+    document.getElementById('info-pull').classList.add('active');
+
+    // ================= Challenge quiz =================
+    function buildChallenge(rootId, questions, badgeName, bannerId) {
+        const root = document.getElementById(rootId);
+        const solved = new Set();
+        questions.forEach((q, qi) => {
+            const qEl = document.createElement('div');
+            qEl.className = 'quiz-q';
+            qEl.innerHTML = '<div class="q-text">' + (qi + 1) + '. ' + q.q + '</div>';
+            const opts = document.createElement('div');
+            opts.className = 'quiz-opts';
+            const explain = document.createElement('div');
+            explain.className = 'quiz-explain';
+            q.opts.forEach((o, oi) => {
+                const b = document.createElement('button');
+                b.className = 'quiz-opt';
+                b.textContent = o;
+                b.addEventListener('click', () => {
+                    if (solved.has(qi)) return;
+                    if (oi === q.correct) {
+                        b.classList.add('right');
+                        explain.textContent = '✅ ' + q.explain;
+                        explain.classList.add('show');
+                        solved.add(qi);
+                        if (solved.size === questions.length) {
+                            setBadge(badgeName);
+                            document.getElementById(bannerId).classList.add('show');
+                        }
+                    } else {
+                        b.classList.add('wrong');
+                        setTimeout(() => b.classList.remove('wrong'), 900);
+                    }
+                });
+                opts.appendChild(b);
+            });
+            qEl.appendChild(opts);
+            qEl.appendChild(explain);
+            root.appendChild(qEl);
+        });
+    }
+
+    buildChallenge('challenge-root', [
+        {
+            q: 'For the same object on the same surface, which friction is the LARGEST?',
+            opts: ['Static friction (just before it starts moving)', 'Sliding friction', 'Rolling friction'],
+            correct: 0,
+            explain: 'Static > sliding > rolling. Starting motion is the hardest part!',
+        },
+        {
+            q: 'Why do carrom players sprinkle powder on the board?',
+            opts: ['To make the board smell nice', 'To reduce friction so the striker glides easily', 'To increase friction for better grip'],
+            correct: 1,
+            explain: 'The powder fills tiny bumps and reduces friction — the striker slides much further.',
+        },
+        {
+            q: 'Fish, birds and aeroplanes have pointed, streamlined shapes to…',
+            opts: ['Look faster', 'Reduce fluid friction (drag)', 'Increase their weight'],
+            correct: 1,
+            explain: 'Streamlined shapes let the fluid flow smoothly around them, cutting drag.',
+        },
+    ], 'friction', 'badge-banner');
+
+    // ================= Main loop =================
+    let last = performance.now();
+    function frame(now) {
+        const dt = Math.min((now - last) / 1000, 0.033);
+        last = now;
+        const sim = sims[active];
+        sim.update(dt);
+        ctx.setTransform(viewScale, 0, 0, viewScale, 0, 0);
+        sim.draw();
+        requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+    </script>
+</body>
+</html>
