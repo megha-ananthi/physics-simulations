@@ -37,7 +37,7 @@ smoothly on low-end devices, and they use a **light theme** so they stay readabl
 
 ## M.Sc. Physics Practicals Module
 
-Exam-preparation simulations for ten M.Sc. Physics practicals, opened from the **M.Sc. Physics Practicals**
+Exam-preparation simulations for eleven M.Sc. Physics practicals, opened from the **M.Sc. Physics Practicals**
 card on the home page. Every experiment page has four parts: **Simulate** (the interactive experiment),
 **Draw it** (each exam diagram drawn stroke by stroke with step captions), **Record** (an exam-ready record
 sheet — aim, apparatus, formula, diagrams, procedure, observation tables filled from your own readings,
@@ -46,6 +46,7 @@ calculation, result; printable) and **Viva** (likely viva questions with answers
 | Practical | Exp | Experiment | Type |
 |-----------|-----|------------|------|
 | I  | 3  | Polarimeter — specific rotation of cane sugar | Optics |
+| I  | 4  | D/A converter — binary weighted resistor method (IC 741) | Op-amp |
 | I  | 11 | RS, clocked RS, D (and JK, T) flip-flops with NAND/NOR | Digital |
 | I  | 12 | 4-bit binary adder & subtractor with IC 7483 | Digital |
 | I  | 13 | Op-amp 4-bit R-2R ladder DAC (IC 741) | Op-amp |
