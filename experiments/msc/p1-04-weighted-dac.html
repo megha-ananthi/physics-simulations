@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Weighted Resistor DAC - M.Sc. Practicals - Science Lab</title>
+    <meta name="description" content="4-bit D/A converter by the binary weighted resistor method using IC 741: flip the toggle switches on a lab-style trainer kit, set the full-scale voltage with Rf and read the multimeter.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/msc.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x2696;&#xFE0F;</text></svg>">
+    <style>
+        :root { --accent: #EF6C00; --accent-soft: rgba(239, 108, 0, 0.12); --accent-border: rgba(239, 108, 0, 0.5); }
+        /* bench view */
+        #bench { cursor: default; }
+        #bench .sw { cursor: pointer; }
+        #bench .sw:hover .sw-base { stroke: #FFD54F; stroke-width: 2.5; }
+        #bench .pot { cursor: ns-resize; }
+        #bench text { font-family: var(--font-body); font-weight: 800; }
+        #bench .lcd { font-family: var(--font-mono); font-weight: 800; }
+        #bench .wire { fill: none; stroke-width: 3.2; stroke-linecap: round; }
+        #bench .wire-shadow { fill: none; stroke: rgba(0,0,0,0.18); stroke-width: 4.5; stroke-linecap: round; }
+        /* circuit view */
+        #circuit .flow { stroke: var(--accent); stroke-width: 3.2; stroke-dasharray: 2 12; stroke-linecap: round; fill: none; opacity: 0.9; }
+        #circuit .hit { fill: transparent; stroke: none; cursor: pointer; }
+        #circuit text.cur { fill: var(--accent); font-weight: 800; }
+        #circuit .blade-hi { stroke: var(--logic1); }
+        .task { font-size: 0.9rem; }
+        .task li { margin: 0.2rem 0; }
+        .task li.ok { color: var(--good); font-weight: 800; }
+        .task li.ok::marker { content: '✓  '; }
+        .dvm {
+            background: #1B1F2A; color: #7CFF9B; border-radius: 12px; padding: 0.6rem 0.9rem; font-family: var(--font-mono);
+            display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem;
+        }
+        .dvm .dvm-val { font-size: 2.1rem; font-weight: 800; letter-spacing: 1px; }
+        .dvm .dvm-lab { font-size: 0.72rem; color: #8FA0B8; text-transform: uppercase; letter-spacing: 0.6px; }
+        .bits { display: flex; justify-content: space-around; gap: 0.4rem; margin: 0.7rem 0 0.5rem; }
+        .sub-line { font-size: 0.9rem; margin-top: 0.4rem; }
+        .sup-row { display: grid; grid-template-columns: 6.4rem 1fr 6.2rem; gap: 0.5rem; align-items: center; font-size: 0.85rem; margin-top: 0.35rem; }
+        .sup-bar { height: 14px; border-radius: 7px; background: #EEE; overflow: hidden; }
+        .sup-bar i { display: block; height: 100%; background: #D7CCC8; border-radius: 7px; transition: background 0.3s; }
+        .sup-row.on .sup-bar i { background: var(--accent); }
+        .sup-row.on b { color: var(--accent); }
+        .sup-row .mono { font-family: var(--font-mono); text-align: right; }
+    </style>
+</head>
+<body>
+    <header class="top-bar">
+        <a href="index.html" class="back-btn">&larr; Practicals</a>
+        <div class="exp-heading">
+            <span class="exp-chip">Practical I &middot; Exp 4</span>
+            <h1 class="exp-title">&#x2696;&#xFE0F; D/A Converter — 4-bit Binary Weighted Resistor Method</h1>
+        </div>
+        <a href="../../index.html" class="back-btn">&#x1F3E0; Lab</a>
+    </header>
+    <p class="big-idea">Each input bit sends a current into the op-amp through its own resistor. The resistors are <strong>binary weighted</strong>
+        (50 k, 100 k, 200 k, 400 k), so the MSB sends 8 parts of current, the next 4, then 2, then 1. The IC 741 adds the currents and
+        turns them into a voltage that climbs in equal steps.</p>
+    <nav class="section-nav">
+        <a href="#simulate">&#x1F52C; Simulate</a><a href="#draw">&#x270F;&#xFE0F; Draw it</a><a href="#record">&#x1F4DD; Record</a><a href="#viva">&#x1F3A4; Viva</a>
+    </nav>
+
+    <main>
+        <!-- ================= SIMULATE ================= -->
+        <section id="simulate" class="block">
+            <h2 class="block-title">&#x1F52C; Simulate <span class="hint-inline">Flip the toggle switches D₃–D₀, turn the R<sub>f</sub> knob (drag it up/down), and read the multimeter — just like the lab.</span></h2>
+            <div class="tabs" data-tabs="view">
+                <button class="tab-btn active" data-tab="bench">&#x1F9F0; Lab bench</button>
+                <button class="tab-btn" data-tab="circuit">&#x1F4D0; Circuit &amp; currents</button>
+            </div>
+            <div class="grid-2">
+                <div>
+                    <div class="tab-panel" data-group="view" data-panel="bench">
+                        <div class="stage"><svg id="bench" viewBox="0 0 1000 540" role="img" aria-label="Trainer kit with IC 741, weighted resistors, toggle switches and a multimeter"></svg></div>
+                    </div>
+                    <div class="tab-panel" data-group="view" data-panel="circuit">
+                        <div class="stage"><svg id="circuit" class="pen" viewBox="0 0 840 340" role="img" aria-label="Binary weighted resistor DAC circuit"></svg></div>
+                    </div>
+                </div>
+                <div class="stack">
+                    <div class="card">
+                        <h3>Digital input &rarr; Analog output</h3>
+                        <div class="bits" id="bit-switches"></div>
+                        <div class="dvm"><div><div class="dvm-lab">Multimeter · V<sub>o</sub> (20 V DC range)</div><div class="dvm-val" id="dvm">0.00 V</div></div><div class="dvm-lab" id="dvm-code">0000 = 0</div></div>
+                        <div class="sub-line" id="sub-line"></div>
+                    </div>
+                    <div class="card">
+                        <h3>Lab task (as in the record)</h3>
+                        <ol class="task" id="task">
+                            <li data-t="fsv">Set all switches to <b>1111</b> and turn R<sub>f</sub> until the meter reads <b>1.50 V</b> (full-scale voltage).</li>
+                            <li data-t="rows">Change the inputs from 0000 to 1111 step by step and note V<sub>o</sub> each time.</li>
+                            <li data-t="check">Check: each step should be about 0.1 V (1 LSB). With real resistors the biggest error shows at 0111 → 1000, where every bit changes.</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="ctl"><span class="ctl-label">Feedback R<sub>f</sub> (pot)</span><span class="ctl-value" id="rf-val">8.0 kΩ</span><input type="range" id="rf" min="0" max="50" step="0.1" value="8"></div>
+                <div class="ctl"><span class="ctl-label">V<sub>ref</sub></span><span class="ctl-value" id="vr-val">5.0 V</span><input type="range" id="vr" min="1" max="10" step="0.5" value="5"></div>
+                <div class="ctl"><span class="ctl-label">Readings</span>
+                    <select id="real"><option value="0">Ideal components</option><option value="1" selected>Real (±1 % resistors)</option></select></div>
+                <div class="btn-row">
+                    <button class="btn" id="fsv15">FSV = 1.5 V</button>
+                    <button class="btn" id="fsv5">FSV = 5 V</button>
+                    <button class="btn btn-primary" id="auto">&#x25B6; Auto count 0000 &rarr; 1111</button>
+                    <button class="btn" id="fill">Fill all 16 rows</button>
+                    <button class="btn" id="clear">Clear readings</button>
+                </div>
+            </div>
+
+            <div class="grid-2-even" style="margin-top:1rem">
+                <div class="card">
+                    <h3>Currents add up at the (−) input</h3>
+                    <div id="superpos"></div>
+                    <div class="note"><span class="note-tag">Idea</span>The (−) input is a virtual ground (0 V), so each switched-on bit sends its own current V<sub>ref</sub>/R into the summing point, independent of the others. The currents are in the ratio 8 : 4 : 2 : 1 and all flow through R<sub>f</sub>.</div>
+                    <div class="note"><span class="note-tag">Compare</span>The <a href="p1-13-r2r-dac.html" style="text-decoration:underline">R-2R ladder DAC (Exp 13)</a> does the same job with only two resistor values.</div>
+                </div>
+                <div class="card">
+                    <h3>DAC characteristic (staircase)</h3>
+                    <div class="stage"><canvas id="graph"></canvas></div>
+                    <p style="font-size:0.8rem;color:var(--ink-soft);margin-top:0.4rem">The graph shows |V<sub>o</sub>|. The meter shows a minus sign because the op-amp is an inverting amplifier; the record writes the magnitude.</p>
+                </div>
+            </div>
+            <div class="card" style="margin-top:1rem">
+                <h3>Observation table <span style="font-family:var(--font-body);font-size:0.8rem;color:var(--ink-soft)">(fills as you set each input)</span></h3>
+                <div id="obs-sim"></div>
+            </div>
+        </section>
+
+        <!-- ================= DRAW ================= -->
+        <section id="draw" class="block">
+            <h2 class="block-title">&#x270F;&#xFE0F; Draw it <span class="hint-inline">Press ▶ Draw and copy each step into your record.</span></h2>
+            <div class="tabs" data-tabs="draw">
+                <button class="tab-btn active" data-tab="dcirc">Circuit diagram</button>
+                <button class="tab-btn" data-tab="dpins">IC 741 pin diagram</button>
+                <button class="tab-btn" data-tab="dgraph">Model graph</button>
+            </div>
+            <div class="tab-panel" data-group="draw" data-panel="dcirc" id="draw-circuit"></div>
+            <div class="tab-panel" data-group="draw" data-panel="dpins" id="draw-pins"></div>
+            <div class="tab-panel" data-group="draw" data-panel="dgraph" id="draw-graph"></div>
+        </section>
+
+        <!-- ================= RECORD ================= -->
+        <section id="record" class="block">
+            <h2 class="block-title">&#x1F4DD; Record sheet</h2>
+            <div class="rec-actions no-print"><button class="btn btn-sm" data-print-record>&#x1F5A8;&#xFE0F; Print record</button></div>
+            <article class="record">
+                <div class="rec-head"><div class="rec-box">Expt. No. 4<br>Date ______</div><div class="rec-box">Page No. ______</div></div>
+                <h2 class="rec-title">D/A CONVERTER — 4-BIT BINARY WEIGHTED RESISTOR METHOD</h2>
+
+                <h3>Aim</h3>
+                <p>To construct a 4-bit D/A converter using operational amplifier by binary weighted resistor method.</p>
+
+                <h3>Apparatus and components</h3>
+                <p>IC 741, resistors (50 kΩ, 100 kΩ, 200 kΩ, 400 kΩ), potentiometer for R<sub>f</sub>, dual regulated power supply, 1–0 toggle switches, multimeter, etc.</p>
+
+                <h3>Circuit diagram</h3>
+                <div class="rec-diagram" data-diagram="dcirc"></div>
+
+                <h3>Formula</h3>
+                <div class="formula">V<sub>o</sub> = − V<sub>ref</sub> <span class="up">[</span> D<sub>3</sub>/R<sub>4</sub> + D<sub>2</sub>/R<sub>3</sub> + D<sub>1</sub>/R<sub>2</sub> + D<sub>0</sub>/R<sub>1</sub> <span class="up">]</span> R<sub>f</sub></div>
+                <p>where V<sub>ref</sub> = 5 V, D<sub>3</sub> D<sub>2</sub> D<sub>1</sub> D<sub>0</sub> represent 0 or 1 depending on the binary combination,
+                    R<sub>4</sub> = 50 kΩ, R<sub>3</sub> = 2R<sub>4</sub> = 100 kΩ, R<sub>2</sub> = 4R<sub>4</sub> = 200 kΩ, R<sub>1</sub> = 8R<sub>4</sub> = 400 kΩ, and R<sub>f</sub> is the feedback resistance.</p>
+
+                <h3>Procedure</h3>
+                <p>The digital to analog converter (D/A converter) converts the digital input into its equivalent analog voltage. The digital input is represented by
+                    D<sub>3</sub> D<sub>2</sub> D<sub>1</sub> D<sub>0</sub> with D<sub>3</sub> as MSB and D<sub>0</sub> as LSB. The MSB bit D<sub>3</sub> is connected to the inverting input through a resistor
+                    R<sub>4</sub>. D<sub>2</sub> is connected through a resistor R<sub>3</sub> = 2R<sub>4</sub>, D<sub>1</sub> through a resistor R<sub>2</sub> = 4R<sub>4</sub> and D<sub>0</sub> through a resistor R<sub>1</sub> = 8R<sub>4</sub>.
+                    Therefore the arrangement is called a binary weighted resistor D/A converter.</p>
+                <ol>
+                    <li>The connections are made as shown in the figure.</li>
+                    <li>The full scale output voltage (FSV) is fixed by varying the feedback resistance. For convenience the FSV is adjusted to 1.5 V; then for the digital input 0000 the analog output will be 0 V, for 0001 it will be 0.1 V, for 0010 it will be 0.2 V, etc.</li>
+                    <li>The digital inputs are changed from 0000 to 1111 step by step and the analog output voltage is measured at the output terminal of IC 741.</li>
+                    <li>The FSV can also be fixed as 5 V and the output measured for the different input combinations.</li>
+                </ol>
+
+                <h3>Observation</h3>
+                <p id="rec-conds"></p>
+                <div id="obs-rec"></div>
+
+                <h3>Model graph</h3>
+                <div class="rec-diagram" data-diagram="dgraph"></div>
+
+                <h3>Calculation</h3>
+                <div id="rec-calc"></div>
+
+                <h3>Result</h3>
+                <div class="result-box" id="rec-result">A 4-bit binary weighted resistor D/A converter is constructed using operational amplifier.</div>
+
+                <h3>Precautions</h3>
+                <ol>
+                    <li>Use close-tolerance resistors whose values are exactly in the ratio 1 : 2 : 4 : 8.</li>
+                    <li>Connect ±12 V to pins 7 and 4 of IC 741 before applying the inputs.</li>
+                    <li>Set the full-scale voltage with R<sub>f</sub> at input 1111 before taking the readings.</li>
+                </ol>
+            </article>
+        </section>
+
+        <!-- ================= VIVA ================= -->
+        <section id="viva" class="block">
+            <h2 class="block-title">&#x1F3A4; Viva voce</h2>
+            <div id="viva-list"></div>
+        </section>
+    </main>
+
+    <footer class="page-footer">Practical I &middot; Exp 4 &bull; Simplified model for learning &mdash; values are illustrative</footer>
+
+    <script src="assets/msc-common.js"></script>
+    <script>
+    'use strict';
+    const S = MSC.sym;
+    const $ = (id) => document.getElementById(id);
+
+    // ------------------------------------------------------------------ state & physics (volts, kΩ, mA)
+    // bits[0] = D3 (MSB) … bits[3] = D0 (LSB); resistors R4 (MSB) = 50 k, R3 = 100 k, R2 = 200 k, R1 = 400 k
+    const RN = [50, 100, 200, 400];
+    const RNAME = ['R_4', 'R_3', 'R_2', 'R_1'];
+    const BNAME = ['D_3 (MSB)', 'D_2', 'D_1', 'D_0 (LSB)'];
+    const state = { bits: [1, 1, 1, 1], VR: 5, Rf: 8, real: true, readings: {}, rowsVisited: new Set(), fsvDone: false };
+    const codeOf = (b) => b.reduce((a, x) => a * 2 + x, 0);
+    const bitsOf = (n) => [3, 2, 1, 0].map(k => (n >> k) & 1);
+
+    let seed = 29;
+    const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    const TOL = RN.map(() => 1 + 0.01 * (2 * rnd() - 1));
+    const OFFSET = 0.002;
+
+    const currents = (bits, real) => bits.map((d, k) => d * state.VR / (RN[k] * (real ? TOL[k] : 1)));
+    const vCalc = (bits) => -state.VR * state.Rf * bits.reduce((a, d, k) => a + d / RN[k], 0);
+    function vMeter(bits) {
+        const I = currents(bits, state.real).reduce((a, b) => a + b, 0);
+        const v = -state.Rf * I + (state.real ? OFFSET : 0);
+        return Math.round(v * 100) / 100;
+    }
+    const fmtV = (v) => (Math.abs(v) < 0.005 ? '0.00' : (v < 0 ? '−' : '') + Math.abs(v).toFixed(2));
+
+    // ------------------------------------------------------------------ bench view (modelled on the lab set-up)
+    const SWY = [304, 340, 376, 412];          // toggle rows on the switch board
+    const RY = [196, 226, 318, 348];           // resistor rows on the breadboard
+    const band = { 0: '#212121', 1: '#6D4C41', 2: '#E53935', 4: '#FDD835', 5: '#43A047' };
+    const RBANDS = [[5, 0, 3], [1, 0, 4], [2, 0, 4], [4, 0, 4]];   // 50k: green-black-orange; 100k: brown-black-yellow …
+    const MULT = { 3: '#FB8C00', 4: '#FDD835' };
+
+    function wire(d, color) { return '<path class="wire-shadow" d="' + d + '" transform="translate(1.5,2)"/><path class="wire" d="' + d + '" stroke="' + color + '"/>'; }
+    function socket(x, y, color, label) {
+        return '<circle cx="' + x + '" cy="' + y + '" r="11" fill="' + color + '" stroke="rgba(0,0,0,0.35)" stroke-width="1.5"/><circle cx="' + x + '" cy="' + (y - 2) + '" r="4.5" fill="rgba(0,0,0,0.45)"/>' +
+            (label ? '<rect x="' + (x - 22) + '" y="' + (y + 16) + '" width="44" height="16" rx="3" fill="#fff" stroke="#CFD8DC"/><text x="' + x + '" y="' + (y + 28) + '" font-size="10" text-anchor="middle" fill="#37474F">' + label + '</text>' : '');
+    }
+    function resistorBody(x1, y, x2, bands, label) {
+        const mx = (x1 + x2) / 2;
+        let s = '<line x1="' + x1 + '" y1="' + y + '" x2="' + x2 + '" y2="' + y + '" stroke="#90A4AE" stroke-width="2"/>';
+        s += '<rect x="' + (mx - 17) + '" y="' + (y - 6) + '" width="34" height="12" rx="5" fill="#E8D5A8" stroke="#BFA878"/>';
+        const cols = [band[bands[0]], band[bands[1]], MULT[bands[2]], '#C9A227'];
+        cols.forEach((c, i) => { s += '<rect x="' + (mx - 12 + i * 7) + '" y="' + (y - 6) + '" width="3.2" height="12" fill="' + c + '"/>'; });
+        s += '<text x="' + mx + '" y="' + (y - 10) + '" font-size="10" text-anchor="middle" fill="#5D4037">' + label + '</text>';
+        return s;
+    }
+    function toggle(x, y, on, name) {
+        const ang = on ? -32 : 32;
+        return '<g class="sw" data-bit="' + name + '">' +
+            '<rect x="' + (x - 26) + '" y="' + (y - 16) + '" width="112" height="32" fill="transparent"/>' +
+            '<rect class="sw-base" x="' + (x - 13) + '" y="' + (y - 9) + '" width="26" height="18" rx="4" fill="#37474F" stroke="#263238"/>' +
+            '<circle cx="' + x + '" cy="' + y + '" r="6" fill="#B0BEC5"/>' +
+            '<g transform="rotate(' + ang + ' ' + x + ' ' + y + ')"><rect x="' + (x - 2.5) + '" y="' + (y - 22) + '" width="5" height="22" rx="2" fill="#CFD8DC" stroke="#78909C"/><circle cx="' + x + '" cy="' + (y - 22) + '" r="4.5" fill="' + (on ? '#E53935' : '#546E7A') + '"/></g>' +
+            '<text x="' + (x + 18) + '" y="' + (y - 1) + '" font-size="11" fill="#fff">' + MSC.fmtSVG(BNAME[name]) + '</text>' +
+            '<text x="' + (x + 18) + '" y="' + (y + 12) + '" font-size="10" fill="' + (on ? '#FFCDD2' : '#B2DFDB') + '">' + (on ? '1 (+5 V)' : '0 (GND)') + '</text></g>';
+    }
+    function bench() {
+        const b = state.bits, vo = vMeter(b);
+        let s = '<defs><pattern id="holes" width="9" height="9" patternUnits="userSpaceOnUse"><rect width="9" height="9" fill="#FAFAFA"/><rect x="3" y="3" width="3" height="3" fill="#CFD8DC"/></pattern>' +
+            '<linearGradient id="wood" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#E4B77A"/><stop offset="1" stop-color="#C9955A"/></linearGradient></defs>';
+        s += '<rect width="1000" height="540" fill="#EDE3D6"/>';
+        for (let i = 0; i < 9; i++) s += '<path d="M0,' + (40 + i * 60) + ' C250,' + (30 + i * 60) + ' 600,' + (55 + i * 60) + ' 1000,' + (38 + i * 60) + '" stroke="rgba(120,85,50,0.08)" stroke-width="6" fill="none"/>';
+        // power supply at the back
+        s += '<rect x="178" y="12" width="250" height="80" rx="6" fill="#4E342E" stroke="#3E2723"/>';
+        [212, 262, 312, 362].forEach(x => { s += '<circle cx="' + x + '" cy="46" r="15" fill="#212121" stroke="#616161"/><line x1="' + x + '" y1="46" x2="' + x + '" y2="33" stroke="#BDBDBD" stroke-width="3"/>'; });
+        s += '<circle cx="404" cy="30" r="4" fill="#76FF03"/><text x="303" y="82" font-size="10" fill="#EFEBE9" text-anchor="middle">DUAL REGULATED POWER SUPPLY  ±12 V</text>';
+        // trainer kit
+        s += '<rect x="150" y="104" width="612" height="422" rx="10" fill="url(#wood)" stroke="#A1703F" stroke-width="2"/>';
+        s += '<rect x="168" y="120" width="576" height="390" rx="4" fill="#FFF8E1" stroke="#E0D3B0"/>';
+        s += '<text x="470" y="140" font-size="11" fill="#8D6E63" text-anchor="middle">OP-AMP TRAINER KIT</text>';
+        // decorative sockets on the left of the panel (as on the kit)
+        [['#9E9E9E', 190, 160], ['#43A047', 222, 158], ['#1E88E5', 222, 186], ['#FDD835', 200, 214], ['#43A047', 200, 244], ['#FDD835', 200, 274]].forEach(([c, x, y]) => { s += socket(x, y, c); });
+        // breadboard
+        s += '<rect x="296" y="156" width="360" height="222" rx="6" fill="url(#holes)" stroke="#CFD8DC" stroke-width="2"/>';
+        s += '<rect x="296" y="262" width="360" height="12" fill="#ECEFF1"/>';
+        s += '<line x1="304" y1="166" x2="648" y2="166" stroke="#E53935" stroke-width="1.5"/><line x1="304" y1="174" x2="648" y2="174" stroke="#1E88E5" stroke-width="1.5"/>';
+        s += '<line x1="304" y1="362" x2="648" y2="362" stroke="#E53935" stroke-width="1.5"/><line x1="304" y1="370" x2="648" y2="370" stroke="#1E88E5" stroke-width="1.5"/>';
+        // IC 741 straddling the centre channel (pins 1-4 bottom, 5-8 top)
+        s += '<rect x="470" y="246" width="68" height="44" rx="3" fill="#263238"/><path d="M470,261 a6,7 0 0 1 0,14" fill="#455A64"/>';
+        s += '<text x="506" y="272" font-size="12" fill="#ECEFF1" text-anchor="middle">741</text>';
+        [0, 1, 2, 3].forEach(i => { const x = 480 + i * 16; s += '<rect x="' + (x - 2.5) + '" y="290" width="5" height="8" fill="#B0BEC5"/><rect x="' + (x - 2.5) + '" y="238" width="5" height="8" fill="#B0BEC5"/>'; });
+        s += '<text x="478" y="310" font-size="8" fill="#78909C" text-anchor="middle">1</text><text x="494" y="310" font-size="8" fill="#78909C" text-anchor="middle">2</text><text x="510" y="310" font-size="8" fill="#78909C" text-anchor="middle">3</text><text x="526" y="310" font-size="8" fill="#78909C" text-anchor="middle">4</text>';
+        s += '<text x="478" y="233" font-size="8" fill="#78909C" text-anchor="middle">8</text><text x="494" y="233" font-size="8" fill="#78909C" text-anchor="middle">7</text><text x="510" y="233" font-size="8" fill="#78909C" text-anchor="middle">6</text><text x="526" y="233" font-size="8" fill="#78909C" text-anchor="middle">5</text>';
+        // weighted resistors, summing column, jumpers
+        RN.forEach((r, k) => { s += resistorBody(318, RY[k], 400, RBANDS[k], r + ' kΩ'); });
+        s += '<line x1="400" y1="' + RY[0] + '" x2="400" y2="' + RY[3] + '" stroke="#90A4AE" stroke-width="2.5"/>';
+        RY.forEach(y => { s += '<circle cx="400" cy="' + y + '" r="3" fill="#607D8B"/>'; });
+        s += wire('M400,282 C430,282 470,320 494,298', '#43A047');                                  // summing point → pin 2
+        s += wire('M510,298 C512,330 520,352 530,366', '#212121');                                  // pin 3 → ground rail
+        // Rf potentiometer (blue trimmer) between pin 2 and pin 6
+        const potA = -135 + 270 * (state.Rf / 50);
+        s += '<g class="pot" id="pot"><rect x="582" y="186" width="36" height="36" rx="5" fill="#1565C0" stroke="#0D47A1"/><circle cx="600" cy="204" r="12" fill="#E3F2FD"/>' +
+            '<g transform="rotate(' + potA.toFixed(1) + ' 600 204)"><rect x="598" y="193" width="4" height="12" rx="1.5" fill="#0D47A1"/></g>' +
+            '<text x="600" y="240" font-size="11" fill="#0D47A1" text-anchor="middle">' + MSC.fmtSVG('R_f = ' + state.Rf.toFixed(1) + ' kΩ') + '</text></g>';
+        s += wire('M430,282 C440,230 560,200 584,210', '#E53935');                                 // summing node → pot
+        s += wire('M616,212 C640,226 520,226 510,238', '#E53935');                                 // pot → pin 6 (output)
+        // supply sockets on the kit and their wires
+        s += socket(232, 452, '#E53935', '+5V') + socket(292, 452, '#212121', 'GND') + socket(352, 452, '#FDD835', '−12V') + socket(412, 452, '#1E88E5', '+12V') + socket(472, 452, '#212121', 'GND');
+        s += socket(700, 452, '#43A047', 'LED out');
+        s += wire('M412,452 C420,380 470,220 494,238', '#E53935');                                 // +12 V → pin 7
+        s += wire('M352,452 C360,410 520,330 526,298', '#FDD835');                                 // −12 V → pin 4
+        s += wire('M292,452 C300,420 520,390 560,370', '#212121');                                 // GND → ground rail
+        s += wire('M232,452 C200,440 140,430 132,420', '#E53935');                                 // +5 V (Vref) → switch board
+        // toggle-switch board (the small board wired in on the left)
+        s += '<rect x="14" y="250" width="136" height="184" rx="8" fill="#2E7D32" stroke="#1B5E20" stroke-width="2"/>';
+        s += '<text x="82" y="266" font-size="11" fill="#E8F5E9" text-anchor="middle">1–0 TOGGLE SWITCHES</text>';
+        b.forEach((on, k) => { s += toggle(40, SWY[k], !!on, k); });
+        // switch → resistor wires
+        ['#E53935', '#43A047', '#E53935', '#212121'].forEach((c, k) => { s += wire('M140,' + SWY[k] + ' C220,' + SWY[k] + ' 250,' + RY[k] + ' 318,' + RY[k], c); });
+        // analog meter (behind) and digital multimeter
+        s += '<rect x="782" y="150" width="190" height="96" rx="12" fill="#212121"/><path d="M812,226 A65,65 0 0 1 942,226" fill="#FAFAFA" stroke="#9E9E9E"/><line x1="877" y1="226" x2="860" y2="176" stroke="#C62828" stroke-width="2"/>';
+        s += '<rect x="790" y="254" width="186" height="268" rx="18" fill="#FFC107" stroke="#E0A000" stroke-width="2"/>';
+        s += '<rect x="808" y="270" width="150" height="60" rx="5" fill="#C8D3B0" stroke="#8D9A76"/>';
+        s += '<text class="lcd" x="950" y="316" font-size="36" fill="#263238" text-anchor="end">' + fmtV(vo) + '</text><text x="816" y="284" font-size="9" fill="#455A64">DC V</text>';
+        s += '<text x="883" y="346" font-size="10" fill="#5D4037" text-anchor="middle">DIGITAL MULTIMETER</text>';
+        s += '<circle cx="883" cy="410" r="46" fill="#FFB300" stroke="#E08E00" stroke-width="2"/><circle cx="883" cy="410" r="30" fill="#FFA000"/>';
+        s += '<g transform="rotate(-38 883 410)"><rect x="879" y="372" width="8" height="40" rx="3" fill="#FFE082" stroke="#E08E00"/></g>';
+        s += '<text x="846" y="366" font-size="9" fill="#5D4037">20V ⎓</text><text x="930" y="382" font-size="9" fill="#5D4037">Ω</text><text x="918" y="448" font-size="9" fill="#5D4037">A</text><text x="836" y="452" font-size="9" fill="#5D4037">V~</text>';
+        [[838, '#212121'], [883, '#E53935'], [928, '#E53935']].forEach(([x, c]) => { s += '<circle cx="' + x + '" cy="492" r="8" fill="#263238"/><circle cx="' + x + '" cy="492" r="4" fill="' + c + '"/>'; });
+        s += wire('M883,492 C880,540 700,480 640,410 C610,370 560,250 540,242', '#E53935');       // red probe → output (pin 6)
+        s += wire('M838,492 C830,540 690,500 620,372', '#212121');                                 // black probe → ground
+        return s;
+    }
+
+    // ------------------------------------------------------------------ circuit view
+    const CY = [60, 125, 190, 255];
+    const OA = { x: 520, y: 180 };
+    let flows = [];
+    function circuit() {
+        const b = state.bits, I = currents(b, false), It = I.reduce((a, c) => a + c, 0);
+        let s = '';
+        s += S.opamp(OA.x, OA.y, { label: 'IC 741' });
+        s += S.wire([[OA.x, OA.y + 21], [498, OA.y + 21], [498, 226]]) + S.ground(498, 226);
+        s += S.wire([[480, OA.y - 21], [480, 28]]) + S.resistor(480, 28, 680, 28) + S.text(612, 12, 'R_f = ' + state.Rf.toFixed(1) + ' kΩ', { anchor: 'start', size: 12 }) +
+            S.arrow(562, 44, 602, 12, { size: 7 }) + S.wire([[680, 28], [680, OA.y]]);
+        s += S.dot(480, OA.y - 21) + S.dot(680, OA.y) + S.wire([[OA.x + 96, OA.y], [760, OA.y]]) + S.circle(764, OA.y, 4, 'paper') + S.text(764, OA.y + 20, 'V_o', { size: 14 });
+        s += S.line(340, OA.y - 21, OA.x, OA.y - 21) + S.text(352, OA.y - 6, '0 V (virtual ground)', { size: 10, anchor: 'start', cls: 'soft' });
+        s += S.line(340, CY[0], 340, CY[3]) + S.dot(340, OA.y - 21);
+        b.forEach((d, k) => {
+            const y = CY[k];
+            // SPDT toggle: upper contact = +5 V (bit 1), lower contact = GND (bit 0); the moving arm feeds the resistor
+            s += S.circle(60, y - 14, 3.2, 'paper') + S.circle(60, y + 14, 3.2, 'paper') + S.dot(94, y, 3.2);
+            s += S.line(94, y, 63, d ? y - 13 : y + 13, 'thick' + (d ? ' blade-hi' : ''));
+            s += S.text(52, y - 14, '+5 V', { size: 10, anchor: 'end', cls: d ? 'hot' : 'soft' }) + S.text(52, y + 14, '0 V', { size: 10, anchor: 'end', cls: d ? 'soft' : '' });
+            s += S.text(120, y - 16, BNAME[k].split(' ')[0] + ' = ' + d, { size: 12, cls: d ? 'hot' : '' });
+            s += S.line(94, y, 180, y) + S.resistor(180, y, 300, y, { label: RNAME[k] + ' = ' + RN[k] + ' kΩ', side: -1 }) + S.line(300, y, 340, y) + (k === 0 || k === 3 ? '' : S.dot(340, y));
+            s += S.text(240, y + 22, 'I = ' + (I[k] * 1000).toFixed(1) + ' µA', { size: 11, cls: 'cur' });
+            s += '<rect class="hit" data-bit="' + k + '" x="16" y="' + (y - 30) + '" width="130" height="60" rx="8"><title>Toggle bit</title></rect>';
+        });
+        s += S.text(640, OA.y + 118, 'I_{total} = ' + (It * 1000).toFixed(1) + ' µA flows through R_f', { size: 12, cls: 'cur' });
+        flows = [];
+        const flow = (d, c) => { flows.push(c); s += '<path class="flow" data-flow="' + (flows.length - 1) + '" d="' + d + '"/>'; };
+        b.forEach((d, k) => flow('M184,' + (CY[k] + 9) + ' H296', I[k]));
+        flow('M349,' + (CY[0] + 6) + ' V' + (OA.y - 29), I[0] + I[1]);
+        flow('M349,' + (CY[3] - 6) + ' V' + (OA.y - 13), I[2] + I[3]);
+        flow('M488,' + (OA.y - 29) + ' V36 H672 V' + (OA.y - 8), It);
+        return s;
+    }
+
+    // ------------------------------------------------------------------ panels
+    function renderBitSwitches() {
+        $('bit-switches').innerHTML = state.bits.map((b, i) =>
+            '<div class="bit-switch' + (b ? ' on' : '') + '" data-bit="' + i + '" role="switch" aria-checked="' + !!b + '" tabindex="0"><span class="bit-name">D' + (3 - i) + (i === 0 ? ' MSB' : i === 3 ? ' LSB' : '') + '</span><span class="knob"></span><span class="bit-val">' + b + '</span></div>').join('');
+    }
+    function renderSuper() {
+        const I = currents(state.bits, false);
+        let total = 0;
+        $('superpos').innerHTML = state.bits.map((d, k) => {
+            const i0 = state.VR / RN[k], share = state.Rf * i0;
+            if (d) total += share;
+            return '<div class="sup-row' + (d ? ' on' : '') + '"><b>' + MSC.fmtHTML(BNAME[k]) + '</b><div class="sup-bar"><i style="width:' + (100 * RN[0] / RN[k]) + '%"></i></div><span class="mono">' + (d ? '' : '(') + (i0 * 1000).toFixed(1) + ' µA' + (d ? '' : ')') + '</span></div>';
+        }).join('') + '<div class="sup-row on" style="margin-top:0.5rem"><b>|V<sub>o</sub>| = R<sub>f</sub>·ΣI</b><div style="font-size:0.8rem;color:var(--ink-soft)">' + state.Rf.toFixed(1) + ' kΩ × ' + (I.reduce((a, c) => a + c, 0) * 1000).toFixed(1) + ' µA</div><span class="mono"><b>' + total.toFixed(3) + ' V</b></span></div>';
+    }
+
+    // ------------------------------------------------------------------ graph
+    const graph = MSC.canvas($('graph'), 520, 330);
+    let graphDirty = true, lastW = 0;
+    function drawGraph() {
+        const { ctx } = graph;
+        graph.begin();
+        ctx.fillStyle = '#FBFAFF'; ctx.fillRect(0, 0, 520, 330);
+        const x0 = 58, y0 = 285, w = 440, h = 250;
+        const vfs = -vCalc([1, 1, 1, 1]), top = Math.max(vfs * 1.15, 0.5);
+        const X = (n) => x0 + (n + 0.5) * w / 16, Y = (v) => y0 - v / top * h;
+        ctx.strokeStyle = 'rgba(0,0,0,0.07)'; ctx.lineWidth = 1;
+        for (let n = 0; n <= 16; n++) { ctx.beginPath(); ctx.moveTo(x0 + n * w / 16, y0); ctx.lineTo(x0 + n * w / 16, y0 - h); ctx.stroke(); }
+        ctx.strokeStyle = '#1F2A44'; ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.moveTo(x0, y0 - h - 8); ctx.lineTo(x0, y0); ctx.lineTo(x0 + w + 10, y0); ctx.stroke();
+        ctx.fillStyle = '#1F2A44'; ctx.font = '700 11px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        for (let n = 0; n < 16; n++) ctx.fillText(String(n), X(n), y0 + 5);
+        ctx.fillText('Digital input (decimal)', x0 + w / 2, y0 + 22);
+        ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+        const stepV = top > 6 ? 2 : top > 3 ? 1 : top > 1.2 ? 0.5 : 0.1;
+        for (let v = 0; v <= top + 1e-9; v += stepV) { ctx.fillText(v.toFixed(stepV < 0.5 ? 1 : 1), x0 - 6, Y(v)); ctx.strokeStyle = 'rgba(0,0,0,0.07)'; ctx.beginPath(); ctx.moveTo(x0, Y(v)); ctx.lineTo(x0 + w, Y(v)); ctx.stroke(); }
+        ctx.save(); ctx.translate(16, y0 - h / 2); ctx.rotate(-Math.PI / 2); ctx.textAlign = 'center'; ctx.fillText('|Vo| (volt)', 0, 0); ctx.restore();
+        ctx.strokeStyle = 'rgba(239,108,0,0.3)'; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.5; ctx.beginPath();
+        for (let n = 0; n < 16; n++) { const v = -vCalc(bitsOf(n)); ctx.lineTo(x0 + n * w / 16, Y(v)); ctx.lineTo(x0 + (n + 1) * w / 16, Y(v)); }
+        ctx.stroke(); ctx.setLineDash([]);
+        ctx.strokeStyle = '#EF6C00'; ctx.lineWidth = 3;
+        for (let n = 0; n < 16; n++) {
+            const r = state.readings[n];
+            if (!r) continue;
+            ctx.beginPath(); ctx.moveTo(x0 + n * w / 16, Y(-r.obs)); ctx.lineTo(x0 + (n + 1) * w / 16, Y(-r.obs)); ctx.stroke();
+            ctx.fillStyle = '#EF6C00'; ctx.beginPath(); ctx.arc(X(n), Y(-r.obs), 3.5, 0, Math.PI * 2); ctx.fill();
+        }
+        const cur = codeOf(state.bits), cv = -vMeter(state.bits);
+        ctx.fillStyle = '#E53935'; ctx.beginPath(); ctx.arc(X(cur), Y(cv), 6, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#1F2A44'; ctx.textAlign = 'left'; ctx.font = '800 12px Nunito, sans-serif';
+        ctx.fillText('FSV = ' + vfs.toFixed(2) + ' V', x0 + 8, Y(vfs) - 12);
+        graphDirty = false;
+    }
+
+    // ------------------------------------------------------------------ tables & record
+    function obsTable(forRecord) {
+        const cur = codeOf(state.bits), rows = [];
+        for (let n = 0; n < 16; n++) {
+            const b = bitsOf(n), r = state.readings[n];
+            rows.push(b.concat([
+                r ? { t: Math.abs(r.obs).toFixed(2), cls: 'mono' } : { t: forRecord ? '' : '—', cls: 'empty' },
+                { t: Math.abs(vCalc(b)).toFixed(3), cls: 'mono' },
+            ]));
+        }
+        return MSC.table([[{ t: 'Digital input', colspan: 4 }, { t: '|V_o| observed (V)', rowspan: 2 }, { t: '|V_o| calculated (V)', rowspan: 2 }], ['D_3', 'D_2', 'D_1', 'D_0']],
+            rows, { highlight: forRecord ? -1 : cur });
+    }
+    function updateRecord() {
+        $('obs-rec').innerHTML = obsTable(true);
+        const vfs = -vCalc([1, 1, 1, 1]), lsb = state.VR * state.Rf / RN[3];
+        $('rec-conds').innerHTML = 'V<sub>ref</sub> = ' + state.VR.toFixed(1) + ' V, &nbsp; R<sub>4</sub> = 50 kΩ, R<sub>3</sub> = 100 kΩ, R<sub>2</sub> = 200 kΩ, R<sub>1</sub> = 400 kΩ, &nbsp; R<sub>f</sub> = ' + state.Rf.toFixed(1) + ' kΩ (FSV = ' + vfs.toFixed(2) + ' V)';
+        const b = state.bits, terms = b.map((d, k) => d + '/' + RN[k] + 'k').join(' + '), v = vCalc(b);
+        $('rec-calc').innerHTML =
+            '<p class="calc-line">For the input D<sub>3</sub>D<sub>2</sub>D<sub>1</sub>D<sub>0</sub> = <b>' + b.join('') + '</b>:</p>' +
+            '<p class="calc-line">V<sub>o</sub> = −' + state.VR.toFixed(1) + ' × (' + terms + ') × ' + state.Rf.toFixed(1) + 'k = <b>' + v.toFixed(3) + ' V</b></p>' +
+            '<p class="calc-line">For FSV = 1.5 V at 1111: R<sub>f</sub> = FSV / [V<sub>ref</sub>(1/50k + 1/100k + 1/200k + 1/400k)] = 1.5 / (5 × 15/400k) = <b>8 kΩ</b></p>' +
+            '<p class="calc-line">One step (LSB) = V<sub>ref</sub> R<sub>f</sub> / R<sub>1</sub> = ' + state.VR.toFixed(1) + ' × ' + state.Rf.toFixed(1) + 'k / 400k = <b>' + lsb.toFixed(3) + ' V</b>; resolution = FSV / (2<sup>4</sup> − 1) = ' + vfs.toFixed(3) + ' / 15 = <b>' + (vfs / 15).toFixed(3) + ' V</b></p>';
+    }
+    function updateTask() {
+        const t = $('task').children;
+        const full = Math.abs(Math.abs(vMeter([1, 1, 1, 1])) - 1.5) < 0.015;
+        if (codeOf(state.bits) === 15 && full) state.fsvDone = true;
+        if (!full) state.fsvDone = false;
+        t[0].classList.toggle('ok', state.fsvDone);
+        t[1].classList.toggle('ok', state.fsvDone && state.rowsVisited.size >= 16);
+        const steps = [];
+        for (let n = 1; n < 16; n++) if (state.readings[n] && state.readings[n - 1]) steps.push(Math.abs(state.readings[n].obs - state.readings[n - 1].obs));
+        t[2].classList.toggle('ok', state.fsvDone && steps.length >= 15 && steps.every(s => Math.abs(s - 0.1) <= 0.025));
+    }
+
+    function update() {
+        const n = codeOf(state.bits);
+        state.readings[n] = { obs: vMeter(state.bits) };
+        state.rowsVisited.add(n);
+        $('bench').innerHTML = bench();
+        $('circuit').innerHTML = circuit();
+        const vo = state.readings[n].obs;
+        $('dvm').textContent = fmtV(vo) + ' V';
+        $('dvm-code').textContent = state.bits.join('') + ' = ' + n;
+        $('sub-line').innerHTML = 'V<sub>o</sub> = −V<sub>ref</sub>(D<sub>3</sub>/R<sub>4</sub> + D<sub>2</sub>/R<sub>3</sub> + D<sub>1</sub>/R<sub>2</sub> + D<sub>0</sub>/R<sub>1</sub>)R<sub>f</sub> = <b>' + vCalc(state.bits).toFixed(3) + ' V</b>';
+        $('rf-val').textContent = state.Rf.toFixed(1) + ' kΩ';
+        $('rf').value = state.Rf;
+        renderBitSwitches();
+        renderSuper();
+        $('obs-sim').innerHTML = obsTable(false);
+        graphDirty = true;
+        updateRecord();
+        updateTask();
+    }
+    function setBit(i) { state.bits[i] = 1 - state.bits[i]; update(); }
+    function setRf(v, keepReadings) { state.Rf = MSC.clamp(Math.round(v * 10) / 10, 0, 50); if (!keepReadings) { state.readings = {}; state.rowsVisited = new Set(); } update(); }
+
+    $('bench').addEventListener('click', e => { const g = e.target.closest('.sw'); if (g) setBit(Number(g.dataset.bit)); });
+    $('circuit').addEventListener('click', e => { const h = e.target.closest('[data-bit]'); if (h) setBit(Number(h.dataset.bit)); });
+    $('bit-switches').addEventListener('click', e => { const h = e.target.closest('[data-bit]'); if (h) setBit(Number(h.dataset.bit)); });
+    $('bit-switches').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { const h = e.target.closest('[data-bit]'); if (h) { e.preventDefault(); setBit(Number(h.dataset.bit)); } } });
+    // turn the Rf pot by dragging up/down (or the mouse wheel)
+    let drag = null;
+    $('bench').addEventListener('pointerdown', e => {
+        if (!e.target.closest('.pot')) return;
+        drag = { y: e.clientY, rf: state.Rf };
+        $('bench').setPointerCapture(e.pointerId);
+        e.preventDefault();
+    });
+    $('bench').addEventListener('pointermove', e => { if (drag) setRf(drag.rf + (drag.y - e.clientY) * 0.05); });
+    $('bench').addEventListener('pointerup', () => { drag = null; });
+    $('bench').addEventListener('wheel', e => { if (!e.target.closest('.pot')) return; e.preventDefault(); setRf(state.Rf + (e.deltaY < 0 ? 0.1 : -0.1)); }, { passive: false });
+    $('rf').addEventListener('input', e => setRf(Number(e.target.value)));
+    $('vr').addEventListener('input', e => { state.VR = Number(e.target.value); $('vr-val').textContent = state.VR.toFixed(1) + ' V'; state.readings = {}; state.rowsVisited = new Set(); update(); });
+    $('real').addEventListener('change', e => { state.real = e.target.value === '1'; state.readings = {}; state.rowsVisited = new Set(); update(); });
+    $('fsv15').addEventListener('click', () => { setRf(1.5 * RN[3] / (state.VR * 15)); });
+    $('fsv5').addEventListener('click', () => { setRf(5 * RN[3] / (state.VR * 15)); });
+    $('clear').addEventListener('click', () => { state.readings = {}; state.rowsVisited = new Set(); update(); });
+    $('fill').addEventListener('click', () => { for (let n = 0; n < 16; n++) { state.readings[n] = { obs: vMeter(bitsOf(n)) }; state.rowsVisited.add(n); } update(); });
+    let autoTimer = null;
+    $('auto').addEventListener('click', () => {
+        if (autoTimer) { clearInterval(autoTimer); autoTimer = null; $('auto').textContent = '▶ Auto count 0000 → 1111'; return; }
+        let n = 0;
+        state.readings = {}; state.rowsVisited = new Set();
+        state.bits = bitsOf(0); update();
+        $('auto').textContent = '⏸ Stop counting';
+        autoTimer = setInterval(() => {
+            n++;
+            if (n > 15) { clearInterval(autoTimer); autoTimer = null; $('auto').textContent = '▶ Auto count 0000 → 1111'; return; }
+            state.bits = bitsOf(n); update();
+        }, 700);
+    });
+
+    let phase = 0;
+    MSC.loop(dt => {
+        phase += dt;
+        document.querySelectorAll('#circuit .flow').forEach(p => {
+            const i = flows[Number(p.dataset.flow)];
+            if (Math.abs(i) < 1e-5) { p.style.display = 'none'; return; }
+            p.style.display = '';
+            p.style.strokeDashoffset = String(-(phase * (40 + 400 * Math.min(Math.abs(i), 0.25))) % 14);
+        });
+        if (graphDirty || graph.ctx.canvas.width !== lastW) { lastW = graph.ctx.canvas.width; drawGraph(); }
+    });
+    window.WDAC = { state, vCalc, vMeter, currents, setRf, bitsOf };
+
+    // ------------------------------------------------------------------ draw-along diagrams
+    (function buildDiagrams() {
+        const oa = { x: 560, y: 190 }, ys = [80, 140, 200, 260], names = ['MSB  D_3', 'D_2', 'D_1', 'LSB  D_0'];
+        MSC.diagram('#draw-circuit', {
+            name: 'dcirc', title: 'Fig. 4-bit binary weighted resistor D/A converter using IC 741', viewBox: '0 0 840 330',
+            steps: [
+                { c: 'Draw the op-amp triangle; mark the inverting (−) input pin 2, the non-inverting (+) input pin 3 and the output pin 6.', s: S.opamp(oa.x, oa.y, { power: false, label: 'IC 741' }) },
+                { c: 'Show the supply pins: +V_{CC} (+12 V) to pin 7 and −V_{EE} (−12 V) to pin 4.', s: S.opamp(oa.x, oa.y, { only: 'power', vpLabel: '+12 V', vnLabel: '−12 V' }) },
+                { c: 'Ground the non-inverting (+) input.', s: S.wire([[oa.x, oa.y + 21], [535, oa.y + 21], [535, 236]]) + S.ground(535, 236) },
+                { c: 'Draw the variable feedback resistor R_{f} (arrow across it) from the output back to the (−) input.', s: S.line(520, oa.y - 21, oa.x, oa.y - 21) + S.wire([[520, oa.y - 21], [520, 40]]) + S.resistor(520, 40, 720, 40, { label: 'R_f', side: -1 }) + S.arrow(600, 58, 644, 20, { size: 7 }) + S.wire([[720, 40], [720, oa.y]]) + S.dot(520, oa.y - 21) + S.dot(720, oa.y) },
+                { c: 'Draw the output line and label it V_{o}.', s: S.wire([[oa.x + 96, oa.y], [790, oa.y]]) + S.circle(794, oa.y, 4, 'paper') + S.text(794, oa.y + 20, 'V_o', { size: 14 }) },
+                { c: 'Draw a vertical line (the summing point) and join it to the (−) input.', s: S.line(400, ys[0], 400, ys[3]) + S.line(400, oa.y - 21, 520, oa.y - 21) + S.dot(400, oa.y - 21) },
+                { c: 'Draw the MSB resistor 50 kΩ (R_{4}) from input D_{3} to the summing line.', s: S.line(150, ys[0], 190, ys[0]) + S.resistor(190, ys[0], 330, ys[0], { label: '50 kΩ', side: -1 }) + S.line(330, ys[0], 400, ys[0]) },
+                { c: 'Draw 100 kΩ (R_{3} = 2R_{4}) for D_{2} and 200 kΩ (R_{2} = 4R_{4}) for D_{1}.', s: [1, 2].map(k => S.line(150, ys[k], 190, ys[k]) + S.resistor(190, ys[k], 330, ys[k], { label: [0, '100 kΩ', '200 kΩ'][k], side: -1 }) + S.line(330, ys[k], 400, ys[k]) + S.dot(400, ys[k])).join('') },
+                { c: 'Draw the LSB resistor 400 kΩ (R_{1} = 8R_{4}) for D_{0}.', s: S.line(150, ys[3], 190, ys[3]) + S.resistor(190, ys[3], 330, ys[3], { label: '400 kΩ', side: -1 }) + S.line(330, ys[3], 400, ys[3]) },
+                { c: 'Label the inputs: MSB D_{3} (top, smallest resistor) down to LSB D_{0} (bottom, largest resistor). Each input is 5 V (1) or 0 V (0) from a toggle switch.', s: ys.map((y, k) => S.text(140, y, names[k], { anchor: 'end', size: 13 })).join('') + S.text(88, 300, 'Inputs from 1–0 toggle switches (1 = +5 V, 0 = GND)', { anchor: 'start', size: 11, cls: 'soft' }) },
+            ],
+        });
+        const dipX = 360, dipY = 50;
+        const pinNames = ['Offset null', 'Inverting input (−)', 'Non-inverting input (+)', '−V_{EE}', 'Offset null', 'Output', '+V_{CC}', 'NC'];
+        MSC.diagram('#draw-pins', {
+            name: 'dpins', title: 'Fig. Pin diagram of IC 741', viewBox: '0 0 840 290',
+            steps: [
+                { c: 'Draw the 8-pin DIP body with the notch at the top.', s: S.dip(dipX, dipY, { n: 8, w: 120, pitch: 44, title: 'IC 741', only: 'body' }) },
+                { c: 'Mark pins 1–4 down the left side and pins 5–8 up the right side.', s: S.dip(dipX, dipY, { n: 8, w: 120, pitch: 44, only: 'pins' }) },
+                { c: 'Name the pins: 2 = inverting input, 3 = non-inverting input, 6 = output, 7 = +V_{CC}, 4 = −V_{EE}.', s: S.dip(dipX, dipY, { n: 8, w: 120, pitch: 44, labels: pinNames, only: 'labels', labelSize: 13 }) },
+            ],
+        });
+        const gx0 = 80, gy0 = 320, gw = 480, gh = 260, top = 1.7;
+        const GX = (n) => gx0 + n * gw / 16, GY = (v) => gy0 - v / top * gh;
+        let stair = 'M' + gx0 + ',' + gy0;
+        for (let n = 0; n < 16; n++) { const v = n * 0.1; stair += ' L' + GX(n) + ',' + GY(v) + ' L' + GX(n + 1) + ',' + GY(v); }
+        MSC.diagram('#draw-graph', {
+            name: 'dgraph', title: 'Model graph — DAC characteristic (FSV = 1.5 V)', viewBox: '0 0 640 380',
+            steps: [
+                { c: 'Draw the axes: digital input on the X-axis, output voltage |V_{o}| on the Y-axis.', s: S.axes(gx0, gy0, gw + 30, gh + 30, { xlabel: 'Digital input →', ylabel: '|V_o| (V)' }) },
+                { c: 'Mark the inputs 0000 … 1111 at equal intervals.', s: Array.from({ length: 16 }, (_, n) => S.line(GX(n) + gw / 32, gy0, GX(n) + gw / 32, gy0 + 5) + (n % 3 === 0 || n === 15 ? S.text(GX(n) + gw / 32, gy0 + 16, n.toString(2).padStart(4, '0'), { size: 10 }) : '')).join('') },
+                { c: 'Draw the staircase: each step is 0.1 V higher (0, 0.1, 0.2 … 1.5 V).', s: S.path(stair, 'thick accent') },
+                { c: 'Mark the full-scale voltage FSV = 1.5 V and one step = 0.1 V.', s: S.line(gx0, GY(1.5), GX(16), GY(1.5), 'dash thin') + S.text(gx0 + 6, GY(1.5) - 12, 'FSV = 1.5 V', { anchor: 'start', size: 12 }) +
+                    S.arrow(GX(12) + 40, GY(1.2), GX(12) + 40, GY(1.3), { size: 6, both: true }) + S.text(GX(12) + 48, GY(1.25), '1 LSB = 0.1 V', { anchor: 'start', size: 11 }) },
+            ],
+        });
+    })();
+
+    // ------------------------------------------------------------------ viva
+    MSC.viva('#viva-list', [
+        { q: 'What is a D/A converter?', a: 'A circuit that converts a digital (binary) input into an equivalent analog output voltage.' },
+        { q: 'Why is it called the binary weighted resistor method?', a: 'The input resistors are weighted in binary: R, 2R, 4R, 8R (here 50 k, 100 k, 200 k, 400 k), so the bits contribute currents in the ratio 8 : 4 : 2 : 1.' },
+        { q: 'Why is the smallest resistor connected to the MSB?', a: 'The MSB must give the largest current (largest share of the output). Current = V<sub>ref</sub>/R, so the smallest resistor gives the largest current.' },
+        { q: 'Why are the branch currents independent of each other?', a: 'The op-amp keeps its (−) input at virtual ground (0 V), so each branch current is simply V<sub>ref</sub>/R<sub>k</sub> for a 1 and zero for a 0; the currents simply add.' },
+        { q: 'How is the full-scale voltage set?', a: 'By varying R<sub>f</sub>. With input 1111, R<sub>f</sub> is adjusted until V<sub>o</sub> = 1.5 V; then R<sub>f</sub> = 8 kΩ and each step is 0.1 V.' },
+        { q: 'Why is the output negative?', a: 'The op-amp works as an inverting summing amplifier: V<sub>o</sub> = −R<sub>f</sub>ΣI.' },
+        { q: 'What is the resolution of this DAC?', a: 'The change in output for one LSB: FSV/(2⁴ − 1) = 1.5/15 = 0.1 V (6.7 % of full scale).' },
+        { q: 'What is the main disadvantage of the binary weighted DAC?', a: 'It needs a wide range of accurate resistor values. For 8 bits the resistors go from R to 128R, which are hard to make precisely and match, especially in IC form.' },
+        { q: 'How does the R-2R ladder DAC overcome this?', a: 'It uses only two resistor values, R and 2R, however many bits there are, so it is easier to make accurately.' },
+        { q: 'What happens if one resistor is 5 % off?', a: 'That bit’s step size is wrong, so the staircase becomes uneven (non-linearity) — the steps are no longer all 0.1 V.' },
+        { q: 'What is the role of IC 741 here?', a: 'It is a summing amplifier: it adds the input currents at the virtual-ground node and converts the total current into a voltage through R<sub>f</sub>.' },
+    ]);
+
+    update();
+    </script>
+</body>
+</html>

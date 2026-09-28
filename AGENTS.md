@@ -62,6 +62,7 @@ physics-simulations/
 │       │   ├── programs8085.js     # window.PROGRAMS8085: every 8085 program + samples + flowcharts
 │       │   └── cpu8085.test.js     # Headless tests (JavaScriptCore) for the two files above
 │       ├── p1-03-polarimeter.html  # Practical I Exp 3   (optics)
+│       ├── p1-04-weighted-dac.html # Practical I Exp 4   (op-amp, from the record; bench view modelled on the lab video)
 │       ├── p1-11-flip-flops.html   # Practical I Exp 11  (digital)
 │       ├── p1-12-adder-subtractor.html  # Practical I Exp 12 (digital, IC 7483)
 │       ├── p1-13-r2r-dac.html      # Practical I Exp 13  (op-amp) — reference analog page
@@ -292,8 +293,9 @@ the canonical template):
 
 ## "M.Sc. Physics Practicals" Module (`experiments/msc/`)
 
-Exam-preparation simulations for ten M.Sc. Physics practicals (Practical I: Exp 3, 11, 12, 13, 16, 18 —
-numbered as in the manual's page-5 "List of Experiments", not its chapter headings; Practical II: Exp 3, 13, 18, 20).
+Exam-preparation simulations for eleven M.Sc. Physics practicals (Practical I: Exp 3, 11, 12, 13, 16, 18 —
+numbered as in the manual's page-5 "List of Experiments", not its chapter headings — plus Exp 4, the binary
+weighted resistor DAC, numbered as in the student's record; Practical II: Exp 3, 13, 18, 20).
 The student must understand the experiment and then draw and write it in the exam, so every page has the
 same four sections, reachable from a sticky `.section-nav`:
 
