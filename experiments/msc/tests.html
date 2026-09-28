@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8085 Engine Tests - M.Sc. Practicals</title>
+    <meta name="robots" content="noindex">
+    <style>
+        body { font-family: ui-monospace, Menlo, Consolas, monospace; background: #F5F0FF; color: #2D2D2D; padding: 1.5rem; }
+        h1 { font-family: sans-serif; font-size: 1.2rem; }
+        #out { white-space: pre-wrap; background: #fff; border: 1px solid #ddd; border-radius: 10px; padding: 1rem; }
+        .pass { color: #2E7D32; font-weight: 800; }
+        .fail { color: #C62828; font-weight: 800; }
+    </style>
+</head>
+<body>
+    <h1>8085 assembler &amp; emulator — self-test</h1>
+    <p><a href="index.html">&larr; Back to the practicals</a></p>
+    <div id="out"></div>
+    <script>
+        window.print = function (s) {
+            const out = document.getElementById('out');
+            const line = document.createElement('div');
+            line.textContent = s;
+            line.className = /^FAIL/.test(s) || /^FAILED/.test(s) ? 'fail' : /^ALL PASSED/.test(s) ? 'pass' : '';
+            out.appendChild(line);
+        };
+    </script>
+    <script src="assets/cpu8085.js"></script>
+    <script src="assets/programs8085.js"></script>
+    <script src="assets/cpu8085.test.js"></script>
+</body>
+</html>

@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RS, Clocked RS &amp; D Flip-Flops - M.Sc. Practicals - Science Lab</title>
+    <meta name="description" content="Build SR latches, clocked SR, D, JK and T flip-flops from NAND and NOR gates, watch the signals race round the feedback loop gate by gate, and verify every truth table.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/msc.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F501;</text></svg>">
+    <style>
+        :root { --accent: #5C6BC0; --accent-soft: rgba(92, 107, 192, 0.12); --accent-border: rgba(92, 107, 192, 0.5); }
+        .ov { text-decoration: overline; }
+        /* live gate-level circuit */
+        #ff-svg .w { fill: none; stroke-width: 2.6; }
+        #ff-svg .lv1 { stroke: var(--logic1); }
+        #ff-svg .lv0 { stroke: var(--logic0); }
+        #ff-svg .w.chg { stroke-width: 4.8; }
+        #ff-svg .glead { stroke: none; }
+        #ff-svg .gbody { fill: #fff; }
+        #ff-svg .gbody.fired { fill: #FFF1C9; stroke: var(--warn); stroke-width: 2.6; }
+        #ff-svg text.pinno, #ic-svg text.pinno { fill: #7C86A8; }
+        #ff-svg circle.jn { stroke: none; }
+        #ff-svg circle.jn.lv1 { fill: var(--logic1); }
+        #ff-svg circle.jn.lv0 { fill: var(--logic0); }
+        #ff-svg text.val1, #ic-svg text.val1 { fill: var(--logic1); }
+        #ff-svg text.val0, #ic-svg text.val0 { fill: #78909C; }
+        #ff-svg text.netlab { fill: var(--accent); }
+        #ff-svg .sw { cursor: pointer; }
+        #ff-svg .sw rect { fill: #fff; stroke: var(--logic0); stroke-width: 2; }
+        #ff-svg .sw.on rect { fill: #FDECEA; stroke: var(--logic1); }
+        #ff-svg .sw.on text { fill: var(--logic1); }
+        #ff-svg .sw:hover rect { stroke-width: 3; }
+        #ff-svg .led { stroke: var(--pen); stroke-width: 2; }
+        #ff-svg .led.on { fill: var(--logic1); }
+        #ff-svg .led.off { fill: #ECEFF1; }
+        #ff-svg .led-glow { fill: rgba(229, 57, 53, 0.25); stroke: none; }
+        #ic-svg .stub.lv1 { fill: #FDECEA; stroke: var(--logic1); }
+        #ic-svg .stub.used { stroke-width: 2; }
+        #ic-svg text.unused { fill: #B0B6C8; }
+        .status { font-weight: 800; border-radius: 10px; padding: 0.45rem 0.75rem; font-size: 0.88rem; margin-top: 0.6rem; border: 1px solid transparent; }
+        .status.stable { background: var(--good-soft); color: var(--good); border-color: rgba(46,125,50,0.3); }
+        .status.settling { background: var(--warn-soft); color: #B35C00; border-color: rgba(230,119,0,0.35); }
+        .status.race { background: var(--bad-soft); color: var(--bad); border-color: rgba(198,40,40,0.35); }
+        .status.bad { background: #FFF4D6; color: #8A5A00; border-color: rgba(230,119,0,0.35); }
+        .status .st-tag { display: inline-block; font-size: 0.68rem; letter-spacing: 0.5px; text-transform: uppercase; border-radius: 50px; padding: 0.05rem 0.55rem; margin-right: 0.45rem; color: #fff; background: var(--good); }
+        .status.settling .st-tag { background: var(--warn); }
+        .status.race .st-tag { background: var(--bad); }
+        .status.bad .st-tag { background: #B7791F; }
+        .inputs-row { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; align-items: flex-end; }
+        .leds { display: flex; gap: 0.9rem; justify-content: center; margin-top: 0.3rem; }
+        .led-box { display: flex; flex-direction: column; align-items: center; gap: 0.15rem; font-weight: 800; font-size: 0.8rem; color: var(--ink-soft); }
+        .led-box i { width: 30px; height: 30px; border-radius: 50%; background: #ECEFF1; border: 2px solid var(--pen); display: block; transition: background 0.1s, box-shadow 0.1s; }
+        .led-box.on i { background: var(--logic1); box-shadow: 0 0 12px rgba(229,57,53,0.7); }
+        .led-box b { font-family: var(--font-mono); font-size: 1rem; color: var(--ink); }
+        .eq-live { font-family: 'Times New Roman', Georgia, serif; font-size: 1.05rem; margin-top: 0.35rem; }
+        .wiring { font-size: 0.84rem; columns: 2 260px; column-gap: 1.4rem; padding-left: 1.1rem; }
+        .wiring li { break-inside: avoid; }
+        .wiring b { font-family: var(--font-mono); }
+        .obs-ok { color: var(--good); font-weight: 800; }
+        .obs-bad { color: var(--bad); font-weight: 800; }
+        .obs-warn { color: var(--warn); font-weight: 800; }
+        table.obs tr.last td { box-shadow: inset 0 0 0 9999px rgba(76,175,80,0.10); }
+        .tt-legend { font-size: 0.76rem; color: var(--ink-soft); margin-top: 0.35rem; }
+        .ctl-sep { width: 1px; align-self: stretch; background: var(--line); }
+        .sim-note h4 { font-size: 0.92rem; margin: 0.2rem 0; color: var(--accent); }
+        .rec-sub { font-weight: 800; margin: 0.9rem 0 0.3rem; font-size: 0.93rem; }
+        @media (max-width: 600px) {
+            .ctl-sep { display: none; }
+            .inputs-row { gap: 0.7rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="top-bar">
+        <a href="index.html" class="back-btn">&larr; Practicals</a>
+        <div class="exp-heading">
+            <span class="exp-chip">Practical I &middot; Exp 11</span>
+            <h1 class="exp-title">&#x1F501; RS, Clocked RS &amp; D Flip-Flops (NAND &amp; NOR)</h1>
+        </div>
+        <a href="../../index.html" class="back-btn">&#x1F3E0; Lab</a>
+    </header>
+    <p class="big-idea">A <strong>flip-flop</strong> is two gates that feed each other: the loop <strong>remembers one bit</strong>. Put two
+        steering gates and a <strong>clock</strong> in front of it and the inputs act only while CLK&nbsp;=&nbsp;1 — that gives the clocked RS, D, JK and T flip-flops.</p>
+    <nav class="section-nav">
+        <a href="#simulate">&#x1F52C; Simulate</a><a href="#draw">&#x270F;&#xFE0F; Draw it</a><a href="#record">&#x1F4DD; Record</a><a href="#viva">&#x1F3A4; Viva</a>
+    </nav>
+
+    <main>
+        <!-- ================= SIMULATE ================= -->
+        <section id="simulate" class="block">
+            <h2 class="block-title">&#x1F52C; Simulate <span class="hint-inline">Click an input box in the circuit (or a switch below). Watch the gates switch one after another — red wire = 1, grey = 0.</span></h2>
+            <div class="tabs" data-tabs="ff">
+                <button class="tab-btn active" data-tab="srnor">SR latch · NOR</button>
+                <button class="tab-btn" data-tab="srnand">SR latch · NAND</button>
+                <button class="tab-btn" data-tab="csr">Clocked SR</button>
+                <button class="tab-btn" data-tab="dff">D flip-flop</button>
+                <button class="tab-btn" data-tab="jk">JK flip-flop</button>
+                <button class="tab-btn" data-tab="tff">T flip-flop</button>
+            </div>
+
+            <div class="grid-2">
+                <div>
+                    <div class="stage"><svg id="ff-svg" class="pen" viewBox="0 30 600 260" role="img" aria-label="Gate-level flip-flop circuit"></svg></div>
+                    <div class="controls" id="controls">
+                        <div class="inputs-row" id="in-switches"></div>
+                        <div class="ctl-sep"></div>
+                        <div class="btn-row" id="clk-tools">
+                            <button class="btn btn-primary" id="pulse">&#x238D; Clock pulse</button>
+                            <label class="ctl"><span class="ctl-label">Pulse width</span>
+                                <select id="pwidth"><option value="narrow">Narrow (2 gate delays)</option><option value="wide">Wide (10 gate delays)</option></select></label>
+                            <button class="btn" id="auto">&#x25B6; Auto clock</button>
+                        </div>
+                        <div class="btn-row">
+                            <button class="btn" id="release" title="Return both inputs to the inactive level at the same instant">Release both together</button>
+                            <button class="btn" id="add">&#x2795; Add current state to table</button>
+                            <button class="btn btn-sm" id="reset" title="Put the flip-flop back to Q = 0 with the inputs inactive">&#x27F2; Reset (Q = 0)</button>
+                            <label class="ctl"><span class="ctl-label">Gate delay shown as</span>
+                                <select id="speed"><option value="140">140 ms</option><option value="420">420 ms (slow motion)</option></select></label>
+                        </div>
+                    </div>
+                </div>
+                <div class="stack">
+                    <div class="card">
+                        <h3>Outputs</h3>
+                        <div class="leds"><div class="led-box" id="led-q"><i></i>Q<b>0</b></div><div class="led-box" id="led-qb"><i></i><span class="ov">Q</span><b>1</b></div></div>
+                        <div class="status" id="status"></div>
+                    </div>
+                    <div class="card">
+                        <h3 id="tt-title">Truth table</h3>
+                        <div id="tt-sim"></div>
+                        <div class="tt-legend"><span style="background:#FFF4D6;padding:0 0.3rem;border-radius:4px">yellow</span> = row selected by the present inputs &middot; <span style="background:#E3F2E4;padding:0 0.3rem;border-radius:4px">green</span> = row of the last event. Press <b>&#x2795; Add</b> to copy what you see into the record sheet.</div>
+                    </div>
+                    <div class="card">
+                        <h3>Characteristic equation</h3>
+                        <div class="formula" id="eq"></div>
+                        <div class="eq-live" id="eq-live"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:1rem">
+                <h3>Timing diagram <span style="font-family:var(--font-body);font-size:0.8rem;color:var(--ink-soft)">(live logic-analyser view; one tick = one gate delay; shaded = outputs not settled / race)</span></h3>
+                <div class="stage"><canvas id="timing"></canvas></div>
+                <div class="btn-row" style="justify-content:flex-end;margin-top:0.4rem"><button class="btn btn-sm" id="tclear">Clear trace</button></div>
+            </div>
+
+            <div class="grid-2-even" style="margin-top:1rem">
+                <div class="card">
+                    <h3 id="ic-title">IC connections</h3>
+                    <div class="stage"><svg id="ic-svg" class="pen" viewBox="0 0 420 232" role="img" aria-label="IC pin connections"></svg></div>
+                    <ul class="wiring" id="wiring" style="margin-top:0.5rem"></ul>
+                </div>
+                <div class="card sim-note" id="explain"></div>
+            </div>
+        </section>
+
+        <!-- ================= DRAW ================= -->
+        <section id="draw" class="block">
+            <h2 class="block-title">&#x270F;&#xFE0F; Draw it <span class="hint-inline">Press ▶ Draw and copy each step into your record.</span></h2>
+            <div class="tabs" data-tabs="draw">
+                <button class="tab-btn active" data-tab="srnor">SR (NOR)</button>
+                <button class="tab-btn" data-tab="srnand">SR (NAND)</button>
+                <button class="tab-btn" data-tab="csr">Clocked SR</button>
+                <button class="tab-btn" data-tab="dff">D</button>
+                <button class="tab-btn" data-tab="jk">JK</button>
+                <button class="tab-btn" data-tab="tff">T</button>
+                <button class="tab-btn" data-tab="p7400">IC 7400</button>
+                <button class="tab-btn" data-tab="p7402">IC 7402</button>
+                <button class="tab-btn" data-tab="p7410">IC 7410</button>
+                <button class="tab-btn" data-tab="timing">Timing diagram</button>
+            </div>
+            <div class="tab-panel" data-group="draw" data-panel="srnor" id="draw-srnor"></div>
+            <div class="tab-panel" data-group="draw" data-panel="srnand" id="draw-srnand"></div>
+            <div class="tab-panel" data-group="draw" data-panel="csr" id="draw-csr"></div>
+            <div class="tab-panel" data-group="draw" data-panel="dff" id="draw-dff"></div>
+            <div class="tab-panel" data-group="draw" data-panel="jk" id="draw-jk"></div>
+            <div class="tab-panel" data-group="draw" data-panel="tff" id="draw-tff"></div>
+            <div class="tab-panel" data-group="draw" data-panel="p7400" id="draw-p7400"></div>
+            <div class="tab-panel" data-group="draw" data-panel="p7402" id="draw-p7402"></div>
+            <div class="tab-panel" data-group="draw" data-panel="p7410" id="draw-p7410"></div>
+            <div class="tab-panel" data-group="draw" data-panel="timing" id="draw-timing"></div>
+        </section>
+
+        <!-- ================= RECORD ================= -->
+        <section id="record" class="block">
+            <h2 class="block-title">&#x1F4DD; Record sheet</h2>
+            <div class="rec-actions no-print">
+                <button class="btn btn-sm" id="rec-clear">Clear my observations</button>
+                <button class="btn btn-sm" data-print-record>&#x1F5A8;&#xFE0F; Print record</button>
+            </div>
+            <article class="record">
+                <div class="rec-head"><div class="rec-box">Expt. No. ______<br>Date ______</div><div class="rec-box">Page No. ______</div></div>
+                <h2 class="rec-title">STUDY OF RS, CLOCKED RS, D, JK AND T FLIP-FLOPS USING NAND AND NOR GATES</h2>
+
+                <h3>Aim</h3>
+                <p>To construct the RS (using NOR and NAND gates), clocked RS, D, JK and T flip-flops with logic gates and to verify their state (truth) tables.</p>
+
+                <h3>Apparatus required</h3>
+                <p>IC 7400 (quad 2-input NAND), IC 7402 (quad 2-input NOR), IC 7410 (triple 3-input NAND, for the JK and T flip-flops), digital trainer kit
+                    (+5 V supply, logic input switches, LED indicators and a debounced clock pulser), connecting leads.</p>
+
+                <h3>Theory</h3>
+                <p>A <b>flip-flop</b> is a bistable circuit that stores one bit. Its two outputs Q and <span class="ov">Q</span> are normally complements of each other.
+                    Two cross-coupled NOR (or NAND) gates form the basic <b>RS latch</b>: S = 1 sets Q = 1, R = 1 resets Q = 0, S = R = 0 keeps the previous state,
+                    and S = R = 1 is forbidden (both outputs become equal, and the state after the inputs are released together is unpredictable). In the NAND latch the inputs are active-low
+                    (<span class="ov">S</span>, <span class="ov">R</span>).</p>
+                <p>In the <b>clocked RS</b> flip-flop two steering NAND gates pass S and R to the latch only while CLK = 1; when CLK = 0 the flip-flop holds its state.
+                    The <b>D</b> flip-flop feeds D to S and <span class="ov">D</span> to R, so S = R = 1 can never occur and Q follows D when clocked. In the <b>JK</b> flip-flop the outputs are fed back to the steering
+                    gates, so J = K = 1 makes the output toggle instead of being forbidden. If the clock stays high longer than the propagation delay, Q toggles again and again — the
+                    <b>race-around condition</b>. The <b>T</b> flip-flop is a JK flip-flop with J = K = T; it toggles on every clock pulse when T = 1.</p>
+                <p class="calc-line">Characteristic equations: &nbsp; RS: Q<sub>n+1</sub> = S + <span class="ov">R</span>Q<sub>n</sub> (SR = 0) &nbsp;·&nbsp; D: Q<sub>n+1</sub> = D &nbsp;·&nbsp;
+                    JK: Q<sub>n+1</sub> = J<span class="ov">Q</span><sub>n</sub> + <span class="ov">K</span>Q<sub>n</sub> &nbsp;·&nbsp; T: Q<sub>n+1</sub> = T ⊕ Q<sub>n</sub></p>
+
+                <h3>Pin diagrams</h3>
+                <div class="grid-2-even">
+                    <div class="rec-diagram" data-diagram="p7400"></div>
+                    <div class="rec-diagram" data-diagram="p7402"></div>
+                </div>
+                <div class="rec-diagram" data-diagram="p7410" style="max-width:520px;margin-left:auto;margin-right:auto"></div>
+
+                <h3>Procedure</h3>
+                <ol>
+                    <li>Check the ICs and place them on the digital trainer. Connect pin 14 of every IC to +5 V (V<sub>CC</sub>) and pin 7 to ground.</li>
+                    <li>Wire the RS flip-flop as shown in the logic diagram, using the pin numbers marked on the diagram. Connect the inputs to the logic switches and Q, <span class="ov">Q</span> to the LED indicators.</li>
+                    <li>For the clocked circuits connect CLK to the debounced pulser (monopulse key) of the trainer.</li>
+                    <li>Apply each input combination of the truth table (with Q<sub>n</sub> = 0 and with Q<sub>n</sub> = 1), give a clock pulse where needed and note the output Q<sub>n+1</sub>.</li>
+                    <li>Repeat for the clocked RS, D, JK and T flip-flops and compare the observations with the truth tables.</li>
+                </ol>
+
+                <h3>Circuit diagrams and truth tables</h3>
+                <div id="rec-ffs"></div>
+
+                <h3>Model timing diagram (clocked RS flip-flop)</h3>
+                <div class="rec-diagram" data-diagram="timing"></div>
+
+                <h3>Result</h3>
+                <div class="result-box" id="rec-result"></div>
+
+                <h3>Precautions</h3>
+                <ol>
+                    <li>Make the connections according to the IC pin diagram; note that the outputs of IC 7402 are on pins 1, 4, 10 and 13, not 3, 6, 8 and 11 as in IC 7400.</li>
+                    <li>The connections should be tight; V<sub>CC</sub> (pin 14) and ground (pin 7) should be applied carefully at the specified pins only.</li>
+                    <li>Use the debounced pulser for the clock — a mechanical switch bounces and gives several pulses.</li>
+                    <li>Do not leave TTL inputs open (an open input behaves as logic 1); avoid the forbidden input S = R = 1.</li>
+                </ol>
+            </article>
+        </section>
+
+        <!-- ================= VIVA ================= -->
+        <section id="viva" class="block">
+            <h2 class="block-title">&#x1F3A4; Viva voce</h2>
+            <div id="viva-list"></div>
+        </section>
+    </main>
+
+    <footer class="page-footer">Practical I &middot; Exp 11 &bull; Simplified model for learning &mdash; values are illustrative</footer>
+
+    <script src="assets/msc-common.js"></script>
+    <script>
+    'use strict';
+    const S = MSC.sym;
+    const $ = (id) => document.getElementById(id);
+    const H = MSC.fmtHTML;
+
+    // ================================================================== circuit descriptions
+    const GW = 64, RACE_TICKS = 8;
+    const Y1 = 77.33, Y2 = 94.67, Y3 = 237.33, Y4 = 254.67;
+    const PINOUT = {
+        '7400': ['1A', '1B', '1Y', '2A', '2B', '2Y', 'GND', '3Y', '3A', '3B', '4Y', '4A', '4B', 'V_{CC}'],
+        '7402': ['1Y', '1A', '1B', '2Y', '2A', '2B', 'GND', '3A', '3B', '3Y', '4A', '4B', '4Y', 'V_{CC}'],
+        '7410': ['1A', '1B', '2A', '2B', '2C', '2Y', 'GND', '3Y', '3A', '3B', '3C', '1Y', '1C', 'V_{CC}'],
+    };
+    const IC_DESC = { '7400': 'quad 2-input NAND', '7402': 'quad 2-input NOR', '7410': 'triple 3-input NAND' };
+    const NAMES = { S: 'S', R: 'R', SB: '!{S}', RB: '!{R}', CLK: 'CLK', D: 'D', J: 'J', K: 'K', T: 'T', Q: 'Q', QB: '!{Q}', SP: '!{S}′', RP: '!{R}′', DB: '!{D}' };
+
+    function mkGate(id, type, x, y, ins, out, ic, pins) { return { id, type, x, y, h: ins.length === 3 ? 60 : 52, ins, out, ic, pins }; }
+    /* Cross-coupled output pair. Upper gate (y = 60) gives Q, lower gate (y = 220) gives Q̄. */
+    function latchRoutes(LX) {
+        const ox = LX + 88, fx = ox + 20, bx = LX - 20;
+        return {
+            routes: [
+                { net: 'Q', grp: 'Qout', pts: [[ox, 86], [ox + 63, 86]] },
+                { net: 'Q', grp: 'Qfb', pts: [[fx, 86], [fx, 128], [bx, 196], [bx, Y3], [LX - 14, Y3]] },
+                { net: 'QB', grp: 'QBout', pts: [[ox, 246], [ox + 63, 246]] },
+                { net: 'QB', grp: 'QBfb', pts: [[fx, 246], [fx, 204], [bx, 136], [bx, Y2], [LX - 14, Y2]] },
+            ],
+            dots: [{ net: 'Q', grp: 'Qfb', x: fx, y: 86 }, { net: 'QB', grp: 'QBfb', x: fx, y: 246 }],
+            outs: [{ net: 'Q', label: 'Q', x: ox + 74, y: 86 }, { net: 'QB', label: '!{Q}', x: ox + 74, y: 246 }],
+        };
+    }
+    const CLK_ROUTES = (yTop, yBot) => [
+        { net: 'CLK', grp: 'clk', pts: [[246, yTop], [222, yTop], [222, yBot], [246, yBot]] },
+        { net: 'CLK', grp: 'clk', pts: [[74, 166], [222, 166]] },
+    ];
+
+    const CIRCUITS = {};
+    (function define() {
+        // ---- SR latch, NOR (IC 7402)
+        let L = latchRoutes(360);
+        CIRCUITS.srnor = {
+            key: 'srnor', short: 'SR latch (NOR)', title: 'SR latch using NOR gates (IC 7402)', viewBox: '0 30 600 260', dviewBox: '0 30 600 285',
+            clocked: false, ics: { IC1: '7402' }, idle: { S: 0, R: 0 }, active: { S: 1, R: 1 },
+            inputs: [{ net: 'S', y: Y4 }, { net: 'R', y: Y1 }], traces: ['S', 'R', 'Q', 'QB'],
+            gates: [mkGate('G1', 'NOR', 360, 60, ['R', 'QB'], 'Q', 'IC1', [2, 3, 1]), mkGate('G2', 'NOR', 360, 220, ['Q', 'S'], 'QB', 'IC1', [5, 6, 4])],
+            routes: [{ net: 'R', grp: 'in', pts: [[74, Y1], [346, Y1]] }, { net: 'S', grp: 'in', pts: [[74, Y4], [346, Y4]] }].concat(L.routes),
+            dots: L.dots, outs: L.outs, labels: [],
+            cols: ['S', 'R'],
+            rows: [{ in: { S: 0, R: 0 }, th: 'NO CHANGE', k: 'hold' }, { in: { S: 0, R: 1 }, th: '0', k: 'reset' }, { in: { S: 1, R: 0 }, th: '1', k: 'set' }, { in: { S: 1, R: 1 }, th: '? (forbidden)', k: 'forbid' }],
+        };
+        // ---- SR latch, NAND (IC 7400) — active-low inputs
+        L = latchRoutes(360);
+        CIRCUITS.srnand = {
+            key: 'srnand', short: 'SR latch (NAND)', title: 'SR latch using NAND gates (IC 7400)', viewBox: '0 30 600 260', dviewBox: '0 30 600 285',
+            clocked: false, ics: { IC1: '7400' }, idle: { SB: 1, RB: 1 }, active: { SB: 0, RB: 0 },
+            inputs: [{ net: 'SB', y: Y1 }, { net: 'RB', y: Y4 }], traces: ['SB', 'RB', 'Q', 'QB'],
+            gates: [mkGate('G1', 'NAND', 360, 60, ['SB', 'QB'], 'Q', 'IC1', [1, 2, 3]), mkGate('G2', 'NAND', 360, 220, ['Q', 'RB'], 'QB', 'IC1', [4, 5, 6])],
+            routes: [{ net: 'SB', grp: 'in', pts: [[74, Y1], [346, Y1]] }, { net: 'RB', grp: 'in', pts: [[74, Y4], [346, Y4]] }].concat(L.routes),
+            dots: L.dots, outs: L.outs, labels: [],
+            cols: ['SB', 'RB'],
+            rows: [{ in: { SB: 1, RB: 1 }, th: 'NO CHANGE', k: 'hold' }, { in: { SB: 1, RB: 0 }, th: '0', k: 'reset' }, { in: { SB: 0, RB: 1 }, th: '1', k: 'set' }, { in: { SB: 0, RB: 0 }, th: '? (forbidden)', k: 'forbid' }],
+        };
+        // ---- Clocked SR (one IC 7400)
+        L = latchRoutes(460);
+        const steerLinks = [{ net: 'SP', grp: 'sp', pts: [[348, Y1], [446, Y1]] }, { net: 'RP', grp: 'sp', pts: [[348, Y4], [446, Y4]] }];
+        const steerLabels = [{ net: 'SP', x: 397, y: Y1 - 11 }, { net: 'RP', x: 397, y: Y4 - 11 }];
+        CIRCUITS.csr = {
+            key: 'csr', short: 'Clocked SR', title: 'Clocked SR flip-flop using NAND gates (IC 7400)', viewBox: '0 30 700 275', dviewBox: '0 30 700 290',
+            clocked: true, ics: { IC1: '7400' }, idle: { S: 0, R: 0, CLK: 0 },
+            inputs: [{ net: 'S', y: 68.67 }, { net: 'R', y: 263.33 }, { net: 'CLK', y: 166 }], traces: ['CLK', 'S', 'R', 'Q', 'QB'],
+            gates: [
+                mkGate('G1', 'NAND', 260, 51.33, ['S', 'CLK'], 'SP', 'IC1', [1, 2, 3]), mkGate('G2', 'NAND', 260, 228.67, ['CLK', 'R'], 'RP', 'IC1', [4, 5, 6]),
+                mkGate('G3', 'NAND', 460, 60, ['SP', 'QB'], 'Q', 'IC1', [9, 10, 8]), mkGate('G4', 'NAND', 460, 220, ['Q', 'RP'], 'QB', 'IC1', [12, 13, 11]),
+            ],
+            routes: [{ net: 'S', grp: 'in', pts: [[74, 68.67], [246, 68.67]] }, { net: 'R', grp: 'in', pts: [[74, 263.33], [246, 263.33]] }]
+                .concat(CLK_ROUTES(86, 246), steerLinks, L.routes),
+            dots: [{ net: 'CLK', grp: 'clk', x: 222, y: 166 }].concat(L.dots), outs: L.outs, labels: steerLabels,
+            cols: ['CLK', 'S', 'R'],
+            rows: [{ clk: 1, in: { S: 0, R: 0 }, th: 'NO CHANGE', k: 'hold' }, { clk: 1, in: { S: 0, R: 1 }, th: '0', k: 'reset' }, { clk: 1, in: { S: 1, R: 0 }, th: '1', k: 'set' },
+                { clk: 1, in: { S: 1, R: 1 }, th: '? (forbidden)', k: 'forbid' }, { clk: 0, in: null, th: 'NO CHANGE', k: 'hold' }],
+        };
+        // ---- D flip-flop (IC 7400 + one gate of a second 7400 as the inverter)
+        L = latchRoutes(460);
+        CIRCUITS.dff = {
+            key: 'dff', short: 'D flip-flop', title: 'D flip-flop using NAND gates (IC 7400 × 2)', viewBox: '0 30 700 275', dviewBox: '0 30 700 290',
+            clocked: true, ics: { IC1: '7400', IC2: '7400' }, idle: { D: 0, CLK: 0 },
+            inputs: [{ net: 'D', y: 68.67 }, { net: 'CLK', y: 166 }], traces: ['CLK', 'D', 'Q', 'QB'],
+            gates: [
+                mkGate('G1', 'NAND', 260, 51.33, ['D', 'CLK'], 'SP', 'IC1', [1, 2, 3]), mkGate('G2', 'NAND', 260, 228.67, ['CLK', 'DB'], 'RP', 'IC1', [4, 5, 6]),
+                mkGate('G3', 'NAND', 460, 60, ['SP', 'QB'], 'Q', 'IC1', [9, 10, 8]), mkGate('G4', 'NAND', 460, 220, ['Q', 'RP'], 'QB', 'IC1', [12, 13, 11]),
+                mkGate('G5', 'NAND', 112, 237.33, ['D', 'D'], 'DB', 'IC2', [1, 2, 3]),
+            ],
+            routes: [
+                { net: 'D', grp: 'in', pts: [[74, 68.67], [246, 68.67]] },
+                { net: 'D', grp: 'inv', pts: [[86, 68.67], [86, 272], [98, 272]] }, { net: 'D', grp: 'inv', pts: [[86, Y4], [98, Y4]] },
+                { net: 'DB', grp: 'db', pts: [[200, 263.33], [246, 263.33]] },
+            ].concat(CLK_ROUTES(86, 246), steerLinks, L.routes),
+            dots: [{ net: 'CLK', grp: 'clk', x: 222, y: 166 }, { net: 'D', grp: 'inv', x: 86, y: 68.67 }, { net: 'D', grp: 'inv', x: 86, y: Y4 }].concat(L.dots),
+            outs: L.outs, labels: steerLabels.concat([{ net: 'DB', x: 223, y: 263.33 + 12 }]),
+            cols: ['CLK', 'D'],
+            rows: [{ clk: 1, in: { D: 0 }, th: '0', k: 'reset' }, { clk: 1, in: { D: 1 }, th: '1', k: 'set' }, { clk: 0, in: null, th: 'NO CHANGE', k: 'hold' }],
+        };
+        // ---- JK flip-flop (IC 7410 steering + IC 7400 latch)
+        const jkBase = (inTop, inBot, extra) => {
+            const Lj = latchRoutes(460);
+            return {
+                clocked: true, ics: { IC1: '7410', IC2: '7400' }, viewBox: '0 30 700 275', dviewBox: '0 30 700 290',
+                gates: [
+                    mkGate('G1', 'NAND', 260, 47.33, [inTop, 'CLK', 'QB'], 'SP', 'IC1', [1, 2, 13, 12]),
+                    mkGate('G2', 'NAND', 260, 224.67, ['Q', 'CLK', inBot], 'RP', 'IC1', [3, 4, 5, 6]),
+                    mkGate('G3', 'NAND', 460, 60, ['SP', 'QB'], 'Q', 'IC2', [1, 2, 3]), mkGate('G4', 'NAND', 460, 220, ['Q', 'RP'], 'QB', 'IC2', [4, 5, 6]),
+                ],
+                routes: extra.concat(CLK_ROUTES(Y1, Y4), steerLinks, Lj.routes, [
+                    { net: 'QB', grp: 'fb', pts: [[440, 136], [234, 136], [234, 92.33], [246, 92.33]] },
+                    { net: 'Q', grp: 'fb', pts: [[440, 196], [234, 196], [234, 239.67], [246, 239.67]] },
+                ]),
+                dots: [{ net: 'CLK', grp: 'clk', x: 222, y: 166 }, { net: 'QB', grp: 'fb', x: 440, y: 136 }, { net: 'Q', grp: 'fb', x: 440, y: 196 }].concat(Lj.dots),
+                outs: Lj.outs, labels: steerLabels,
+            };
+        };
+        CIRCUITS.jk = Object.assign(jkBase('J', 'K', [{ net: 'J', grp: 'in', pts: [[74, 62.33], [246, 62.33]] }, { net: 'K', grp: 'in', pts: [[74, 269.67], [246, 269.67]] }]), {
+            key: 'jk', short: 'JK flip-flop', title: 'JK flip-flop using NAND gates (IC 7410 + IC 7400)', idle: { J: 0, K: 0, CLK: 0 },
+            inputs: [{ net: 'J', y: 62.33 }, { net: 'K', y: 269.67 }, { net: 'CLK', y: 166 }], traces: ['CLK', 'J', 'K', 'Q', 'QB'],
+            sustains: v => !!(v.CLK && v.J && v.K),
+            cols: ['CLK', 'J', 'K'],
+            rows: [{ clk: 1, in: { J: 0, K: 0 }, th: 'NO CHANGE', k: 'hold' }, { clk: 1, in: { J: 0, K: 1 }, th: '0', k: 'reset' }, { clk: 1, in: { J: 1, K: 0 }, th: '1', k: 'set' },
+                { clk: 1, in: { J: 1, K: 1 }, th: '!{Q}_n (toggle)', k: 'toggle' }, { clk: 0, in: null, th: 'NO CHANGE', k: 'hold' }],
+        });
+        const tb = jkBase('T', 'T', [{ net: 'T', grp: 'in', pts: [[74, 62.33], [246, 62.33]] }, { net: 'T', grp: 'in', pts: [[96, 62.33], [96, 269.67], [246, 269.67]] }]);
+        tb.dots.push({ net: 'T', grp: 'in', x: 96, y: 62.33 });
+        CIRCUITS.tff = Object.assign(tb, {
+            key: 'tff', short: 'T flip-flop', title: 'T flip-flop — JK flip-flop with J = K = T (IC 7410 + IC 7400)', idle: { T: 0, CLK: 0 },
+            inputs: [{ net: 'T', y: 62.33 }, { net: 'CLK', y: 166 }], traces: ['CLK', 'T', 'Q', 'QB'],
+            sustains: v => !!(v.CLK && v.T),
+            cols: ['CLK', 'T'],
+            rows: [{ clk: 1, in: { T: 0 }, th: 'NO CHANGE', k: 'hold' }, { clk: 1, in: { T: 1 }, th: '!{Q}_n (toggle)', k: 'toggle' }, { clk: 0, in: null, th: 'NO CHANGE', k: 'hold' }],
+        });
+        Object.values(CIRCUITS).forEach(C => {
+            C.inNets = C.inputs.map(i => i.net).filter(n => n !== 'CLK');
+            C.forbiddenOut = C.key === 'srnor' ? 0 : 1;
+        });
+    })();
+
+    // ================================================================== gate-level machine (unit-delay model)
+    function evalGate(g, v) {
+        const a = g.ins.map(n => v[n]);
+        if (g.type === 'NAND') return a.every(x => x === 1) ? 0 : 1;
+        if (g.type === 'NOR') return a.some(x => x === 1) ? 0 : 1;
+        return a[0] ? 0 : 1;
+    }
+    /* All gates switch together one gate delay after their inputs change (synchronous unit delay).
+       If the outputs keep switching for RACE_TICKS delays with the inputs unchanged, the loop is in a race; real gates
+       never have identical delays, so (unless the circuit is a genuine oscillator, e.g. JK with CLK = 1 and J = K = 1)
+       one randomly chosen gate is allowed to switch first, which ends the race in an unpredictable state. */
+    class Machine {
+        constructor(C, q, rng) { this.C = C; this.v = {}; this.rng = rng || Math.random; this.reset(q || 0); }
+        reset(q) {
+            const C = this.C, v = this.v;
+            Object.keys(v).forEach(k => delete v[k]);
+            Object.assign(v, C.idle);
+            C.gates.forEach(g => { v[g.out] = 1; });
+            v.Q = q; v.QB = 1 - q;
+            this.pulseLeft = -1; this.run = 0;
+            this.settle(40);
+            this.run = 0;
+        }
+        step() {
+            const C = this.C, v = this.v;
+            let fell = false;
+            if (this.pulseLeft === 0) { v.CLK = 0; this.pulseLeft = -1; this.run = 0; fell = true; }
+            const next = C.gates.map(g => evalGate(g, v));
+            let ch = [];
+            C.gates.forEach((g, i) => { if (next[i] !== v[g.out]) ch.push(i); });
+            const sustained = !!(C.sustains && C.sustains(v));
+            let broke = false;
+            if (ch.length && this.run >= RACE_TICKS && !sustained) { ch = [ch[Math.floor(this.rng() * ch.length)]]; broke = true; }
+            ch.forEach(i => { v[C.gates[i].out] = next[i]; });
+            if (this.pulseLeft > 0) this.pulseLeft--;
+            this.run = ch.length ? this.run + 1 : 0;
+            return { changed: ch.map(i => C.gates[i]), broke, sustained, fell };
+        }
+        stable() { return this.C.gates.every(g => evalGate(g, this.v) === this.v[g.out]); }
+        settle(max) {
+            let broke = false, maxRun = 0;
+            for (let k = 0; k < max; k++) {
+                const r = this.step();
+                broke = broke || r.broke; maxRun = Math.max(maxRun, this.run);
+                if (!r.changed.length && this.pulseLeft < 0) return { ticks: k, broke, maxRun, settled: true };
+            }
+            return { ticks: max, broke, maxRun, settled: false };
+        }
+        set(net, val) { this.v[net] = val; this.run = 0; }
+        pulse(w) { this.v.CLK = 1; this.pulseLeft = w; this.run = 0; }
+    }
+    const PW = { narrow: 2, wide: 10 };
+
+    /* Programmatic check of every truth-table row for Qn = 0 and 1 (used by the page self-test). */
+    function verifyAll() {
+        const out = [];
+        Object.values(CIRCUITS).forEach(C => {
+            C.rows.forEach(row => {
+                [0, 1].forEach(q0 => {
+                    const m = new Machine(C, q0);
+                    let res, ok, got;
+                    if (!C.clocked) {
+                        Object.keys(row.in).forEach(k => m.set(k, row.in[k]));
+                        res = m.settle(80);
+                    } else if (row.clk === 0) {
+                        C.inNets.forEach(k => m.set(k, 1)); // any inputs: CLK = 0 locks them out
+                        res = m.settle(80);
+                    } else {
+                        Object.keys(row.in).forEach(k => m.set(k, row.in[k]));
+                        m.settle(20);
+                        m.pulse(PW.narrow);
+                        res = m.settle(80);
+                    }
+                    const q = m.v.Q, qb = m.v.QB;
+                    got = 'Q=' + q + ' Q̄=' + qb + (res.broke ? ' (race)' : '');
+                    if (row.k === 'hold') ok = q === q0 && qb === 1 - q0 && !res.broke;
+                    else if (row.k === 'set') ok = q === 1 && qb === 0;
+                    else if (row.k === 'reset') ok = q === 0 && qb === 1;
+                    else if (row.k === 'toggle') ok = q === 1 - q0 && qb === q0 && !res.broke;
+                    else if (row.k === 'forbid') {
+                        // hold the forbidden inputs: both outputs equal; then release together: race
+                        const m2 = new Machine(C, q0);
+                        if (C.clocked) m2.set('CLK', 1);
+                        Object.keys(row.in).forEach(k => m2.set(k, row.in[k]));
+                        m2.settle(40);
+                        const held = [m2.v.Q, m2.v.QB];
+                        if (C.clocked) m2.set('CLK', 0); else Object.keys(C.idle).forEach(k => m2.set(k, C.idle[k]));
+                        const r2 = m2.settle(80);
+                        ok = held[0] === C.forbiddenOut && held[1] === C.forbiddenOut && r2.broke && r2.settled && (C.clocked ? res.broke : true);
+                        got = 'held Q=Q̄=' + held.join('/') + ', release: race=' + r2.broke + ', narrow pulse race=' + res.broke;
+                    }
+                    out.push({ ff: C.key, row: (row.clk !== undefined ? 'CLK=' + row.clk + ' ' : '') + (row.in ? JSON.stringify(row.in) : '(inputs ×)'), q0, expect: row.th, got, ok: !!ok });
+                });
+            });
+        });
+        // race-around: JK / T with a wide pulse and J = K = 1 (T = 1) must keep switching while CLK = 1
+        ['jk', 'tff'].forEach(key => {
+            const C = CIRCUITS[key], m = new Machine(C, 0);
+            C.inNets.forEach(k => m.set(k, 1));
+            m.set('CLK', 1);
+            const r = m.settle(40);
+            out.push({ ff: key, row: 'CLK held 1, J=K=1', q0: 0, expect: 'race-around (never settles)', got: r.settled ? 'settled' : 'oscillating, run=' + m.run, ok: !r.settled });
+        });
+        return out;
+    }
+
+    // ================================================================== UI state
+    const ui = {
+        key: 'srnor', ev: null, last: null, hist: [], fired: new Set(), chNets: new Set(), settleTicks: 0, raced: false,
+        raceAroundNow: false, auto: false, autoCount: 0, tickMs: 140, acc: 0, dirty: true, lastSettle: 0,
+        width: { csr: 'wide', dff: 'wide', jk: 'narrow', tff: 'narrow' },
+    };
+    let M = new Machine(CIRCUITS.srnor, 0);
+    const OBS_KEY = 'msc-p1-11-obs';
+    let OBS = MSC.store.get(OBS_KEY, {});
+    if (!OBS || typeof OBS !== 'object') OBS = {};
+    const cur = () => M.C;
+
+    function snapInputs() { const o = {}; cur().inNets.forEach(n => { o[n] = M.v[n]; }); return o; }
+    function newEv() {
+        return { inputs: snapInputs(), clk: cur().clocked ? (M.v.CLK ? 1 : 0) : null, qBefore: M.v.Q, qbBefore: M.v.QB, race: false, raceAround: false, held: null };
+    }
+    function stim() {
+        const qb = ui.ev ? ui.ev.qBefore : M.v.Q;
+        ui.ev = newEv(); ui.ev.qBefore = qb;
+        ui.settleTicks = 0; ui.raced = false; ui.dirty = true;
+    }
+    function reopen() { if (!ui.ev && ui.last) { ui.ev = Object.assign({}, ui.last); ui.settleTicks = 0; } ui.dirty = true; }
+    function finalize() {
+        const e = ui.ev;
+        e.qAfter = M.v.Q; e.qbAfter = M.v.QB;
+        ui.last = e; ui.ev = null; ui.lastSettle = ui.settleTicks;
+    }
+
+    function toggleInput(net) {
+        if (net === 'CLK') { setClk(M.v.CLK ? 0 : 1); return; }
+        M.set(net, M.v[net] ? 0 : 1);
+        stim();
+    }
+    function setClk(val) {
+        if (M.pulseLeft >= 0) return;
+        M.set('CLK', val);
+        if (val) stim(); else reopen();
+    }
+    function doPulse() {
+        if (!cur().clocked || M.v.CLK || M.pulseLeft >= 0) return;
+        M.pulse(PW[ui.width[ui.key]]);
+        ui.ev = newEv(); ui.settleTicks = 0; ui.raced = false; ui.dirty = true;
+    }
+    function releaseBoth() {
+        const C = cur();
+        if (C.clocked || !bothActive()) return;
+        reopen();
+        Object.keys(C.idle).forEach(k => { M.v[k] = C.idle[k]; });
+        M.run = 0; ui.raced = false;
+    }
+    const bothActive = () => { const C = cur(); return !C.clocked && Object.keys(C.active).every(k => M.v[k] === C.active[k]); };
+    const autoPeriod = () => (ui.width[ui.key] === 'wide' ? 24 : 14);
+
+    function uiTick() {
+        const C = cur();
+        if (ui.auto && C.clocked) {
+            ui.autoCount++;
+            if (ui.autoCount >= autoPeriod() && M.pulseLeft < 0 && !M.v.CLK) { ui.autoCount = 0; doPulse(); }
+        }
+        if (M.pulseLeft === 0) reopen();          // the clock pulse ends at this tick
+        const r = M.step();
+        ui.fired = new Set(r.changed.map(g => g.id));
+        ui.chNets = new Set(r.changed.map(g => g.out));
+        if (r.changed.length) ui.settleTicks++;
+        if (r.broke) { if (!ui.ev) reopen(); if (ui.ev) ui.ev.race = true; ui.raced = true; }
+        ui.raceAroundNow = r.sustained && M.run >= 4;
+        if (ui.raceAroundNow && ui.ev) ui.ev.raceAround = true;
+        if (ui.ev && !r.changed.length && M.v.Q === M.v.QB) ui.ev.held = M.v.Q;
+        if (ui.ev && !r.changed.length && M.pulseLeft < 0) finalize();
+        const snap = {};
+        C.traces.forEach(n => { snap[n] = M.v[n]; });
+        ui.hist.push({ v: snap, un: M.run, sus: r.sustained && M.run > 0 });
+        if (ui.hist.length > 600) ui.hist.splice(0, ui.hist.length - 600);
+        ui.dirty = true;
+    }
+
+    // ================================================================== rendering: live circuit
+    function gp(g) { return S.gatePins(g.type, g.x, g.y, { w: GW, h: g.h, n: g.ins.length }); }
+    function bodyIn(g, y) {
+        if (g.type === 'NOR') { const t = (y - g.y) / g.h; return g.x + 0.6 * GW * t * (1 - t); }
+        return g.x;
+    }
+    const lvCls = (net) => 'w lv' + (M.v[net] ? 1 : 0) + (ui.chNets.has(net) ? ' chg' : '');
+    function renderCircuit() {
+        const C = cur(), v = M.v;
+        let s = '';
+        C.gates.forEach(g => {
+            const P = gp(g);
+            s += S.gate(g.type, g.x, g.y, { w: GW, h: g.h, n: g.ins.length, cls: 'gbody' + (ui.fired.has(g.id) ? ' fired' : ''), leadCls: 'glead', outCls: 'glead' });
+            s += S.text(g.x + GW * 0.42, g.y + g.h / 2 - 7, g.id, { size: 11, weight: 800, cls: 'soft' });
+            s += S.text(g.x + GW * 0.42, g.y + g.h / 2 + 8, C.ics[g.ic], { size: 9, cls: 'soft' });
+            g.ins.forEach((net, k) => {
+                s += S.wire([P.in[k], [bodyIn(g, P.in[k][1]), P.in[k][1]]], lvCls(net));
+                s += S.text(P.in[k][0] + 2, P.in[k][1] - 6, String(g.pins[k]), { size: 9.5, anchor: 'start', cls: 'pinno' });
+            });
+            s += S.wire([[g.x + GW + 10, P.out[1]], P.out], lvCls(g.out));
+            s += S.text(P.out[0] - 1, P.out[1] - 8, String(g.pins[g.ins.length]), { size: 9.5, anchor: 'end', cls: 'pinno' });
+            s += S.text(P.out[0] - 1, P.out[1] + 10, String(v[g.out]), { size: 10, weight: 800, anchor: 'end', cls: 'val' + v[g.out] });
+        });
+        C.routes.forEach(r => { s += S.wire(r.pts, lvCls(r.net)); });
+        C.dots.forEach(d => { s += '<circle class="jn lv' + v[d.net] + '" cx="' + d.x + '" cy="' + d.y + '" r="4"/>'; });
+        C.labels.forEach(l => { s += S.text(l.x, l.y, NAMES[l.net], { size: 11, weight: 800, cls: 'netlab' }); });
+        C.inputs.forEach(inp => {
+            const on = v[inp.net] ? 1 : 0;
+            s += '<g class="sw' + (on ? ' on' : '') + '" data-in="' + inp.net + '"><rect x="12" y="' + (inp.y - 13) + '" width="62" height="26" rx="8"/>' +
+                S.text(43, inp.y, NAMES[inp.net] + ' = ' + on, { size: 12, weight: 800 }) + '<title>Click to toggle ' + inp.net + '</title></g>';
+        });
+        C.outs.forEach(o => {
+            const on = v[o.net];
+            if (on) s += S.circle(o.x, o.y, 18, 'led-glow');
+            s += S.circle(o.x, o.y, 11, 'led ' + (on ? 'on' : 'off')) + S.text(o.x + 18, o.y, o.label + ' = ' + on, { anchor: 'start', size: 14, weight: 800 });
+        });
+        const vb = C.viewBox.split(' ').map(Number);
+        s += S.text(vb[0] + vb[2] - 8, vb[1] + 13, C.title, { anchor: 'end', size: 11, weight: 800, cls: 'soft' });
+        $('ff-svg').setAttribute('viewBox', C.viewBox);
+        $('ff-svg').innerHTML = s;
+    }
+
+    // ================================================================== rendering: panels
+    let swCache = '';
+    function renderSwitches() {
+        const C = cur();
+        const order = C.inNets.concat(C.clocked ? ['CLK'] : []);
+        const html = order.map(n => {
+            const on = M.v[n] ? 1 : 0;
+            const sub = n === 'CLK' ? ' (level)' : (n === 'SB' || n === 'RB') ? ' (active-low)' : '';
+            return '<div class="bit-switch' + (on ? ' on' : '') + '" data-in="' + n + '" role="switch" aria-checked="' + !!on + '" tabindex="0"><span class="bit-name">' + H(NAMES[n]) + sub + '</span><span class="knob"></span><span class="bit-val">' + on + '</span></div>';
+        }).join('');
+        if (html !== swCache) { $('in-switches').innerHTML = html; swCache = html; }
+        $('clk-tools').style.display = C.clocked ? '' : 'none';
+        $('release').style.display = C.clocked ? 'none' : '';
+        $('release').disabled = !bothActive();
+        $('release').innerHTML = C.key === 'srnor' ? 'Release S and R together (1 1 → 0 0)' : 'Release <span class="ov">S</span> and <span class="ov">R</span> together (0 0 → 1 1)';
+        $('pulse').disabled = !!M.v.CLK || M.pulseLeft >= 0;
+        $('auto').textContent = ui.auto ? '⏸ Stop auto clock' : '▶ Auto clock';
+        $('auto').classList.toggle('on', ui.auto);
+        $('pwidth').value = ui.width[ui.key] || 'narrow';
+        const lq = $('led-q'), lqb = $('led-qb');
+        lq.classList.toggle('on', !!M.v.Q); lqb.classList.toggle('on', !!M.v.QB);
+        lq.querySelector('b').textContent = M.v.Q; lqb.querySelector('b').textContent = M.v.QB;
+    }
+
+    function renderStatus() {
+        const C = cur(), el = $('status');
+        let cls = 'stable', tag = 'Stable', msg;
+        const q = M.v.Q, qb = M.v.QB;
+        if (ui.raceAroundNow) {
+            cls = 'race'; tag = 'Race-around';
+            msg = 'CLK is still 1 and ' + (C.key === 'tff' ? 'T = 1' : 'J = K = 1') + ', so the fed-back outputs keep re-triggering the steering gates: Q toggles again and again. Its value when CLK falls cannot be predicted.';
+        } else if (M.run >= RACE_TICKS - 2) {
+            cls = 'race'; tag = 'Race!';
+            msg = 'Both latch gates are switching at the same moment and chasing each other — the outcome is unpredictable. (In a real circuit one gate is always slightly faster.)';
+        } else if (M.pulseLeft >= 0) {
+            cls = 'settling'; tag = 'Clock pulse';
+            msg = 'CLK = 1: the steering gates pass the inputs to the latch' + (ui.settleTicks ? ' (' + ui.settleTicks + ' gate delay' + (ui.settleTicks > 1 ? 's' : '') + ' so far)…' : '…');
+        } else if (!M.stable() || ui.ev) {
+            cls = 'settling'; tag = 'Settling';
+            msg = 'Gate delay ' + (ui.settleTicks + 1) + ': ' + (ui.fired.size ? Array.from(ui.fired).join(', ') + ' just switched' : 'signals travelling round the loop') + '…';
+        } else {
+            msg = 'Q = ' + q + ', Q̄ = ' + qb + (ui.lastSettle ? ' — settled after ' + ui.lastSettle + ' gate delay' + (ui.lastSettle > 1 ? 's' : '') + '.' : '.');
+            if (q === qb) { cls = 'bad'; tag = 'Forbidden'; msg = 'Q = Q̄ = ' + q + ' — the outputs are no longer complements. This is the forbidden input condition; if the inputs are released together the next state is unpredictable.'; }
+            else if (ui.last && ui.last.raceAround) { cls = 'bad'; tag = 'After race-around'; msg = 'CLK fell while Q was toggling, so it stopped at Q = ' + q + ' — pure chance. Use a narrow pulse (or a master–slave / edge-triggered flip-flop).'; }
+            else if (ui.last && ui.last.race) { cls = 'bad'; tag = 'Unpredictable'; msg = 'The race ended by chance with Q = ' + q + '. Try again — sometimes it ends with Q = ' + (1 - q) + '. That is why the table shows “?”.'; }
+            else if (C.clocked && !M.v.CLK) msg += ' CLK = 0, so the inputs are locked out and the latch holds.';
+        }
+        el.className = 'status ' + cls;
+        el.innerHTML = '<span class="st-tag"><span>' + tag + '</span></span>' + H(msg).replace(/Q̄/g, '<span class="ov">Q</span>');
+    }
+
+    function rowIndex(C, e) {
+        if (C.clocked && !e.clk) return C.rows.findIndex(r => r.clk === 0);
+        return C.rows.findIndex(r => r.in && (!C.clocked || r.clk === 1) && Object.keys(r.in).every(k => e.inputs[k] === r.in[k]));
+    }
+    function obsText(e) {
+        if (e.raceAround) return 'race-around → ? (stopped at ' + e.qAfter + ')';
+        if (e.held !== null && e.held !== undefined) return 'Q = !{Q} = ' + e.held + (e.race ? ', released → ? (' + e.qAfter + ')' : '');
+        if (e.race) return '? (fell to ' + e.qAfter + ')';
+        return e.qBefore + ' → ' + e.qAfter;
+    }
+    function obsVerdict(kind, e) {
+        if (e.raceAround) return 'warn';
+        if (kind === 'forbid') return (e.held !== null && e.held !== undefined) || e.race ? 'ok' : 'bad';
+        if (e.race) return 'warn';
+        if (kind === 'hold') return e.qAfter === e.qBefore ? 'ok' : 'bad';
+        if (kind === 'set') return e.qAfter === 1 && e.qbAfter === 0 ? 'ok' : 'bad';
+        if (kind === 'reset') return e.qAfter === 0 && e.qbAfter === 1 ? 'ok' : 'bad';
+        if (kind === 'toggle') return e.qAfter === 1 - e.qBefore ? 'ok' : 'bad';
+        return 'bad';
+    }
+    function ttHTML(C, forRecord) {
+        const head = [C.cols.map(c => forRecord && c === 'CLK' ? 'CLOCK' : NAMES[c]).concat(['Q_{n+1}', forRecord ? 'Observed Q_n → Q_{n+1}' : 'Your observation', '✓'])];
+        const list = OBS[C.key] || {};
+        const rows = C.rows.map((r, i) => {
+            const cells = C.cols.map(c => c === 'CLK' ? String(r.clk) : (r.in ? String(r.in[c]) : '×'));
+            const o = list[i] || [];
+            const obs = o.length ? o.map(x => H(x.t)).join('; ') : (forRecord ? '' : '—');
+            const worst = o.some(x => x.v === 'bad') ? 'bad' : o.some(x => x.v === 'warn') ? 'warn' : o.length ? 'ok' : '';
+            const mark = worst === 'ok' ? '<span class="obs-ok">✓</span>' : worst === 'warn' ? '<span class="obs-warn">⚠</span>' : worst === 'bad' ? '<span class="obs-bad">✗</span>' : '';
+            return cells.map(t => ({ t, cls: 'mono' })).concat([{ t: r.th }, { t: obs, raw: true, cls: o.length ? '' : 'empty' }, { t: mark, raw: true }]);
+        });
+        let hl = -1;
+        if (!forRecord) {
+            if (C.clocked && !M.v.CLK && M.pulseLeft < 0) hl = C.rows.findIndex(r => r.clk === 0);
+            else hl = rowIndex(C, { inputs: snapInputs(), clk: 1 });
+        }
+        const html = MSC.table(head, rows, { highlight: hl });
+        if (!forRecord && ui.last) {
+            const li = rowIndex(C, ui.last);
+            if (li >= 0 && li !== hl) {
+                const tmp = document.createElement('div');
+                tmp.innerHTML = html;
+                const tr = tmp.querySelectorAll('tbody tr')[li];
+                if (tr) tr.classList.add('last');
+                return tmp.innerHTML;
+            }
+        }
+        return html;
+    }
+    let ttCache = '';
+    function renderTable() {
+        const C = cur();
+        $('tt-title').textContent = 'Truth table — ' + C.short;
+        const html = ttHTML(C, false);
+        if (html !== ttCache) { $('tt-sim').innerHTML = html; ttCache = html; }
+    }
+
+    const EQ = {
+        srnor: { f: 'Q<sub>n+1</sub> = S + <span class="ov">R</span>·Q<sub>n</sub> &nbsp;<span class="up">(with S·R = 0)</span>',
+            live: v => v.S && v.R ? 'S = R = 1: S·R = 1, so the equation does not apply — both outputs are 0 (forbidden).' : 'S = ' + v.S + ', R = ' + v.R + ', Q<sub>n</sub> = ' + v.Q + ' → Q<sub>n+1</sub> = ' + v.S + ' + ' + (1 - v.R) + '·' + v.Q + ' = <b>' + (v.S | ((1 - v.R) & v.Q)) + '</b>' },
+        srnand: { f: 'Q<sub>n+1</sub> = S + <span class="ov">R</span>·Q<sub>n</sub>, &nbsp;<span class="up">with S = NOT <span class="ov">S</span></span>',
+            live: v => !v.SB && !v.RB ? '<span class="ov">S</span> = <span class="ov">R</span> = 0 means S = R = 1 — forbidden: both outputs are 1.' : '<span class="ov">S</span> = ' + v.SB + ' (S = ' + (1 - v.SB) + '), <span class="ov">R</span> = ' + v.RB + ', Q<sub>n</sub> = ' + v.Q + ' → Q<sub>n+1</sub> = ' + (1 - v.SB) + ' + ' + v.RB + '·' + v.Q + ' = <b>' + ((1 - v.SB) | (v.RB & v.Q)) + '</b>' },
+        csr: { f: 'Q<sub>n+1</sub> = S + <span class="ov">R</span>·Q<sub>n</sub> &nbsp;<span class="up">(on a clock pulse; SR = 0)</span>',
+            live: v => v.S && v.R ? 'S = R = 1 is forbidden for the clocked RS flip-flop.' : 'On the next clock pulse: S = ' + v.S + ', R = ' + v.R + ', Q<sub>n</sub> = ' + v.Q + ' → Q<sub>n+1</sub> = ' + v.S + ' + ' + (1 - v.R) + '·' + v.Q + ' = <b>' + (v.S | ((1 - v.R) & v.Q)) + '</b>' },
+        dff: { f: 'Q<sub>n+1</sub> = D &nbsp;<span class="up">(on a clock pulse)</span>',
+            live: v => 'On the next clock pulse: D = ' + v.D + ' → Q<sub>n+1</sub> = <b>' + v.D + '</b> (the inverter G5 gives <span class="ov">D</span> = ' + v.DB + ', so S and R are never equal)' },
+        jk: { f: 'Q<sub>n+1</sub> = J·<span class="ov">Q</span><sub>n</sub> + <span class="ov">K</span>·Q<sub>n</sub>',
+            live: v => 'On the next (narrow) clock pulse: J = ' + v.J + ', K = ' + v.K + ', Q<sub>n</sub> = ' + v.Q + ' → Q<sub>n+1</sub> = ' + v.J + '·' + (1 - v.Q) + ' + ' + (1 - v.K) + '·' + v.Q + ' = <b>' + ((v.J & (1 - v.Q)) | ((1 - v.K) & v.Q)) + '</b>' },
+        tff: { f: 'Q<sub>n+1</sub> = T ⊕ Q<sub>n</sub> = T·<span class="ov">Q</span><sub>n</sub> + <span class="ov">T</span>·Q<sub>n</sub>',
+            live: v => 'On the next (narrow) clock pulse: T = ' + v.T + ', Q<sub>n</sub> = ' + v.Q + ' → Q<sub>n+1</sub> = ' + v.T + ' ⊕ ' + v.Q + ' = <b>' + (v.T ^ v.Q) + '</b>' },
+    };
+    function renderEq() {
+        const e = EQ[ui.key];
+        $('eq').innerHTML = e.f;
+        $('eq-live').innerHTML = e.live(M.v);
+    }
+
+    const EXPLAIN = {
+        srnor: '<h3>How the NOR latch works</h3><p>A NOR gate gives 1 only when <b>both</b> its inputs are 0. G1 makes Q from R and <span class="ov">Q</span>; G2 makes <span class="ov">Q</span> from S and Q. Each output holds the other in place, so with S = R = 0 the circuit simply keeps its last state — it <b>remembers</b>.</p>' +
+            '<ul><li><b>S = 1</b> forces <span class="ov">Q</span> = 0, then Q = 1 (set). Watch G2 switch first, then G1.</li><li><b>R = 1</b> forces Q = 0, then <span class="ov">Q</span> = 1 (reset).</li><li><b>S = R = 1</b> makes both outputs 0 — not complements, so it is forbidden. Press <i>Release both together</i>: both gates switch at the same instant, chase each other, and the latch falls into a random state.</li></ul>',
+        srnand: '<h3>How the NAND latch works</h3><p>A NAND gate gives 0 only when both inputs are 1, so a <b>0</b> on an input forces its output to 1. The inputs are therefore <b>active-low</b> (<span class="ov">S</span>, <span class="ov">R</span>): the resting level is 1.</p>' +
+            '<ul><li><span class="ov">S</span> = 0 → Q = 1 (set); <span class="ov">R</span> = 0 → Q = 0 (reset); both 1 → no change.</li><li><span class="ov">S</span> = <span class="ov">R</span> = 0 makes Q = <span class="ov">Q</span> = 1 — forbidden. Returning both to 1 together gives a race and an unpredictable state.</li></ul>',
+        csr: '<h3>Why the clock gates G1 and G2 are needed</h3><p>G1 and G2 are <b>steering gates</b>. With CLK = 0 both give 1 (the “hold” input of a NAND latch), so S and R are ignored. With CLK = 1 they pass <span class="ov">S</span>′ = <span class="ov">S</span> and <span class="ov">R</span>′ = <span class="ov">R</span> to the latch, so the circuit now acts like an SR latch with active-high inputs.</p>' +
+            '<ul><li>Change S or R while CLK = 0 — nothing happens. Then give a clock pulse.</li><li>Hold the CLK switch at 1 and change S, R: the output follows immediately (the flip-flop is <b>level-triggered</b>).</li><li>S = R = 1 with CLK = 1 gives Q = <span class="ov">Q</span> = 1; when CLK falls both steering gates release together → race → “?”.</li></ul>',
+        dff: '<h3>D flip-flop: no forbidden state</h3><p>The fifth gate G5 (inputs 1 and 2 of the second 7400 tied together) is a NAND inverter that makes <span class="ov">D</span>. D drives the S side and <span class="ov">D</span> drives the R side, so S and R are always opposite and S = R = 1 can never happen.</p>' +
+            '<ul><li>CLK = 1: Q copies D (the latch is “transparent”). CLK = 0: Q stores the last value of D.</li><li>That is why the D flip-flop is used as a one-bit memory and as a delay element (Q<sub>n+1</sub> = D).</li><li>Change D, then pulse the clock at once: the inverter needs one gate delay — a glimpse of <b>set-up time</b>.</li></ul>',
+        jk: '<h3>JK flip-flop and the race-around condition</h3><p>The outputs are fed back to the 3-input steering gates: G1 sees <span class="ov">Q</span> and G2 sees Q. So J can only set a flip-flop that is reset, and K can only reset one that is set. With J = K = 1 the flip-flop <b>toggles</b> instead of being forbidden.</p>' +
+            '<ul><li>With a <b>narrow</b> pulse (shorter than the delay round the loop) J = K = 1 toggles Q exactly once.</li><li>Choose a <b>wide</b> pulse, or hold the CLK switch at 1: the new Q comes back to the steering gates while CLK is still 1 and toggles it again and again — the <b>race-around condition</b>. The final state is unpredictable.</li><li>Cure: keep t<sub>p</sub> &lt; propagation delay &lt; T, or use a <b>master–slave</b> or an <b>edge-triggered</b> JK flip-flop.</li></ul>',
+        tff: '<h3>T (toggle) flip-flop</h3><p>Tie J and K together and call the input T. With T = 0 both steering gates stay at 1 and Q holds; with T = 1 each clock pulse <b>toggles</b> Q.</p>' +
+            '<ul><li>Turn T on and press <i>Auto clock</i>: Q changes on every pulse, so Q has half the clock frequency — a <b>divide-by-2</b> counter stage.</li><li>A wide pulse (or CLK held at 1) with T = 1 gives the same race-around as the JK flip-flop.</li></ul>',
+    };
+
+    // ---- IC connection panel
+    function icPins(C) {
+        const map = {};
+        Object.keys(C.ics).forEach(id => { map[id] = {}; });
+        C.gates.forEach(g => {
+            g.ins.forEach((n, k) => { map[g.ic][g.pins[k]] = { net: n, role: 'in' }; });
+            map[g.ic][g.pins[g.ins.length]] = { net: g.out, role: 'out' };
+        });
+        return map;
+    }
+    function renderIC() {
+        const C = cur(), ids = Object.keys(C.ics), map = icPins(C);
+        const pitch = 24, w = 84, y = 30;
+        let s = '';
+        ids.forEach((id, n) => {
+            const x = 168 + n * 420, type = C.ics[id], names = PINOUT[type];
+            s += S.text(x + w / 2, y - 14, id + ' · IC ' + type, { size: 13, weight: 800 });
+            s += S.rect(x, y, w, pitch * 7 + 16, { rx: 4, cls: 'paper' });
+            s += S.path('M' + (x + w / 2 - 10) + ',' + y + ' A10,10 0 0 0 ' + (x + w / 2 + 10) + ',' + y);
+            for (let i = 0; i < 7; i++) {
+                const py = y + 8 + pitch * (i + 0.5);
+                [[i + 1, x - 14, x + 6, 'start', x - 20, 'end'], [14 - i, x + w, x + w - 6, 'end', x + w + 20, 'start']].forEach(([pin, sx, nx, na, lx, la]) => {
+                    const con = map[id][pin], nm = names[pin - 1];
+                    let lab, lc;
+                    if (nm === 'V_{CC}') { lab = '+5 V'; lc = 'val1'; }
+                    else if (nm === 'GND') { lab = 'GND'; lc = 'val0'; }
+                    else if (con) { lab = NAMES[con.net] + ' = ' + M.v[con.net]; lc = 'val' + M.v[con.net]; }
+                    else { lab = '—'; lc = 'unused'; }
+                    const lvl = con ? M.v[con.net] : nm === 'V_{CC}' ? 1 : null;
+                    s += S.rect(sx, py - 5, 14, 10, { cls: 'stub paper' + (lvl === 1 ? ' lv1' : '') + (con ? ' used' : '') });
+                    s += S.text(nx, py, String(pin), { size: 10.5, anchor: na, weight: 800 });
+                    s += S.text(na === 'start' ? nx + 15 : nx - 15, py, nm, { size: 9, anchor: na, cls: con || nm === 'GND' || nm === 'V_{CC}' ? 'soft' : 'unused' });
+                    s += S.text(lx, py, lab, { size: 11.5, anchor: la, weight: con ? 800 : 600, cls: lc });
+                });
+            }
+        });
+        const svg = $('ic-svg');
+        svg.setAttribute('viewBox', ids.length === 1 ? '0 0 420 232' : '0 0 840 232');
+        svg.innerHTML = s;
+        $('ic-title').textContent = 'IC connections — ' + ids.map(id => id + ' = ' + C.ics[id]).join(', ');
+    }
+    function wiringHTML(C) {
+        const map = icPins(C), ends = {};
+        Object.keys(map).forEach(id => Object.keys(map[id]).forEach(p => {
+            const c = map[id][p];
+            (ends[c.net] = ends[c.net] || []).push({ id, pin: Number(p), role: c.role });
+        }));
+        const pinName = (e) => '<b>' + e.id + '·' + e.pin + '</b>';
+        const items = [];
+        C.inputs.forEach(inp => {
+            const e = (ends[inp.net] || []);
+            items.push('<li>' + H(NAMES[inp.net]) + (inp.net === 'CLK' ? ' (pulser)' : ' switch') + ' → ' + e.map(pinName).join(', ') + '</li>');
+        });
+        C.gates.forEach(g => {
+            const e = ends[g.out] || [], src = e.find(x => x.role === 'out'), dst = e.filter(x => x.role === 'in');
+            const extra = g.out === 'Q' || g.out === 'QB' ? ['LED ' + H(NAMES[g.out])] : [];
+            items.push('<li>' + H(NAMES[g.out]) + ': ' + pinName(src) + ' → ' + dst.map(pinName).concat(extra).join(', ') + '</li>');
+        });
+        items.push('<li>V<sub>CC</sub> (+5 V) → pin 14, GND → pin 7 of ' + Object.keys(C.ics).join(' and ') + '</li>');
+        return items.join('');
+    }
+
+    // ---- timing diagram
+    const tcv = MSC.canvas($('timing'), 900, 250);
+    let lastCanvasW = 0;
+    function drawTiming() {
+        const { ctx } = tcv, C = cur();
+        tcv.begin();
+        ctx.clearRect(0, 0, 900, 250);
+        ctx.fillStyle = '#FBFAFF'; ctx.fillRect(0, 0, 900, 250);
+        const tr = C.traces, top = 12, rowH = (250 - top - 24) / tr.length;
+        const N = 110, x0 = 78, x1 = 890, dx = (x1 - x0) / N;
+        const hist = ui.hist.slice(-N), off = N - hist.length;
+        hist.forEach((smp, i) => {
+            if (smp.un >= 2 || smp.sus) {
+                ctx.fillStyle = smp.sus || smp.un >= RACE_TICKS - 2 ? 'rgba(229,57,53,0.12)' : 'rgba(230,119,0,0.10)';
+                ctx.fillRect(x0 + (off + i) * dx, top, dx + 0.6, rowH * tr.length);
+            }
+        });
+        tr.forEach((net, r) => {
+            const yT = top + r * rowH, yHi = yT + 8, yLo = yT + rowH - 10;
+            const isOut = net === 'Q' || net === 'QB';
+            ctx.strokeStyle = 'rgba(0,0,0,0.07)'; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(x0, yLo); ctx.lineTo(x1, yLo); ctx.stroke();
+            ctx.fillStyle = isOut ? '#3949AB' : '#1F2A44'; ctx.font = '800 14px Nunito, sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+            const label = { SB: 'S', RB: 'R', QB: 'Q' }[net] || net, over = net === 'SB' || net === 'RB' || net === 'QB';
+            const ly = (yHi + yLo) / 2;
+            ctx.fillText(label, x0 - 14, ly);
+            if (over) { const tw = ctx.measureText(label).width; ctx.fillRect(x0 - 14 - tw, ly - 10, tw, 1.6); }
+            if (!hist.length) return;
+            ctx.fillStyle = 'rgba(229,57,53,0.14)';
+            hist.forEach((smp, i) => { if (smp.v[net]) ctx.fillRect(x0 + (off + i) * dx, yHi, dx + 0.6, yLo - yHi); });
+            ctx.strokeStyle = isOut ? '#3949AB' : '#1F2A44'; ctx.lineWidth = 2;
+            ctx.beginPath();
+            hist.forEach((smp, i) => {
+                const x = x0 + (off + i) * dx, y = smp.v[net] ? yHi : yLo;
+                if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                ctx.lineTo(x + dx, y);
+            });
+            ctx.stroke();
+        });
+        ctx.fillStyle = '#5F5F6E'; ctx.font = '700 11px Nunito, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+        ctx.fillText('time →   (each small step = 1 gate delay, shown as ' + ui.tickMs + ' ms)', x0, 246);
+        ctx.strokeStyle = '#1F2A44'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(x1 - dx * 2, 240); ctx.lineTo(x1, 240); ctx.stroke();
+        ctx.textAlign = 'right'; ctx.fillText('2 delays', x1 - dx * 2 - 6, 244);
+    }
+
+    function render() {
+        renderCircuit();
+        renderSwitches();
+        if (flashTimer === null) renderStatus();
+        renderTable();
+        renderEq();
+        renderIC();
+        drawTiming();
+        ui.dirty = false;
+    }
+    function renderStatic() {
+        const C = cur();
+        $('explain').innerHTML = EXPLAIN[C.key];
+        $('wiring').innerHTML = wiringHTML(C);
+    }
+
+    // ================================================================== events
+    function switchCircuit(key) {
+        ui.key = key;
+        M = new Machine(CIRCUITS[key], 0);
+        ui.ev = null; ui.last = null; ui.hist = []; ui.auto = false; ui.autoCount = 0; ui.fired = new Set(); ui.chNets = new Set(); ui.settleTicks = 0; ui.lastSettle = 0;
+        renderStatic();
+        render();
+    }
+    MSC.onTab('ff', switchCircuit);
+    $('ff-svg').addEventListener('click', e => { const h = e.target.closest('[data-in]'); if (h) toggleInput(h.dataset.in); });
+    $('in-switches').addEventListener('click', e => { const h = e.target.closest('[data-in]'); if (h) toggleInput(h.dataset.in); });
+    $('in-switches').addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { const h = e.target.closest('[data-in]'); if (h) { e.preventDefault(); toggleInput(h.dataset.in); } }
+    });
+    $('pulse').addEventListener('click', doPulse);
+    $('pwidth').addEventListener('change', e => { ui.width[ui.key] = e.target.value; });
+    $('auto').addEventListener('click', () => { ui.auto = !ui.auto; ui.autoCount = autoPeriod(); ui.dirty = true; });
+    $('release').addEventListener('click', releaseBoth);
+    $('reset').addEventListener('click', () => { const h = ui.hist; switchCircuit(ui.key); ui.hist = h; });
+    $('speed').addEventListener('change', e => { ui.tickMs = Number(e.target.value); });
+    $('tclear').addEventListener('click', () => { ui.hist = []; ui.dirty = true; });
+    $('add').addEventListener('click', addCurrent);
+    $('rec-clear').addEventListener('click', () => { OBS = {}; MSC.store.set(OBS_KEY, OBS); renderRecord(); ui.dirty = true; });
+
+    function addCurrent() {
+        const C = cur();
+        let e = ui.last;
+        if (ui.ev) {
+            if (ui.raceAroundNow) e = Object.assign({}, ui.ev, { raceAround: true, qAfter: M.v.Q, qbAfter: M.v.QB });
+            else { flashStatus('Wait until the outputs have settled, then add the row.'); return; }
+        }
+        if (!e) e = { inputs: snapInputs(), clk: C.clocked ? M.v.CLK : null, qBefore: M.v.Q, qAfter: M.v.Q, qbAfter: M.v.QB, held: M.v.Q === M.v.QB ? M.v.Q : null };
+        const ri = rowIndex(C, e);
+        if (ri < 0) { flashStatus('This input combination is not a row of the table.'); return; }
+        const t = obsText(e), v = obsVerdict(C.rows[ri].k, e);
+        OBS[C.key] = OBS[C.key] || {};
+        const list = OBS[C.key][ri] = OBS[C.key][ri] || [];
+        if (!list.some(x => x.t === t)) list.push({ t, v });
+        MSC.store.set(OBS_KEY, OBS);
+        renderRecord();
+        ui.dirty = true;
+        const row = C.rows[ri], desc = C.cols.map(c => c.replace('B', '̄') + ' = ' + (c === 'CLK' ? row.clk : row.in ? row.in[c] : '×')).join(', ');
+        flashStatus('Added to the record (' + desc + '): Q_n → Q_{n+1} = ' + t.replace('!{Q}', 'Q̄'), true);
+    }
+    let flashTimer = null;
+    function flashStatus(msg, good) {
+        const el = $('status');
+        clearTimeout(flashTimer);
+        el.className = 'status ' + (good ? 'stable' : 'bad');
+        el.innerHTML = '<span class="st-tag"><span>' + (good ? 'Recorded' : 'Note') + '</span></span>' + H(msg).replace(/Q̄/g, '<span class="ov">Q</span>');
+        flashTimer = setTimeout(() => { flashTimer = null; ui.dirty = true; }, 2200);
+    }
+
+    // ================================================================== record
+    function renderRecord() {
+        const order = ['srnor', 'srnand', 'csr', 'dff', 'jk', 'tff'], roman = ['i', 'ii', 'iii', 'iv', 'v', 'vi'];
+        let html = '', total = 0, ok = 0;
+        order.forEach((k, i) => {
+            const C = CIRCUITS[k];
+            html += '<p class="rec-sub">(' + roman[i] + ') ' + H(C.title) + '</p><div class="rec-diagram" data-diagram="' + k + '"></div>' + ttHTML(C, true);
+            const list = OBS[k] || {};
+            Object.keys(list).forEach(r => list[r].forEach(x => { total++; if (x.v === 'ok') ok++; }));
+        });
+        $('rec-ffs').innerHTML = html;
+        order.forEach(k => MSC.fillRecordDiagram(k));
+        $('rec-result').innerHTML = 'The RS flip-flop (with NOR and with NAND gates), the clocked RS, D, JK and T flip-flops were constructed using IC 7402, IC 7400 and IC 7410, and their truth tables were verified.' +
+            (total ? ' <span style="font-weight:600">(' + ok + ' of ' + total + ' observed rows agree with the theory' + (total > ok ? '; the others show the forbidden / race-around behaviour' : '') + '.)</span>' : '');
+    }
+
+    // ================================================================== draw-along diagrams
+    function dGates(C, ids) {
+        return C.gates.filter(g => ids.includes(g.id)).map(g => S.gate(g.type, g.x, g.y, { w: GW, h: g.h, n: g.ins.length }) +
+            S.text(g.x + GW * 0.42, g.y + g.h / 2, g.id, { size: 11, cls: 'soft' })).join('');
+    }
+    function dRoutes(C, grps) {
+        const ok = r => grps.includes(r.grp);
+        return C.routes.filter(ok).map(r => S.wire(r.pts)).join('') + C.dots.filter(ok).map(d => S.dot(d.x, d.y)).join('');
+    }
+    const dIn = (net, y) => S.circle(70, y, 4, 'paper') + S.text(60, y, NAMES[net], { anchor: 'end', size: 15 });
+    const dOuts = (C) => C.outs.map(o => S.circle(o.x - 7, o.y, 4, 'paper') + S.text(o.x + 5, o.y, o.label, { anchor: 'start', size: 15 })).join('');
+    const dLabels = (C, nets) => C.labels.filter(l => nets.includes(l.net)).map(l => S.text(l.x, l.y, NAMES[l.net], { size: 12 })).join('');
+    function dPins(C) {
+        let s = '';
+        C.gates.forEach(g => {
+            const P = gp(g);
+            g.ins.forEach((n, k) => { s += S.text(P.in[k][0] + 2, P.in[k][1] - 6, String(g.pins[k]), { size: 10, anchor: 'start', cls: 'soft' }); });
+            s += S.text(P.out[0] - 1, P.out[1] - 8, String(g.pins[g.ins.length]), { size: 10, anchor: 'end', cls: 'soft' });
+        });
+        return s;
+    }
+    const dNote = (C, txt) => S.text(16, C.clocked ? 308 : 298, txt, { anchor: 'start', size: 12, cls: 'soft' });
+    const inputsOf = (C, nets) => C.inputs.filter(i => nets.includes(i.net)).map(i => dIn(i.net, i.y)).join('');
+
+    function latchDiagram(C, nor) {
+        const g = nor ? 'NOR' : 'NAND', top = C.inputs.find(i => i.y === Y1).net, bot = C.inputs.find(i => i.y === Y4).net;
+        return {
+            name: C.key, title: 'Fig. ' + C.title, viewBox: C.dviewBox,
+            steps: [
+                { c: 'Draw two ' + g + ' gates one above the other (IC ' + (nor ? '7402' : '7400') + '). The upper gate G1 will give Q and the lower gate G2 will give !{Q}.', s: dGates(C, ['G1', 'G2']) },
+                { c: 'Bring input ' + NAMES[top] + ' to the upper input of G1 and input ' + NAMES[bot] + ' to the lower input of G2' + (nor ? '.' : ' (both inputs are active-low).'), s: dRoutes(C, ['in']) + inputsOf(C, [top, bot]) },
+                { c: 'Draw the outputs: G1 → Q (top) and G2 → !{Q} (bottom).', s: dRoutes(C, ['Qout', 'QBout']) + dOuts(C) },
+                { c: 'Cross-couple: take Q back to the upper input of G2 (put a junction dot where it leaves Q).', s: dRoutes(C, ['Qfb']) },
+                { c: 'Take !{Q} back to the lower input of G1. The two feedback wires cross without a dot — they are not joined.', s: dRoutes(C, ['QBfb']) },
+                { c: nor ? 'Write the IC 7402 pin numbers: G1 inputs 2, 3 → output 1; G2 inputs 5, 6 → output 4. V_{CC} = pin 14, GND = pin 7.' : 'Write the IC 7400 pin numbers: G1 inputs 1, 2 → output 3; G2 inputs 4, 5 → output 6. V_{CC} = pin 14, GND = pin 7.',
+                    s: dPins(C) + dNote(C, 'IC ' + (nor ? '7402' : '7400') + ': V_{CC} = pin 14, GND = pin 7') },
+            ],
+        };
+    }
+    function clockedDiagram(C) {
+        const k = C.key, latchIC = k === 'jk' || k === 'tff' ? '7400 (IC2)' : '7400';
+        const steps = [
+            { c: 'Draw the output latch first: two NAND gates G3 (gives Q) and G4 (gives !{Q}), one above the other (IC ' + latchIC + ').', s: dGates(C, ['G3', 'G4']) },
+            { c: 'Cross-couple G3 and G4 (Q to the upper input of G4, !{Q} to the lower input of G3 — the feedback wires cross without a dot) and draw the outputs Q and !{Q}.', s: dRoutes(C, ['Qout', 'QBout', 'Qfb', 'QBfb']) + dOuts(C) },
+            { c: k === 'jk' || k === 'tff' ? 'Draw two 3-input NAND gates G1 and G2 (IC 7410) in front of the latch — the steering gates.' : 'Draw two NAND steering gates G1 and G2 in front of the latch.', s: dGates(C, ['G1', 'G2']) },
+            { c: 'Join G1 → G3 (!{S}′) and G2 → G4 (!{R}′).', s: dRoutes(C, ['sp']) + dLabels(C, ['SP', 'RP']) },
+        ];
+        if (k === 'csr') steps.push({ c: 'Connect input S to the upper input of G1 and input R to the lower input of G2.', s: dRoutes(C, ['in']) + inputsOf(C, ['S', 'R']) });
+        if (k === 'dff') {
+            steps.push({ c: 'Draw the inverter G5: a NAND gate with both inputs tied together (second IC 7400). Its output !{D} goes to the lower input of G2.', s: dGates(C, ['G5']) + dRoutes(C, ['db']) + dLabels(C, ['DB']) });
+            steps.push({ c: 'Connect D to the upper input of G1 and to both inputs of the inverter G5 (junction dots at the branches).', s: dRoutes(C, ['in', 'inv']) + inputsOf(C, ['D']) });
+        }
+        if (k === 'jk') steps.push({ c: 'Connect J to the top input of G1 and K to the bottom input of G2.', s: dRoutes(C, ['in']) + inputsOf(C, ['J', 'K']) });
+        if (k === 'tff') steps.push({ c: 'Tie the J input of G1 and the K input of G2 together and call it T.', s: dRoutes(C, ['in']) + inputsOf(C, ['T']) });
+        steps.push({ c: 'Connect the clock: CLK goes to ' + (k === 'jk' || k === 'tff' ? 'the middle input' : 'the second input') + ' of both G1 and G2 (junction dot where it splits).', s: dRoutes(C, ['clk']) + inputsOf(C, ['CLK']) });
+        if (k === 'jk' || k === 'tff') steps.push({ c: 'Feedback: !{Q} to the third input of G1 and Q to the first input of G2. This feedback makes it a JK flip-flop — the forbidden state disappears.', s: dRoutes(C, ['fb']) });
+        const pinCap = {
+            csr: 'Write the IC 7400 pin numbers: G1 1, 2 → 3; G2 4, 5 → 6; G3 9, 10 → 8; G4 12, 13 → 11.',
+            dff: 'Write the pin numbers: IC1 (7400) G1 1, 2 → 3; G2 4, 5 → 6; G3 9, 10 → 8; G4 12, 13 → 11; IC2 (7400) inverter G5 1, 2 → 3.',
+            jk: 'Write the pin numbers: IC1 (7410) G1 1, 2, 13 → 12; G2 3, 4, 5 → 6; IC2 (7400) G3 1, 2 → 3; G4 4, 5 → 6.',
+            tff: 'Write the pin numbers: IC1 (7410) G1 1, 2, 13 → 12; G2 3, 4, 5 → 6; IC2 (7400) G3 1, 2 → 3; G4 4, 5 → 6.',
+        }[k];
+        const noteTxt = { csr: 'IC 7400: V_{CC} = pin 14, GND = pin 7', dff: 'IC1, IC2 = 7400: V_{CC} = pin 14, GND = pin 7', jk: 'IC1 = 7410, IC2 = 7400: V_{CC} = pin 14, GND = pin 7', tff: 'IC1 = 7410, IC2 = 7400: V_{CC} = pin 14, GND = pin 7' }[k];
+        steps.push({ c: pinCap, s: dPins(C) + dNote(C, noteTxt) });
+        return { name: k, title: 'Fig. ' + C.title, viewBox: C.dviewBox, steps };
+    }
+
+    // ---- pin diagrams with the gates inside
+    const PD = { x: 280, y: 30, w: 220, pitch: 36 };
+    const prow = r => PD.y + 8 + PD.pitch * (r - 0.5);
+    const XI = PD.x + 24;
+    function innerDown(r) { // inputs on rows r, r+1 → output on row r+2 (7400 style), left half, NAND
+        const ya = prow(r), yb = prow(r + 1), yc = prow(r + 2), gx = 324, gy = (ya + yb) / 2 - 15;
+        const P = S.gatePins('NAND', gx, gy, { w: 34, h: 30, lead: 10 });
+        return S.gate('NAND', gx, gy, { w: 34, h: 30, lead: 10 }) +
+            S.wire([[XI, ya], [314, ya], [314, P.in[0][1]]]) + S.wire([[XI, yb], [314, yb], [314, P.in[1][1]]]) +
+            S.wire([P.out, [382, P.out[1]], [382, yb + 18], [309, yb + 18], [309, yc], [XI, yc]]);
+    }
+    function innerUp(r) { // output on row r, inputs on rows r+1, r+2 (7402 style), left half, NOR
+        const ya = prow(r + 1), yb = prow(r + 2), yo = prow(r), gx = 324, gy = (ya + yb) / 2 - 15;
+        const P = S.gatePins('NOR', gx, gy, { w: 34, h: 30, lead: 10 });
+        return S.gate('NOR', gx, gy, { w: 34, h: 30, lead: 10 }) +
+            S.wire([[XI, ya], [314, ya], [314, P.in[0][1]]]) + S.wire([[XI, yb], [314, yb], [314, P.in[1][1]]]) +
+            S.wire([P.out, [382, P.out[1]], [382, ya - 18], [309, ya - 18], [309, yo], [XI, yo]]);
+    }
+    const mirror = (s) => '<g transform="matrix(-1 0 0 1 ' + (2 * (PD.x + PD.w / 2)) + ' ' + PD.pitch + ')">' + s + '</g>';
+    function pinDiagram(type) {
+        const names = PINOUT[type], o = { n: 14, w: PD.w, pitch: PD.pitch };
+        const only = (keep) => names.map((nm, i) => (keep(i + 1) ? nm : ''));
+        const steps = [
+            { c: 'Draw the 14-pin DIP body with the notch (semicircle) at the top.', s: S.dip(PD.x, PD.y, Object.assign({ only: 'body' }, o)) },
+            { c: 'Number the pins: 1–7 down the left side, 8–14 up the right side (anticlockwise from the notch).', s: S.dip(PD.x, PD.y, Object.assign({ only: 'pins' }, o)) },
+            { c: 'Mark the supply pins: pin 14 = +V_{CC} (+5 V) and pin 7 = GND.', s: S.dip(PD.x, PD.y, Object.assign({ only: 'labels', labels: only(p => p === 7 || p === 14) }, o)) },
+        ];
+        if (type === '7400') {
+            steps.push({ c: 'Draw gate 1 (inputs 1, 2 → output 3) and gate 2 (inputs 4, 5 → output 6) in the left half.', s: innerDown(1) + innerDown(4) });
+            steps.push({ c: 'Draw gate 4 (inputs 13, 12 → output 11) and gate 3 (inputs 10, 9 → output 8) in the right half.', s: mirror(innerDown(1) + innerDown(4)) });
+        } else if (type === '7402') {
+            steps.push({ c: 'Draw gate 1 (inputs 2, 3 → output 1) and gate 2 (inputs 5, 6 → output 4). Note: in the 7402 the output pin comes FIRST.', s: innerUp(1) + innerUp(4) });
+            steps.push({ c: 'Draw gate 4 (inputs 12, 11 → output 13) and gate 3 (inputs 9, 8 → output 10) in the right half.', s: mirror(innerUp(1) + innerUp(4)) });
+        } else {
+            steps.push({ c: 'Write the three gates inside: gate 1 = pins 1, 2, 13 → 12; gate 2 = pins 3, 4, 5 → 6; gate 3 = pins 9, 10, 11 → 8.',
+                s: S.text(390, 118, 'Gate 1: 1, 2, 13 → 12', { size: 13 }) + S.text(390, 158, 'Gate 2: 3, 4, 5 → 6', { size: 13 }) + S.text(390, 198, 'Gate 3: 9, 10, 11 → 8', { size: 13 }) + S.text(390, 238, 'Y = (A·B·C)′', { size: 13, cls: 'soft' }) });
+        }
+        steps.push({ c: 'Label every pin: nA, nB' + (type === '7410' ? ', nC' : '') + ' are the inputs and nY the output of gate n.', s: S.dip(PD.x, PD.y, Object.assign({ only: 'labels', labels: only(p => p !== 7 && p !== 14), labelSize: 13 }, o)) });
+        steps.push({ c: 'Write the name of the IC under the diagram.', s: S.text(390, 318, 'IC ' + type + ' — ' + IC_DESC[type] + ' gate', { size: 14 }) });
+        return { name: 'p' + type, title: 'Fig. Pin diagram of IC ' + type + ' (' + IC_DESC[type] + ')', viewBox: '160 10 460 320', steps };
+    }
+
+    // ---- model timing diagram (clocked RS flip-flop)
+    function timingDiagram() {
+        const X0 = 90, X1 = 740, rows = { CLK: 60, S: 130, R: 200, Q: 270 }, hi = (y) => y - 18;
+        const pulses = [0, 1, 2, 3, 4, 5].map(k => 120 + 100 * k);
+        const wave = (y, edges, start) => { // edges = x where the level flips
+            let lv = start, pts = [[X0, lv ? hi(y) : y]];
+            edges.forEach(x => { pts.push([x, lv ? hi(y) : y]); lv = 1 - lv; pts.push([x, lv ? hi(y) : y]); });
+            pts.push([X1, lv ? hi(y) : y]);
+            return S.wire(pts, 'thick');
+        };
+        const clkEdges = [];
+        pulses.forEach(x => { clkEdges.push(x, x + 40); });
+        const base = Object.keys(rows).map(k => S.line(X0, rows[k], X1, rows[k], 'thin ghost') + S.text(X0 - 14, rows[k] - 9, k, { anchor: 'end', size: 15 })).join('');
+        return {
+            name: 'timing', title: 'Fig. Model timing diagram of the clocked RS flip-flop', viewBox: '20 20 740 290',
+            steps: [
+                { c: 'Draw four time axes one below the other and label them CLK, S, R and Q.', s: base },
+                { c: 'Draw the clock: six equal rectangular pulses.', s: wave(rows.CLK, clkEdges, 0) + pulses.map((x, i) => S.text(x + 20, rows.CLK + 12, String(i + 1), { size: 11, cls: 'soft' })).join('') },
+                { c: 'Draw S: high for pulse 1, a short pulse while CLK = 0 (between pulses 3 and 4), and high again for pulse 5.', s: wave(rows.S, [100, 180, 370, 400, 480, 580], 0) },
+                { c: 'Draw R: high for pulse 3 and for pulse 6.', s: wave(rows.R, [280, 380, 580, 690], 0) },
+                { c: 'Draw Q: it can change only while CLK = 1 — set at pulse 1, held at 2, reset at 3, unchanged at 4 (S changed while CLK = 0), set at 5, reset at 6.', s: wave(rows.Q, [124, 324, 524, 624], 0) },
+                { c: 'Mark each pulse with dashed lines and write set / hold / reset under Q.', s: pulses.map(x => S.line(x, 36, x, 282, 'thin dash soft')).join('') +
+                    ['set', 'hold', 'reset', 'hold', 'set', 'reset'].map((t, i) => S.text(pulses[i] + 20, 294, t, { size: 11, cls: 'accent' })).join('') + S.text(385, 146, 'no effect', { size: 10, cls: 'soft' }) },
+            ],
+        };
+    }
+
+    (function buildDiagrams() {
+        MSC.diagram('#draw-srnor', latchDiagram(CIRCUITS.srnor, true));
+        MSC.diagram('#draw-srnand', latchDiagram(CIRCUITS.srnand, false));
+        ['csr', 'dff', 'jk', 'tff'].forEach(k => MSC.diagram('#draw-' + k, clockedDiagram(CIRCUITS[k])));
+        ['7400', '7402', '7410'].forEach(t => MSC.diagram('#draw-p' + t, pinDiagram(t)));
+        MSC.diagram('#draw-timing', timingDiagram());
+    })();
+    renderRecord();
+
+    // ================================================================== viva
+    MSC.viva('#viva-list', [
+        { q: 'What is a flip-flop?', a: 'A bistable multivibrator — a circuit with two stable states that stores one bit. It has two outputs Q and Q̄ which are normally complements. It stays in a state until an input changes it.' },
+        { q: 'What is the difference between a latch and a flip-flop?', a: 'A latch responds to its inputs whenever it is enabled (level-sensitive). A flip-flop changes only at the clock edge (edge-triggered). The gated circuits built from gates in this experiment are level-triggered — strictly they are clocked (gated) latches.' },
+        { q: 'Why is S = R = 1 not allowed in the NOR latch?', a: 'Both outputs become 0, so Q and Q̄ are no longer complements. When S and R return to 0 together, both gates switch at the same time and race; the final state is unpredictable. The table therefore shows “?”.' },
+        { q: 'Why are the inputs of a NAND latch active-low?', a: 'A 0 at any input forces a NAND output to 1. So S̄ = 0 sets Q = 1 and R̄ = 0 resets it; the resting (no change) condition is S̄ = R̄ = 1, and S̄ = R̄ = 0 is forbidden (Q = Q̄ = 1).' },
+        { q: 'What is the function of the clock in the clocked RS flip-flop?', a: 'The clock enables the two steering NAND gates. When CLK = 0 their outputs are 1 and the latch holds its state whatever S and R are; when CLK = 1 the inputs reach the latch. This synchronises many flip-flops to one clock.' },
+        { q: 'How is a D flip-flop obtained from an RS flip-flop? What is its advantage?', a: 'Connect D to S and D̄ (through an inverter) to R. S and R are then always complementary, so the forbidden state cannot occur; Q<sub>n+1</sub> = D. It is used as a 1-bit memory (data latch) and as a delay element.' },
+        { q: 'What is the race-around condition? How is it avoided?', a: 'In a level-triggered JK flip-flop with J = K = 1, if the clock pulse width t<sub>p</sub> is longer than the propagation delay round the loop, Q toggles many times during one pulse and the final state is uncertain. It is avoided by t<sub>p</sub> &lt; Δt &lt; T, or by using a master–slave or edge-triggered JK flip-flop.' },
+        { q: 'Write the characteristic equations of the RS, D, JK and T flip-flops.', a: 'RS: Q<sub>n+1</sub> = S + R̄Q<sub>n</sub> (SR = 0); D: Q<sub>n+1</sub> = D; JK: Q<sub>n+1</sub> = JQ̄<sub>n</sub> + K̄Q<sub>n</sub>; T: Q<sub>n+1</sub> = TQ̄<sub>n</sub> + T̄Q<sub>n</sub> = T ⊕ Q<sub>n</sub>.' },
+        { q: 'How is a T flip-flop made and where is it used?', a: 'By joining J and K of a JK flip-flop (J = K = T). With T = 1 the output toggles on every clock pulse, so its frequency is half the clock frequency. It is used in binary counters and frequency dividers.' },
+        { q: 'What is the difference between a characteristic table and an excitation table?', a: 'The characteristic (truth) table gives the next state for each input and present state. The excitation table gives the inputs needed for a required transition — e.g. for JK: 0→0: J = 0, K = ×; 0→1: 1, ×; 1→0: ×, 1; 1→1: ×, 0.' },
+        { q: 'Which ICs are used? Where are V_{CC} and ground?', a: 'IC 7400 (quad 2-input NAND), IC 7402 (quad 2-input NOR) and IC 7410 (triple 3-input NAND). For all of them V<sub>CC</sub> = pin 14 and GND = pin 7. In the 7402 the outputs are on pins 1, 4, 10 and 13, whereas in the 7400 they are on 3, 6, 8 and 11.' },
+        { q: 'What is propagation delay?', a: 'The time between a change at a gate input and the resulting change at its output — about 10 ns for a standard TTL gate. In the simulation it is slowed down to 140 ms so that you can see the gates switch one after another.' },
+    ]);
+
+    // ================================================================== main loop (one tick = one gate delay)
+    MSC.loop(dt => {
+        ui.acc += dt * 1000;
+        let n = 0;
+        while (ui.acc >= ui.tickMs && n < 4) { ui.acc -= ui.tickMs; uiTick(); n++; }
+        if (ui.acc > ui.tickMs * 4) ui.acc = 0;
+        if (ui.dirty || tcv.ctx.canvas.width !== lastCanvasW) { lastCanvasW = tcv.ctx.canvas.width; render(); }
+    });
+
+    // expose for self-test
+    window.FFLAB = {
+        CIRCUITS, Machine, verifyAll, ui, get M() { return M; }, OBS: () => OBS,
+        toggleInput, setClk, doPulse, releaseBoth, addCurrent, switchCircuit,
+        tickN(n) { for (let i = 0; i < n; i++) uiTick(); render(); },
+    };
+    </script>
+</body>
+</html>

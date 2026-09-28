@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M.Sc. Physics Practicals - Science Lab</title>
+    <meta name="description" content="Interactive simulations for M.Sc. Physics Practical I and Practical II: optics, digital electronics, op-amp and 8085 microprocessor experiments, with draw-along diagrams, record sheets and viva questions.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/msc.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F393;</text></svg>">
+    <style>
+        :root {
+            --optics: #00897B;
+            --digital: #5C6BC0;
+            --analog: #EF6C00;
+            --micro: #8E24AA;
+        }
+        .hub-header {
+            background: linear-gradient(135deg, var(--header-start), var(--header-end));
+            color: #fff; text-align: center; padding: 2.4rem 1.5rem 2rem; position: relative;
+        }
+        .hub-header .back-btn { position: absolute; top: 1rem; left: 1rem; background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3); box-shadow: none; }
+        .hub-header .back-btn:hover { background: rgba(255,255,255,0.28); }
+        .hub-header h1 { font-family: var(--font-heading); font-weight: 400; font-size: 2.2rem; margin-top: 0.4rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
+        .hub-header p { opacity: 0.9; font-weight: 600; max-width: 720px; margin: 0.4rem auto 0; }
+
+        .how {
+            display: flex; justify-content: center; gap: 0.6rem; flex-wrap: wrap; margin: 1.6rem auto 0.4rem; max-width: 900px; padding: 0 1rem;
+        }
+        .how-step {
+            background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 0.6rem 0.9rem; box-shadow: var(--shadow);
+            font-size: 0.86rem; flex: 1 1 190px; max-width: 220px;
+        }
+        .how-step b { display: block; font-family: var(--font-heading); font-weight: 400; color: #6B3FA0; font-size: 1rem; }
+
+        .practical { max-width: 1150px; margin: 2rem auto 0; padding: 0 1.2rem; }
+        .practical h2 { font-family: var(--font-heading); font-weight: 400; color: #6B3FA0; font-size: 1.6rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+        .practical h2 .count { font-family: var(--font-body); font-size: 0.85rem; font-weight: 800; color: var(--ink-soft); background: #fff; border: 1px solid var(--line); border-radius: 50px; padding: 0.1rem 0.7rem; }
+        .exp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.1rem; margin-top: 0.9rem; }
+        .exp-card {
+            --c: var(--digital);
+            background: #fff; border-radius: 18px; padding: 1.2rem 1.2rem 1rem; box-shadow: var(--shadow);
+            border-top: 5px solid var(--c); display: flex; flex-direction: column; position: relative;
+            transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s;
+        }
+        .exp-card:hover { transform: translateY(-6px); box-shadow: 0 14px 34px rgba(0,0,0,0.14); }
+        .exp-card.optics { --c: var(--optics); }
+        .exp-card.digital { --c: var(--digital); }
+        .exp-card.analog { --c: var(--analog); }
+        .exp-card.micro { --c: var(--micro); }
+        .exp-top { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+        .exp-no { font-family: var(--font-heading); font-size: 0.95rem; color: var(--c); }
+        .exp-type { font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #fff; background: var(--c); border-radius: 50px; padding: 0.15rem 0.6rem; }
+        .exp-icon { font-size: 2.4rem; margin: 0.5rem 0 0.2rem; }
+        .exp-card h3 { font-family: var(--font-heading); font-weight: 400; font-size: 1.12rem; line-height: 1.3; }
+        .exp-card p { font-size: 0.87rem; color: var(--ink-soft); margin-top: 0.3rem; flex: 1; }
+        .exp-cta { margin-top: 0.8rem; font-weight: 800; font-size: 0.86rem; color: var(--c); }
+        .hub-footer { text-align: center; padding: 2.4rem 1rem 1.5rem; font-size: 0.85rem; color: var(--ink-soft); }
+        @media (max-width: 600px) {
+            .hub-header { padding: 3.4rem 1rem 1.6rem; }
+            .hub-header h1 { font-size: 1.6rem; }
+            .practical { padding: 0 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="hub-header">
+        <a href="../../index.html" class="back-btn">&larr; Back to Lab</a>
+        <h1>&#x1F393; M.Sc. Physics Practicals</h1>
+        <p>Understand each experiment, watch its diagrams drawn step by step, and get an exam-ready record sheet with viva questions.</p>
+    </header>
+
+    <div class="how">
+        <div class="how-step"><b>&#x1F52C; Simulate</b>Play with the apparatus and take real-looking readings.</div>
+        <div class="how-step"><b>&#x270F;&#xFE0F; Draw it</b>Watch every diagram drawn line by line, the way you draw it.</div>
+        <div class="how-step"><b>&#x1F4DD; Record</b>Aim, formula, procedure, tables, calculation and result.</div>
+        <div class="how-step"><b>&#x1F3A4; Viva</b>Likely viva questions with short answers.</div>
+    </div>
+
+    <section class="practical">
+        <h2>Practical I <span class="count">6 experiments</span></h2>
+        <div class="exp-grid">
+            <a class="exp-card optics" href="p1-03-polarimeter.html">
+                <div class="exp-top"><span class="exp-no">Exp 3</span><span class="exp-type">Optics</span></div>
+                <div class="exp-icon">&#x1F36C;</div>
+                <h3>Polarimeter — Specific Rotation of Sugar</h3>
+                <p>Rotate the analyser until both halves of the field match, and find how strongly sugar twists polarised light.</p>
+                <div class="exp-cta">Open experiment &rarr;</div>
+            </a>
+            <a class="exp-card digital" href="p1-11-flip-flops.html">
+                <div class="exp-top"><span class="exp-no">Exp 11</span><span class="exp-type">Digital</span></div>
+                <div class="exp-icon">&#x1F501;</div>
+                <h3>RS, Clocked RS &amp; D Flip-Flops</h3>
+                <p>Build flip-flops from NAND and NOR gates, watch the signals race round the loop, and verify every truth table.</p>
+                <div class="exp-cta">Open experiment &rarr;</div>
+            </a>
+            <a class="exp-card digital" href="p1-12-adder-subtractor.html">
+                <div class="exp-top"><span class="exp-no">Exp 12</span><span class="exp-type">Digital</span></div>
+                <div class="exp-icon">&#x2795;</div>
+                <h3>4-bit Adder &amp; Subtractor (IC 7483)</h3>
+                <p>Add and subtract binary numbers with the 7483 — ripple carry, 1’s and 2’s complement, and the BCD adder.</p>
+                <div class="exp-cta">Open experiment &rarr;</div>
+            </a>
+            <a class="exp-card analog" href="p1-13-r2r-dac.html">
+                <div class="exp-top"><span class="exp-no">Exp 13</span><span class="exp-type">Op-amp</span></div>
+                <div class="exp-icon">&#x1F39A;&#xFE0F;</div>
+                <h3>R-2R Ladder 4-bit DAC (IC 741)</h3>
+                <p>Flip the four input bits and watch the ladder turn them into a staircase of output voltages.</p>
+                <div class="exp-cta">Open experiment &rarr;</div>
+            </a>
+            <a class="exp-card micro" href="p1-16-sum-of-n-data.html">
+                <div class="exp-top"><span class="exp-no">Exp 16</span><span class="exp-type">8085</span></div>
+                <div class="exp-icon">&#x1F9EE;</div>
+                <h3>8085 — Sum of a Set of n Data</h3>
+                <p>Step through the addition program instruction by instruction and watch the carry being counted.</p>
+                <div class="exp-cta">Open experiment &rarr;</div>
+            </a>
+            <a class="exp-card micro" href="p1-18-code-conversion.html">
+                <div class="exp-top"><span class="exp-no">Exp 18</span><span class="exp-type">8085</span></div>
+                <div class="exp-icon">&#x1F524;</div>
+                <h3>8085 — Code Conversion</h3>
+                <p>Decimal ↔ hexadecimal and hexadecimal ↔ ASCII, with the DAA trick and nibble masking animated.</p>
+                <div class="exp-cta">Open experiment &rarr;</div>
+            </a>
+        </div>
+    </section>
+
+    <section class="practical">
+        <h2>Practical II <span class="count">4 experiments</span></h2>
+        <div class="exp-grid">
+            <a class="exp-card optics" href="p2-03-air-wedge.html">
+                <div class="exp-top"><span class="exp-no">Exp 3</span><span class="exp-type">Optics</span></div>
+                <div class="exp-icon">&#x1F50D;</div>
+                <h3>Air Wedge — Thickness of a Thin Wire</h3>
+                <p>Move the travelling microscope across the fringes, read the vernier, and calculate the wire’s thickness.</p>
+                <div class="exp-cta">Open experiment &rarr;</div>
+            </a>
+            <a class="exp-card digital" href="p2-13-shift-register-counters.html">
+                <div class="exp-top"><span class="exp-no">Exp 13</span><span class="exp-type">Digital</span></div>
+                <div class="exp-icon">&#x1F4AB;</div>
+                <h3>Shift Register, Ring &amp; Johnson Counters</h3>
+                <p>Clock four D flip-flops and watch the bits march along — then close the loop to make ring and twisted-ring counters.</p>
+                <div class="exp-cta">Open experiment &rarr;</div>
+            </a>
+            <a class="exp-card micro" href="p2-18-sorting.html">
+                <div class="exp-top"><span class="exp-no">Exp 18</span><span class="exp-type">8085</span></div>
+                <div class="exp-icon">&#x1F4CA;</div>
+                <h3>8085 — Ascending &amp; Descending Order</h3>
+                <p>Watch the bubble-sort program compare and swap numbers in memory, pass after pass.</p>
+                <div class="exp-cta">Open experiment &rarr;</div>
+            </a>
+            <a class="exp-card micro" href="p2-20-8085-arithmetic.html">
+                <div class="exp-top"><span class="exp-no">Exp 20</span><span class="exp-type">8085</span></div>
+                <div class="exp-icon">&#x2797;</div>
+                <h3>8085 — 8-bit Add, Subtract, Multiply &amp; Divide</h3>
+                <p>The record’s four programs, with repeated addition and repeated subtraction animated step by step.</p>
+                <div class="exp-cta">Open experiment &rarr;</div>
+            </a>
+        </div>
+    </section>
+
+    <footer class="hub-footer">Made with &#x1F4A1; by Megha Ananthi B &bull; Simulations are simplified models for learning</footer>
+</body>
+</html>

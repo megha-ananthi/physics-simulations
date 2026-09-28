@@ -1,6 +1,6 @@
-# CLAUDE.md — AI Agent Context for Physics Simulations Lab
+# AGENTS.md — AI Agent Context for Physics Simulations Lab
 
-This file provides comprehensive context for AI agents (Claude Code, Copilot, Cursor, etc.) working on this project. Read this before making any changes.
+This file provides comprehensive context for AI agents (Codex, Copilot, Cursor, etc.) working on this project. Read this before making any changes.
 
 ---
 
@@ -71,12 +71,12 @@ physics-simulations/
 │       ├── p2-13-shift-register-counters.html # Practical II Exp 13 (digital)
 │       ├── p2-18-sorting.html      # Practical II Exp 18 (8085) — reference 8085 page
 │       └── p2-20-8085-arithmetic.html   # Practical II Exp 20 (8085, record version)
-├── CLAUDE.md                       # This file — AI agent context
+├── AGENTS.md                       # This file — AI agent context
 ├── README.md                       # Human-readable project docs
-└── .claude/
-    ├── settings.json               # Shared Claude Code permissions (committed)
+└── .Codex/
+    ├── settings.json               # Shared Codex permissions (committed)
     ├── settings.local.json          # Local-only settings (gitignored, may contain tokens)
-    └── launch.json                 # Dev server config for Claude Preview
+    └── launch.json                 # Dev server config for Codex Preview
 ```
 
 ---
@@ -419,7 +419,7 @@ Every experiment must include this in the `<head>`:
 - **Feature branches**: `feature/experiment-name` or `docs/description`
 - Always create PRs to merge into `main`
 - Commit messages: imperative mood, describe what changed and why
-- Do NOT commit `.claude/settings.local.json` (contains local-only config, may have tokens)
+- Do NOT commit `.Codex/settings.local.json` (contains local-only config, may have tokens)
 
 ---
 
