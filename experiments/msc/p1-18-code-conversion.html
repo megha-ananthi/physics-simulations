@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8085 Code Conversion - M.Sc. Practicals - Science Lab</title>
+    <meta name="description" content="Step through the four 8085 code-conversion programs (decimal to hex, hex to decimal, hex to ASCII and ASCII to hex) and watch DAA, nibble masking and the ASCII offsets at work.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/msc.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F524;</text></svg>">
+    <style>
+        :root { --accent: #8E24AA; --accent-soft: rgba(142, 36, 170, 0.12); --accent-border: rgba(142, 36, 170, 0.5); }
+        [hidden] { display: none !important; }
+        .try-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+        .try-lab { font-size: 0.78rem; font-weight: 800; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.4px; }
+        .in-lab { font-weight: 800; font-size: 0.88rem; }
+        .try-row input.field { width: 4.2rem; text-align: center; text-transform: uppercase; font-size: 1rem; }
+        .try-row input.field.bad { border-color: var(--bad); background: var(--bad-soft); }
+        .memmap { font-size: 0.86rem; color: var(--ink-soft); margin-top: 0.55rem; }
+        .memmap b { font-family: var(--font-mono); color: var(--ink); }
+        .say { font-size: 0.88rem; margin-top: 0.65rem; background: #FBFAFF; border: 1px dashed var(--accent-border); border-radius: 10px; padding: 0.5rem 0.75rem; }
+        .say b { color: var(--accent); }
+        .mono { font-family: var(--font-mono); font-weight: 800; }
+        .pulse { animation: boxPulse 1s ease; }
+        @keyframes boxPulse { 0% { box-shadow: 0 0 0 5px #FFD27A; } 100% { box-shadow: 0 0 0 0 rgba(255, 210, 122, 0); } }
+        /* dual counter */
+        .dual { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem; }
+        .ctr { background: #FBFAFF; border: 1px solid var(--line); border-radius: 12px; padding: 0.55rem 0.5rem; text-align: center; }
+        .ctr-name { font-size: 0.74rem; font-weight: 800; color: var(--ink-soft); }
+        .ctr-name b { color: var(--ink); }
+        .ctr-digits { display: flex; justify-content: center; gap: 0.3rem; margin: 0.35rem 0 0.15rem; }
+        .dg { display: flex; flex-direction: column; align-items: center; }
+        .dg span { font-family: var(--font-mono); font-weight: 800; font-size: 2rem; line-height: 1.15; background: #fff; border: 2px solid var(--accent-border); color: var(--accent);
+            border-radius: 8px; min-width: 2.3rem; padding: 0 0.2rem; transition: background 0.25s; }
+        .dg.hexc span { color: #0288D1; border-color: rgba(2, 136, 209, 0.45); }
+        .dg.hund span { color: #E67700; border-color: rgba(230, 119, 0, 0.5); }
+        .dg.bad span { color: var(--bad); border-color: var(--bad); background: var(--bad-soft); }
+        .dg i { font-style: normal; font-size: 0.6rem; font-weight: 800; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.3px; margin-top: 0.1rem; }
+        .ctr-sub { font-family: var(--font-mono); font-size: 0.74rem; color: var(--ink-soft); }
+        .ctr-sub .warnx { color: var(--bad); font-family: var(--font-body); font-weight: 800; }
+        .target { margin-top: 0.7rem; font-size: 0.88rem; }
+        .pbar { height: 9px; background: #ECEAF2; border-radius: 5px; overflow: hidden; margin-top: 0.3rem; }
+        .pbar i { display: block; height: 100%; background: var(--accent); border-radius: 5px; transition: width 0.2s; }
+        .daa.fix { background: var(--warn-soft); border: 1px solid rgba(230, 119, 0, 0.5); }
+        .hist table.obs { font-size: 0.78rem; margin-top: 0.6rem; }
+        .hist tr.fix td { background: #FFF4D6; }
+        .jump { margin-top: 0.6rem; }
+        /* bits */
+        .regline { display: flex; align-items: center; gap: 0.45rem; margin: 0.3rem 0; }
+        .rname { width: 2.8rem; flex: none; text-align: right; font-weight: 800; font-size: 0.78rem; color: var(--ink-soft); }
+        .bits { display: inline-flex; gap: 3px; }
+        .bit { width: 1.7rem; height: 2rem; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 800;
+            border: 1px solid var(--line); border-radius: 6px; background: #fff; transition: background 0.25s, box-shadow 0.25s; }
+        .bit.one { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-border); }
+        .bit.chg { box-shadow: 0 0 0 2px var(--warn); }
+        .bit.cut { opacity: 0.35; }
+        .bit.wrap { background: #FFE9B3; }
+        .mask .bit { height: 1.5rem; font-size: 0.85rem; border-style: dashed; }
+        .nib-gap { width: 0.45rem; }
+        .rhex { font-family: var(--font-mono); font-weight: 800; color: var(--accent); min-width: 2.6rem; }
+        .ladder { list-style: none; padding: 0; margin: 0.65rem 0 0; display: grid; gap: 0.25rem; }
+        .ladder.two { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-flow: column; grid-template-rows: repeat(5, auto); column-gap: 0.4rem; }
+        .ladder li { font-size: 0.8rem; padding: 0.22rem 0.55rem; border-radius: 8px; border: 1px solid var(--line); background: #fff; color: var(--ink-soft); }
+        .ladder li code { font-family: var(--font-mono); font-weight: 800; color: var(--ink); }
+        .ladder li.done { background: #F1FAF1; }
+        .ladder li.cur { background: #FFE9B3; border-color: rgba(230, 119, 0, 0.5); color: var(--ink); }
+        .ladder li.skip { text-decoration: line-through; opacity: 0.55; }
+        .ladder .tag { font-family: var(--font-mono); font-weight: 800; color: var(--accent); margin-left: 0.3rem; }
+        .outs { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.7rem; }
+        .outbox { border: 2px dashed var(--accent-border); border-radius: 12px; padding: 0.3rem 0.8rem; text-align: center; min-width: 6.4rem; }
+        .outbox .oa { font-size: 0.7rem; font-weight: 800; color: var(--ink-soft); }
+        .outbox .ov { font-family: var(--font-mono); font-weight: 800; font-size: 1.15rem; color: var(--accent); }
+        .outbox .oc { font-family: var(--font-mono); font-weight: 800; font-size: 1.5rem; line-height: 1.1; }
+        .outbox.filled { border-style: solid; background: var(--accent-soft); }
+        /* ASCII table */
+        .atab { display: grid; grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); gap: 0.3rem; }
+        .ac { border: 1px solid var(--line); border-radius: 8px; text-align: center; padding: 0.15rem 0.1rem; background: #fff; transition: background 0.25s; }
+        .ac b { display: block; font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-soft); }
+        .ac i { display: block; font-style: normal; font-family: var(--font-mono); font-weight: 800; font-size: 1.15rem; line-height: 1.2; }
+        .ac small { display: block; font-size: 0.62rem; color: var(--ink-soft); }
+        .ac.gap { grid-column: span 2; background: #F4F4F7; }
+        .ac.gap i { font-size: 0.82rem; line-height: 1.6; }
+        .ac.on { background: #FFE9B3; border-color: var(--warn); box-shadow: 0 0 0 2px rgba(230, 119, 0, 0.3); }
+        .soft-p { font-size: 0.82rem; color: var(--ink-soft); margin-top: 0.5rem; }
+        /* paper method */
+        .paper { font-size: 0.92rem; }
+        .paper .pl { font-family: 'Times New Roman', Georgia, serif; font-size: 1.05rem; margin: 0.2rem 0; }
+        .paper .ans { color: var(--accent); font-weight: 800; }
+        .paper table.obs { margin: 0.4rem 0; font-size: 0.86rem; }
+        @media (max-width: 600px) {
+            .bit { width: 1.32rem; height: 1.75rem; font-size: 0.9rem; }
+            .rname { width: 2.2rem; }
+            .ladder.two { grid-template-columns: minmax(0, 1fr); grid-auto-flow: row; grid-template-rows: none; }
+            .dg span { font-size: 1.6rem; min-width: 1.9rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="top-bar">
+        <a href="index.html" class="back-btn">&larr; Practicals</a>
+        <div class="exp-heading">
+            <span class="exp-chip">Practical I &middot; Exp 18</span>
+            <h1 class="exp-title">&#x1F524; 8085 — Code Conversion</h1>
+        </div>
+        <a href="../../index.html" class="back-btn">&#x1F3E0; Lab</a>
+    </header>
+    <p class="big-idea">The same number can be written in different codes. The 8085 converts <strong>decimal ↔ hex</strong> by counting in two registers at once
+        (one kept in decimal by <strong>DAA</strong>), and <strong>hex ↔ ASCII</strong> by splitting a byte into its two hex digits and adding or subtracting
+        <strong>30H</strong> (plus <strong>07H</strong> for the letters A–F).</p>
+    <nav class="section-nav">
+        <a href="#simulate">&#x1F52C; Simulate</a><a href="#draw">&#x270F;&#xFE0F; Draw it</a><a href="#record">&#x1F4DD; Record</a><a href="#viva">&#x1F3A4; Viva</a>
+    </nav>
+
+    <main>
+        <section id="simulate" class="block">
+            <h2 class="block-title">&#x1F52C; Simulate <span class="hint-inline">Pick a conversion, enter a number and press ⏭ Step — the picture follows every instruction.</span></h2>
+            <div class="tabs" data-tabs="conv">
+                <button class="tab-btn active" data-tab="d2h">&#x1F522; Decimal &rarr; Hex</button>
+                <button class="tab-btn" data-tab="h2d">&#x1F51F; Hex &rarr; Decimal</button>
+                <button class="tab-btn" data-tab="h2a">&#x1F524; Hex &rarr; ASCII</button>
+                <button class="tab-btn" data-tab="a2h">&#x1F520; ASCII &rarr; Hex</button>
+            </div>
+
+            <div class="card">
+                <div class="try-row">
+                    <label class="in-lab" for="num-in" id="in-lab">Number</label>
+                    <input id="num-in" class="field mono" maxlength="3" autocomplete="off" spellcheck="false">
+                    <span id="char-wrap" class="try-row" hidden><label class="in-lab" for="char-in">or type a character</label><input id="char-in" class="field mono" maxlength="1" autocomplete="off" spellcheck="false"></span>
+                    <span class="try-lab" style="margin-left:0.4rem">Try</span>
+                    <span class="btn-row" id="samples"></span>
+                </div>
+                <p class="memmap" id="memmap"></p>
+                <div id="input-hint"></div>
+            </div>
+
+            <div class="grid-2" style="margin-top:1rem">
+                <div class="card">
+                    <h3 id="vis-title">How it works</h3>
+                    <div id="vis-counter">
+                        <div class="dual">
+                            <div class="ctr" id="ctr-a-box">
+                                <div class="ctr-name">A — counts in <b>decimal</b> (BCD)</div>
+                                <div class="ctr-digits" id="ctr-a"></div>
+                                <div class="ctr-sub" id="ctr-a-sub"></div>
+                            </div>
+                            <div class="ctr">
+                                <div class="ctr-name">B — the same count in <b>hex</b></div>
+                                <div class="ctr-digits" id="ctr-b"></div>
+                                <div class="ctr-sub" id="ctr-b-sub"></div>
+                            </div>
+                        </div>
+                        <div class="target" id="target"></div>
+                        <p class="say daa" id="daa-box"></p>
+                        <div class="hist" id="hist"></div>
+                        <div class="btn-row jump">
+                            <button class="btn btn-sm" id="jump-daa">&#x23ED; Next DAA correction</button>
+                            <button class="btn btn-sm" id="jump-loop">&#x23ED; Next time round the loop</button>
+                        </div>
+                    </div>
+                    <div id="vis-bits" hidden>
+                        <div class="regline"><span class="rname">A</span><span class="bits" id="bits-a"></span><span class="rhex" id="hex-a"></span></div>
+                        <div class="regline mask" id="mask-line"><span class="rname">AND</span><span class="bits" id="bits-m"></span><span class="rhex" id="hex-m"></span></div>
+                        <div class="regline" id="b-line"><span class="rname">B</span><span class="bits" id="bits-b"></span><span class="rhex" id="hex-b"></span></div>
+                        <p class="say" id="op-line"></p>
+                        <ol class="ladder" id="ladder"></ol>
+                        <div class="outs" id="outs"></div>
+                    </div>
+                </div>
+                <div class="stack">
+                    <div class="card">
+                        <h3>&#x1F4C4; Paper method (for the exam)</h3>
+                        <div class="paper" id="paper"></div>
+                    </div>
+                    <div class="card" id="ascii-card" hidden>
+                        <h3>ASCII codes of the hex digits</h3>
+                        <div id="ascii-table"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top:0.9rem" id="cpu"></div>
+            <div id="prog-notes"></div>
+        </section>
+
+        <section id="draw" class="block">
+            <h2 class="block-title">&#x270F;&#xFE0F; Draw it <span class="hint-inline">Press ▶ Draw and copy each step into your record.</span></h2>
+            <div class="tabs" data-tabs="draw">
+                <button class="tab-btn active" data-tab="fd2h">Decimal &rarr; Hex</button>
+                <button class="tab-btn" data-tab="fh2d">Hex &rarr; Decimal</button>
+                <button class="tab-btn" data-tab="fh2a">Hex &rarr; ASCII</button>
+                <button class="tab-btn" data-tab="fsub">SUB routine</button>
+                <button class="tab-btn" data-tab="fa2h">ASCII &rarr; Hex</button>
+            </div>
+            <div class="tab-panel" data-group="draw" data-panel="fd2h" id="draw-fd2h"></div>
+            <div class="tab-panel" data-group="draw" data-panel="fh2d" id="draw-fh2d"></div>
+            <div class="tab-panel" data-group="draw" data-panel="fh2a" id="draw-fh2a"></div>
+            <div class="tab-panel" data-group="draw" data-panel="fsub" id="draw-fsub"></div>
+            <div class="tab-panel" data-group="draw" data-panel="fa2h" id="draw-fa2h"></div>
+        </section>
+
+        <section id="record" class="block">
+            <h2 class="block-title">&#x1F4DD; Record sheet</h2>
+            <div class="rec-actions no-print"><button class="btn btn-sm" data-print-record>&#x1F5A8;&#xFE0F; Print record</button></div>
+            <div class="note no-print" style="margin:0 0 0.8rem"><span class="note-tag">Tip</span>The manual leaves the opcode column empty. The opcodes in these program tables are assembled from the programs, so you can copy them.
+                Each observation table uses the number you last entered for that conversion above.</div>
+            <article class="record">
+                <div class="rec-head"><div class="rec-box">Expt. No. ______<br>Date ______</div><div class="rec-box">Page No. ______</div></div>
+                <h2 class="rec-title">CODE CONVERSION — 8085</h2>
+                <h3>Apparatus required</h3>
+                <p>8085 microprocessor kit, keyboard, +5 V power supply.</p>
+
+                <h3>(A) Decimal to hexadecimal — Aim</h3>
+                <p>To convert a given decimal number to hexadecimal number.</p>
+                <h3>Algorithm</h3><ol id="alg-d2h"></ol>
+                <h3>Flowchart</h3><div class="rec-diagram" data-diagram="fd2h"></div>
+                <h3>Program</h3><div id="prog-d2h"></div>
+                <h3>Observation</h3><div id="io-d2h"></div><p class="calc-line" id="ver-d2h"></p>
+
+                <h3>(B) Hexadecimal to decimal — Aim</h3>
+                <p>To convert a given hexadecimal number to decimal number and also to verify the result.</p>
+                <h3>Algorithm</h3><ol id="alg-h2d"></ol>
+                <h3>Flowchart</h3><div class="rec-diagram" data-diagram="fh2d"></div>
+                <h3>Program</h3><div id="prog-h2d"></div>
+                <h3>Observation</h3><div id="io-h2d"></div><p class="calc-line" id="ver-h2d"></p>
+
+                <h3>(C) Hexadecimal to ASCII — Aim</h3>
+                <p>To write an assembly language program to convert the given hexadecimal number into its ASCII equivalent and to verify the result.</p>
+                <h3>Algorithm</h3><ol id="alg-h2a"></ol>
+                <h3>Flowchart (main program)</h3><div class="rec-diagram" data-diagram="fh2a"></div>
+                <h3>Flowchart (subroutine SUB)</h3><div class="rec-diagram" data-diagram="fsub"></div>
+                <h3>Program</h3><div id="prog-h2a"></div>
+                <h3>Observation</h3><div id="io-h2a"></div><p class="calc-line" id="ver-h2a"></p>
+
+                <h3>(D) ASCII to hexadecimal — Aim</h3>
+                <p>To write an assembly language program to convert the given ASCII number into its hexadecimal equivalent and to verify the result.</p>
+                <h3>Algorithm</h3><ol id="alg-a2h"></ol>
+                <h3>Flowchart</h3><div class="rec-diagram" data-diagram="fa2h"></div>
+                <h3>Program</h3><div id="prog-a2h"></div>
+                <h3>Observation</h3><div id="io-a2h"></div><p class="calc-line" id="ver-a2h"></p>
+
+                <h3>Result</h3>
+                <div class="result-box" id="rec-result"></div>
+            </article>
+        </section>
+
+        <section id="viva" class="block">
+            <h2 class="block-title">&#x1F3A4; Viva voce</h2>
+            <div id="viva-list"></div>
+        </section>
+    </main>
+
+    <footer class="page-footer">Practical I &middot; Exp 18 &bull; The simulator runs the real 8085 instructions of the program</footer>
+
+    <script src="assets/msc-common.js"></script>
+    <script src="assets/cpu8085.js"></script>
+    <script src="assets/programs8085.js"></script>
+    <script>
+    'use strict';
+    const $ = (id) => document.getElementById(id);
+    const P = PROGRAMS8085, h2 = CPU8085.h2, h4 = CPU8085.h4, bin8 = CPU8085.bin8;
+    const hx = (n) => n.toString(16).toUpperCase();
+    const nib = (v, k) => (v >> (4 * k)) & 15;
+    const isBCD = (v) => (v & 15) <= 9 && (v >> 4) <= 9;
+    const bcd2dec = (v) => (v >> 4) * 10 + (v & 15);
+    const printable = (c) => c >= 0x21 && c <= 0x7E;
+    const chr = (c) => (printable(c) ? MSC.esc(String.fromCharCode(c)) : (c === 0x20 ? 'space' : '·'));
+    const bin4s = (v) => bin8(v).slice(0, 4) + ' ' + bin8(v).slice(4);
+
+    const PROG = { d2h: P.decToHex, h2d: P.hexToDec, h2a: P.hexToAscii, a2h: P.asciiToHex };
+    const INFO = {
+        d2h: {
+            lab: 'Decimal number (01–99)', title: 'Two counters: A counts in decimal, B counts in hex',
+            map: '<b>4200H</b> = the decimal number, written as BCD (e.g. 21) &rarr; <b>4201H</b> = its hexadecimal value.',
+            stuck: 'The given number is not valid BCD (both digits must be 0–9), so the decimal count in A can never equal it and the loop never ends. Enter 01 to 99.',
+        },
+        h2d: {
+            lab: 'Hex number (01–FF)', title: 'Two counters: B counts in hex, A (and C) in decimal',
+            map: '<b>4200H</b> = the hexadecimal number &rarr; <b>4201H</b> = tens &amp; units (BCD), <b>4202H</b> = hundreds.',
+            stuck: 'Check the input number.',
+        },
+        h2a: {
+            lab: 'Hex number (00–FF)', title: 'Splitting the byte into two hex digits',
+            map: '<b>4200H</b> = the hexadecimal number (two digits) &rarr; <b>4201H</b> = ASCII of the lower digit, <b>4202H</b> = ASCII of the upper digit.',
+            stuck: 'Check the program.',
+        },
+        a2h: {
+            lab: 'ASCII code', title: 'From an ASCII code back to the hex digit',
+            map: '<b>4200H</b> = the ASCII code of one character (“0”–“9”, “A”–“F”) &rarr; <b>4201H</b> = the hex digit it stands for.',
+            stuck: 'Check the program.',
+        },
+    };
+    const PAGE_NOTES = {
+        h2a: ['The manual’s algorithm says “Add the two converted values” and “Display the result”, but the program does neither — it stores the two ASCII codes separately at 4201H and 4202H. Write the algorithm as given in the record below.'],
+        a2h: ['The manual’s algorithm says “Add the two converted values” and “Display the result”, but the program converts one character and stores the value at 4201H. Write the algorithm as given in the record below.'],
+    };
+
+    // state (declared before mount: the widget callbacks use them)
+    const inputs = { d2h: 0x21, h2d: 0xD5, h2a: 0xA5, a2h: 0x41 };
+    let mode = 'd2h';
+    let W = null, pending = false;
+    const vis = {};
+    const cellsFor = (k) => PROG[k].cells.map(c => Object.assign({}, c, c.addr === 0x4200 ? { value: inputs[k] } : {}));
+
+    function resetVis(api) {
+        Object.assign(vis, {
+            dec: 0, pendingDaa: false, hist: [], lastDaa: null, fixFlash: false, cmp: null, count: 0,
+            prevA: undefined, stage: -1, mask: undefined, rot: 0, wrap: false, call: 0, sub: [{}, {}], out1: null, out2: null, op: '', letter: null, hl: [],
+        });
+        if (mode === 'a2h') vis.hl = [api.machine.mem[0x4200]];
+    }
+    const cur = () => vis.hist[vis.hist.length - 1] || {};
+
+    function opText(info, api) {
+        const mn = info.mn || '', a = info.after, b = info.before;
+        if (mode === 'h2a') {
+            if (/^LDA/.test(mn)) return 'A ← <span class="mono">' + h2(a.A) + 'H</span>, the number to convert. Its two hex digits are its two nibbles: ' + bin8(a.A).slice(0, 4) + ' (' + hx(nib(a.A, 1)) + ') and ' + bin8(a.A).slice(4) + ' (' + hx(nib(a.A, 0)) + ').';
+            if (mn === 'MOV B,A') return 'B ← A: keep a copy of ' + h2(a.A) + 'H in B, because A is about to be changed.';
+            if (mn === 'ANI 0FH') return 'A AND 0000 1111: the 0s of the mask clear the upper nibble, the 1s keep the lower one. A = <span class="mono">' + h2(a.A) + 'H</span> — the lower digit ' + hx(a.A) + ' alone.';
+            if (/^CALL/.test(mn)) return '<b>CALL SUB</b>: go to the conversion subroutine; the return address is saved on the stack.';
+            if (mn === 'CPI 0AH') return 'Is ' + h2(b.A) + 'H &lt; 0AH? ' + (a.F.CY ? 'Yes (CY = 1) → it is a digit 0–9, so JC SKP skips ADI 07H.' : 'No (CY = 0) → it is a letter A–F, so the extra 07H is needed.');
+            if (/^JC/.test(mn)) return info.taken ? 'JC SKP jumped over ADI 07H (digit 0–9).' : 'JC does not jump (letter A–F): ADI 07H runs next.';
+            if (mn === 'ADI 07H') return 'Letter: A = ' + h2(b.A) + 'H + 07H = <span class="mono">' + h2(a.A) + 'H</span>. This steps over the 7 codes (3AH–40H) between “9” and “A”.';
+            if (mn === 'ADI 30H') return 'A = ' + h2(b.A) + 'H + 30H = <span class="mono">' + h2(a.A) + 'H</span> — the ASCII code of “' + chr(a.A) + '”.';
+            if (mn === 'RET') return '<b>RET</b>: back to the main program with the ASCII code in A.';
+            if (mn === 'STA 4201H') return 'Store ' + h2(a.A) + 'H (“' + chr(a.A) + '”, the lower digit) at 4201H.';
+            if (mn === 'MOV A,B') return 'A ← B = ' + h2(a.A) + 'H: the original number again.';
+            if (mn === 'ANI F0H') return 'A AND 1111 0000 clears the lower nibble: A = <span class="mono">' + h2(a.A) + 'H</span>. The upper digit is still in the upper 4 bits.';
+            if (mn === 'RLC') return 'RLC ' + vis.rot + ' of 4: every bit moves one place left and D7 comes round into D0 (and into CY).' + (vis.rot === 4 ? ' The upper digit is now in the lower nibble: A = <span class="mono">' + h2(a.A) + 'H</span>.' : '');
+            if (mn === 'STA 4202H') return 'Store ' + h2(a.A) + 'H (“' + chr(a.A) + '”, the upper digit) at 4202H.';
+            if (mn === 'HLT') { const m = api.machine.mem; return 'Done: ' + h2(m[0x4200]) + 'H is written with the characters “' + chr(m[0x4202]) + '” “' + chr(m[0x4201]) + '” (4202H = ' + h2(m[0x4202]) + 'H, 4201H = ' + h2(m[0x4201]) + 'H).'; }
+        } else if (mode === 'a2h') {
+            if (/^LDA/.test(mn)) return 'A ← <span class="mono">' + h2(a.A) + 'H</span> — the ASCII code of “' + chr(a.A) + '”.';
+            if (mn === 'SUI 30H') return h2(b.A) + 'H − 30H = <span class="mono">' + h2(a.A) + 'H</span>. For the characters “0”–“9” this is already the answer.';
+            if (mn === 'CPI 0AH') return 'Is ' + h2(b.A) + 'H &lt; 0AH? ' + (a.F.CY ? 'Yes → it was a digit “0”–“9”: JC SKP jumps straight to STA.' : 'No → it was a letter “A”–“F”: the 7-code gap must be taken away too.');
+            if (/^JC/.test(mn)) return info.taken ? 'JC SKP jumped over SUI 07H.' : 'JC does not jump, so SUI 07H runs next.';
+            if (mn === 'SUI 07H') return h2(b.A) + 'H − 07H = <span class="mono">' + h2(a.A) + 'H</span>.';
+            if (/^STA/.test(mn)) return 'Store ' + h2(a.A) + 'H at 4201H.';
+            if (mn === 'HLT') { const m = api.machine.mem; return 'Done: ASCII ' + h2(m[0x4200]) + 'H (“' + chr(m[0x4200]) + '”) → <span class="mono">' + h2(m[0x4201]) + 'H</span>.'; }
+        }
+        return info.text;
+    }
+
+    const CFG = {
+        source: P.decToHex.source,
+        cells: cellsFor('d2h'),
+        speed: 6,
+        editable: true,
+        stepHookOnRun: true,
+        maxSteps: 20000,
+        stuckHint: INFO.d2h.stuck,
+        onReset(api) { W = api; resetVis(api); scheduleRender(); },
+        onStep(info, api) {
+            W = api;
+            const mn = info.mn || '', a = info.after, b = info.before, mem = api.machine.mem;
+            if (mode === 'd2h' || mode === 'h2d') {
+                if (mn === 'MVI A,00H') vis.dec = 0;
+                else if (mn === 'INR B') { vis.count++; vis.hist.push({ n: vis.count, b: a.B, c: a.C }); if (vis.hist.length > 6) vis.hist.shift(); }
+                else if (mn === 'ADI 01H') { vis.dec = a.A; vis.pendingDaa = true; cur().raw = a.A; }
+                else if (mn === 'DAA') {
+                    const corr = (a.A - b.A) & 0xFF, h = cur();
+                    vis.dec = a.A; vis.pendingDaa = false;
+                    h.corr = corr; h.res = a.A; h.cy = a.F.CY;
+                    vis.lastDaa = { raw: b.A, corr, res: a.A, cy: a.F.CY };
+                    if (corr) vis.fixFlash = true;
+                } else if (mn === 'INR C') cur().c = a.C;
+                else if (mn === 'CMP M') { const hl = (b.H << 8) | b.L; vis.cmp = { x: b.A, m: mem[hl], z: a.F.Z }; }
+            } else if (mode === 'h2a') {
+                vis.prevA = b.A; vis.wrap = false;
+                const sub = api.asm.symbols.SUB, inSub = sub !== undefined && info.pc >= sub;
+                const s = vis.sub[Math.max(0, Math.min(1, vis.call - 1))];
+                if (/^LDA/.test(mn)) { vis.stage = 0; vis.mask = undefined; }
+                else if (mn === 'MOV B,A') vis.stage = 1;
+                else if (mn === 'ANI 0FH') { vis.stage = 2; vis.mask = 0x0F; }
+                else if (/^CALL/.test(mn)) { vis.call++; vis.stage = vis.call === 1 ? 3 : 8; vis.mask = undefined; }
+                else if (inSub) {
+                    vis.stage = vis.call <= 1 ? 3 : 8;
+                    if (mn === 'CPI 0AH') { s.letter = !a.F.CY; s.digit = b.A; }
+                    else if (mn === 'ADI 07H') s.add7 = true;
+                    else if (mn === 'ADI 30H') { s.code = a.A; vis.hl = [a.A]; }
+                } else if (mn === 'STA 4201H') { vis.stage = 4; vis.out1 = a.A; }
+                else if (mn === 'MOV A,B') vis.stage = 5;
+                else if (mn === 'ANI F0H') { vis.stage = 6; vis.mask = 0xF0; }
+                else if (mn === 'RLC') { vis.stage = 7; vis.rot++; vis.wrap = true; vis.mask = undefined; }
+                else if (mn === 'STA 4202H') { vis.stage = 9; vis.out2 = a.A; }
+                else if (mn === 'HLT') vis.stage = 10;
+                vis.op = opText(info, api);
+            } else {
+                vis.prevA = b.A;
+                if (/^LDA/.test(mn)) { vis.stage = 0; vis.hl = [a.A]; }
+                else if (mn === 'SUI 30H') vis.stage = 1;
+                else if (mn === 'CPI 0AH') { vis.stage = 2; vis.letter = !a.F.CY; }
+                else if (mn === 'SUI 07H') vis.stage = 3;
+                else if (/^STA/.test(mn)) { vis.stage = 4; vis.out1 = a.A; }
+                else if (mn === 'HLT') vis.stage = 5;
+                vis.op = opText(info, api);
+            }
+            scheduleRender();
+        },
+        onHalt(api) { W = api; scheduleRender(); },
+    };
+    const cpu = CPU8085.mount('#cpu', CFG);
+    W = cpu;
+
+    function scheduleRender() {
+        if (pending) return;
+        pending = true;
+        const go = () => { pending = false; render(); };
+        if (document.hidden) setTimeout(go, 30); else requestAnimationFrame(go);
+    }
+    function pulse(el) { el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse'); }
+
+    // ------------------------------------------------------------------ concept visuals
+    function renderCounter(m) {
+        const h2d = mode === 'h2d', d = vis.dec, M = m.mem[0x4200];
+        const dig = (v, lab, cls, check) => '<div class="dg ' + (cls || '') + (check && v > 9 ? ' bad' : '') + '"><span>' + hx(v) + '</span><i>' + lab + '</i></div>';
+        $('ctr-a').innerHTML = (h2d ? dig(m.C & 15, 'hundreds (C)', 'hund', true) : '') + dig(nib(d, 1), 'tens', '', true) + dig(nib(d, 0), 'units', '', true);
+        $('ctr-a-sub').innerHTML = bin4s(d) + (vis.pendingDaa && !isBCD(d) ? ' <span class="warnx">← not BCD: DAA will fix it</span>' : '');
+        $('ctr-b').innerHTML = dig(nib(m.B, 1), '16¹', 'hexc') + dig(nib(m.B, 0), '16⁰', 'hexc');
+        $('ctr-b-sub').innerHTML = bin4s(m.B) + ' = ' + m.B + ' counts';
+
+        let t;
+        if (!h2d) {
+            const ok = isBCD(M) && M !== 0, goal = ok ? bcd2dec(M) : 0;
+            t = 'Given decimal number at 4200H: <b class="mono">' + h2(M) + '</b>. The loop repeats until <b>A = ' + h2(M) + '</b> (CMP M gives Z = 1).' +
+                (ok ? '<div class="pbar"><i style="width:' + Math.min(100, 100 * m.B / goal) + '%"></i></div>' : '');
+        } else {
+            t = 'Given hexadecimal number at 4200H: <b class="mono">' + h2(M) + 'H</b>. The loop repeats until <b>B = ' + h2(M) + 'H</b>.' +
+                '<div class="pbar"><i style="width:' + Math.min(100, 100 * m.B / (M || 256)) + '%"></i></div>';
+        }
+        if (m.halted && !m.error) {
+            t += h2d ? '<p class="say"><b>Result:</b> ' + h2(M) + 'H = <b class="mono">' + parseInt(hx(m.mem[0x4202]) + h2(m.mem[0x4201]), 10) + '</b> in decimal — 4201H = ' + h2(m.mem[0x4201]) + ' (tens &amp; units), 4202H = ' + h2(m.mem[0x4202]) + ' (hundreds).</p>'
+                : '<p class="say"><b>Result:</b> after ' + m.mem[0x4201] + ' counts A reads ' + h2(M) + ', so ' + h2(M) + ' (decimal) = <b class="mono">' + h2(m.mem[0x4201]) + 'H</b>, stored at 4201H.</p>';
+        } else if (vis.cmp) {
+            const c = vis.cmp;
+            t += '<div style="margin-top:0.35rem">CMP M: ' + (h2d ? 'B' : 'A') + ' = <b class="mono">' + h2(c.x) + '</b> ' + (c.z ? '=' : '≠') + ' M = <b class="mono">' + h2(c.m) + '</b> → ' +
+                (c.z ? 'equal (Z = 1), so JNZ falls through and the loop ends.' : 'not equal (Z = 0), so JNZ LOOP goes round again.') + '</div>';
+        }
+        $('target').innerHTML = t;
+
+        const L = vis.lastDaa, box = $('daa-box');
+        let s;
+        if (!L) s = 'After every <b>ADI 01H</b> the program runs <b>DAA</b> (decimal adjust accumulator), which keeps A looking like a decimal number: every 4 bits must be a digit 0–9. Watch what happens when the units pass 9 — or press “Next DAA correction”.';
+        else if (!L.corr) s = 'ADI 01H gave <span class="mono">' + h2(L.raw) + 'H</span> — both digits are 0–9 (valid BCD), so DAA leaves A alone. B simply counts 1 more.';
+        else if (L.corr === 0x06) s = 'ADI 01H gave <b class="mono">' + h2(L.raw) + 'H</b>: the units digit ' + hx(nib(L.raw, 0)) + ' is not a decimal digit, so DAA adds <b>06H</b>: ' + h2(L.raw) + 'H + 06H = <b class="mono">' + h2(L.res) + 'H</b>. Adding 6 skips the six unused codes A–F, so the units go back to 0 and the tens go up by one. B does not skip — it just reads ' + h2(W.machine.B) + 'H.';
+        else s = 'ADI 01H gave <b class="mono">' + h2(L.raw) + 'H</b>: the units are past 9 (needs +06H) and the tens pass 9 too (needs +60H), so DAA adds <b>' + h2(L.corr) + 'H</b>: ' + h2(L.raw) + 'H + ' + h2(L.corr) + 'H = 1' + h2(L.res) + 'H → A = <b class="mono">' + h2(L.res) + 'H</b> with <b>CY = 1</b> (the count passed 99).' + (h2d ? ' JNC does not jump, so <b>INR C</b> adds 1 to the hundreds digit.' : '');
+        box.innerHTML = s;
+        box.classList.toggle('fix', !!(L && L.corr));
+        if (vis.fixFlash) { pulse(box); pulse($('ctr-a-box')); vis.fixFlash = false; }
+
+        const rows = vis.hist.map(r => '<tr class="' + (r.corr ? 'fix' : '') + '"><td>' + r.n + '</td><td class="mono">' + h2(r.b) + '</td><td class="mono">' + (r.raw === undefined ? '' : h2(r.raw)) +
+            '</td><td class="mono">' + (r.corr === undefined ? '' : (r.corr ? '+' + h2(r.corr) : '—')) + '</td><td class="mono">' + (r.res === undefined ? '' : h2(r.res)) + '</td>' + (h2d ? '<td class="mono">' + h2(r.c || 0) + '</td>' : '') + '</tr>').join('');
+        $('hist').innerHTML = '<div class="table-wrap"><table class="obs"><thead><tr><th>Loop</th><th>B (hex)</th><th>A after ADI 01</th><th>DAA adds</th><th>A (decimal)</th>' + (h2d ? '<th>C</th>' : '') +
+            '</tr></thead><tbody>' + (rows || '<tr><td colspan="' + (h2d ? 6 : 5) + '" class="empty">The last few times round the loop will appear here.</td></tr>') + '</tbody></table></div>';
+    }
+
+    function bitsHTML(v, o) {
+        o = o || {};
+        let s = '';
+        for (let i = 7; i >= 0; i--) {
+            const b = (v >> i) & 1;
+            let c = 'bit' + (b ? ' one' : '');
+            if (o.prev !== undefined && ((o.prev >> i) & 1) !== b) c += ' chg';
+            if (o.mask !== undefined && !((o.mask >> i) & 1)) c += ' cut';
+            if (o.wrap && i === 0) c += ' wrap';
+            s += '<span class="' + c + '">' + b + '</span>';
+            if (i === 4) s += '<span class="nib-gap"></span>';
+        }
+        return s;
+    }
+    const LADDER = {
+        h2a: [['LDA 4200H', 'get the number'], ['MOV B,A', 'keep a copy'], ['ANI 0FH', 'keep the lower digit'], ['CALL SUB', 'to ASCII'], ['STA 4201H', 'store it'],
+            ['MOV A,B', 'number back'], ['ANI F0H', 'keep the upper digit'], ['RLC ×4', 'move it down'], ['CALL SUB', 'to ASCII'], ['STA 4202H', 'store it']],
+        a2h: [['LDA 4200H', 'get the ASCII code'], ['SUI 30H', 'subtract 30H'], ['CPI 0AH', 'digit or letter?'], ['SUI 07H', 'letters only'], ['STA 4201H', 'store the value']],
+    };
+    function renderBits(m) {
+        const h2a = mode === 'h2a';
+        $('bits-a').innerHTML = bitsHTML(m.A, { prev: m.steps ? vis.prevA : undefined, mask: h2a ? vis.mask : undefined, wrap: vis.wrap });
+        $('hex-a').textContent = h2(m.A) + 'H';
+        $('mask-line').hidden = !(h2a && vis.mask !== undefined);
+        if (h2a && vis.mask !== undefined) { $('bits-m').innerHTML = bitsHTML(vis.mask); $('hex-m').textContent = h2(vis.mask) + 'H'; }
+        $('b-line').hidden = !h2a;
+        if (h2a) { $('bits-b').innerHTML = bitsHTML(m.B); $('hex-b').textContent = h2(m.B) + 'H'; }
+        $('op-line').innerHTML = m.steps ? vis.op : (h2a
+            ? 'Press ⏭ Step. The number at 4200H (' + h2(m.mem[0x4200]) + 'H) is split into its two hex digits, and each digit is changed into its ASCII code by the subroutine SUB.'
+            : 'Press ⏭ Step. The ASCII code at 4200H (' + h2(m.mem[0x4200]) + 'H, “' + chr(m.mem[0x4200]) + '”) is turned back into the hex digit it stands for.');
+        const L = LADDER[mode], st = vis.stage, done = m.halted && !m.error;
+        $('ladder').className = 'ladder' + (h2a ? ' two' : '');
+        $('ladder').innerHTML = L.map((x, i) => {
+            let c = done || i < st ? 'done' : i === st ? 'cur' : '';
+            let tag = '';
+            if (h2a && (i === 3 || i === 8)) {
+                const s = vis.sub[i === 3 ? 0 : 1];
+                if (s.code !== undefined) tag = (s.add7 ? '+07H +30H' : '+30H') + ' → ' + h2(s.code) + 'H “' + chr(s.code) + '”';
+                else if (s.letter !== undefined) tag = s.letter ? 'letter' : 'digit';
+            }
+            if (h2a && i === 7 && vis.rot) tag = vis.rot + '/4';
+            if (!h2a && i === 3 && vis.letter === false && st >= 3) c = 'skip';
+            if (!h2a && i === 2 && vis.letter !== null && st >= 2) tag = vis.letter ? 'letter' : 'digit';
+            return '<li class="' + c + '"><code>' + x[0] + '</code> — ' + x[1] + (tag ? '<span class="tag">' + tag + '</span>' : '') + '</li>';
+        }).join('');
+        const box = (addr, v, what) => '<div class="outbox' + (v !== null ? ' filled' : '') + '"><div class="oa">' + addr + ' · ' + what + '</div>' +
+            (v === null ? '<div class="ov">--</div>' : (h2a ? '<div class="oc">' + chr(v) + '</div><div class="ov">' + h2(v) + 'H</div>' : '<div class="oc">' + h2(v) + 'H</div>')) + '</div>';
+        $('outs').innerHTML = h2a ? box('4202H', vis.out2, 'upper digit') + box('4201H', vis.out1, 'lower digit') : box('4201H', vis.out1, 'hex value');
+        $('ascii-table').innerHTML = asciiTableHTML(vis.hl);
+    }
+    function asciiTableHTML(hl) {
+        const chip = (c) => '<span class="ac' + (hl.includes(c) ? ' on' : '') + '"><b>' + h2(c) + 'H</b><i>' + String.fromCharCode(c) + '</i><small>digit ' + hx(c <= 0x39 ? c - 0x30 : c - 0x37) + '</small></span>';
+        let s = '';
+        for (let c = 0x30; c <= 0x39; c++) s += chip(c);
+        s += '<span class="ac gap' + (hl.some(c => c >= 0x3A && c <= 0x40) ? ' on' : '') + '"><b>3AH – 40H</b><i>: ; &lt; = &gt; ? @</i><small>7 other characters</small></span>';
+        for (let c = 0x41; c <= 0x46; c++) s += chip(c);
+        return '<div class="atab">' + s + '</div><p class="soft-p">“0”–“9” are 30H–39H, so a digit 0–9 just gets <b>+30H</b>. But 7 other characters (3AH–40H) sit between “9” and “A”, so the letters A–F need <b>07H</b> more: +37H in all.</p>';
+    }
+    function render() {
+        if (!W) return;
+        const m = W.machine;
+        if (mode === 'd2h' || mode === 'h2d') renderCounter(m); else renderBits(m);
+    }
+
+    // ------------------------------------------------------------------ paper method
+    function paperHTML(k, v) {
+        if (k === 'd2h') {
+            if (!isBCD(v) || v === 0) return '<p>Enter a valid decimal number (01 to 99) to see the working.</p>';
+            const n = bcd2dec(v), rows = [];
+            let q = n;
+            do { const r = q % 16; rows.push([q + ' ÷ 16', String(Math.floor(q / 16)), r + (r > 9 ? ' = ' + hx(r) : '')]); q = Math.floor(q / 16); } while (q > 0);
+            return '<p><b>Decimal → hex:</b> divide by 16 again and again; the remainders are the hex digits.</p>' +
+                MSC.table([['Divide', 'Quotient', 'Remainder']], rows.map(r => r.map(t => ({ t, cls: 'mono' })))) +
+                '<p class="pl">Read the remainders from the bottom up: ' + n + ' = <span class="ans">' + h2(n) + 'H</span></p>' +
+                '<p class="pl">Check: ' + nib(n, 1) + ' × 16 + ' + nib(n, 0) + ' = ' + n + ' ✓</p>';
+        }
+        if (k === 'h2d') {
+            const d1 = nib(v, 1), d0 = nib(v, 0), dec = String(v).padStart(3, '0');
+            const dn = (d) => (d > 9 ? hx(d) + ' (' + d + ')' : String(d));
+            return '<p><b>Hex → decimal:</b> multiply each digit by its place value (16¹ = 16, 16⁰ = 1) and add.</p>' +
+                '<p class="pl">' + h2(v) + 'H = ' + dn(d1) + ' × 16¹ + ' + dn(d0) + ' × 16⁰</p>' +
+                '<p class="pl">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= ' + (d1 * 16) + ' + ' + d0 + ' = <span class="ans">' + v + '</span></p>' +
+                '<p>The program keeps the answer in BCD: <b class="mono">4201H = ' + dec.slice(1) + '</b> (tens &amp; units) and <b class="mono">4202H = 0' + dec[0] + '</b> (hundreds).</p>';
+        }
+        if (k === 'h2a') {
+            const row = (d, which) => [which + ' digit', hx(d), d <= 9 ? '0–9: add 30H' : 'A–F: add 37H (30H + 07H)', h2(d + (d <= 9 ? 0x30 : 0x37)) + 'H', '“' + String.fromCharCode(d + (d <= 9 ? 0x30 : 0x37)) + '”'];
+            return '<p><b>Hex → ASCII:</b> each hex digit becomes one character. Digits 0–9 add 30H; letters A–F add 37H.</p>' +
+                MSC.table([['', 'Digit', 'Rule', 'ASCII', 'Char']], [row(nib(v, 1), 'Upper'), row(nib(v, 0), 'Lower')].map(r => r.map((t, i) => ({ t, cls: i === 0 ? 'l' : i === 2 ? '' : 'mono' })))) +
+                '<p>So ' + h2(v) + 'H is written as the two characters <b class="mono">“' + hx(nib(v, 1)) + '” “' + hx(nib(v, 0)) + '”</b>. The program does the lower digit first: 4201H = ' +
+                h2(nib(v, 0) + (nib(v, 0) <= 9 ? 0x30 : 0x37)) + 'H, 4202H = ' + h2(nib(v, 1) + (nib(v, 1) <= 9 ? 0x30 : 0x37)) + 'H.</p>';
+        }
+        const r1 = (v - 0x30) & 0xFF, letter = r1 >= 0x0A, r2 = (r1 - (letter ? 7 : 0)) & 0xFF;
+        return '<p><b>ASCII → hex:</b> subtract 30H; if the result is still 0AH or more (a letter), subtract 07H more.</p>' +
+            '<p class="pl">' + h2(v) + 'H (“' + chr(v) + '”) − 30H = ' + h2(r1) + 'H</p>' +
+            (letter ? '<p class="pl">' + h2(r1) + 'H ≥ 0AH → letter: ' + h2(r1) + 'H − 07H = <span class="ans">' + h2(r2) + 'H</span></p>'
+                : '<p class="pl">' + h2(r1) + 'H &lt; 0AH → digit: the answer is <span class="ans">' + h2(r1) + 'H</span></p>');
+    }
+    function renderPaper() { $('paper').innerHTML = paperHTML(mode, inputs[mode]); }
+
+    // ------------------------------------------------------------------ inputs, samples, hints
+    function hints() {
+        const v = inputs[mode];
+        let t = '';
+        if (mode === 'd2h') {
+            if (!isBCD(v)) t = '<b class="mono">' + h2(v) + '</b> is not a valid BCD number — in BCD each hex digit must be 0–9, so the input can only be 01 to 99. A counts only in valid BCD, so it would never equal ' + h2(v) + ' and the loop would never end.';
+            else if (v === 0) t = '00 is a special case: A reaches 00 again only after passing 99 (100 counts), so the program gives 64H (= 100) instead of 00H. Use 01 to 99.';
+        } else if (mode === 'h2d') {
+            if (v === 0) t = 'With 00H, B equals 00H again only after 256 counts, so the program gives 256 (4201H = 56, 4202H = 02) instead of 000. Use 01H to FFH.';
+        } else if (mode === 'a2h') {
+            const ok = (v >= 0x30 && v <= 0x39) || (v >= 0x41 && v <= 0x46);
+            if (!ok) t = (v >= 0x61 && v <= 0x66)
+                ? h2(v) + 'H is the small letter “' + chr(v) + '”. This program only knows “0”–“9” (30H–39H) and capital “A”–“F” (41H–46H); for a small letter a further 20H would have to be subtracted.'
+                : h2(v) + 'H (“' + chr(v) + '”) is not the ASCII code of a hex digit. Valid inputs are 30H–39H (“0”–“9”) and 41H–46H (“A”–“F”); anything else gives a meaningless result.';
+        }
+        $('input-hint').innerHTML = t ? '<div class="note warn"><span class="note-tag">Check the input</span>' + t + '</div>' : '';
+    }
+    function syncInputBoxes() {
+        $('num-in').value = h2(inputs[mode]);
+        $('num-in').classList.remove('bad');
+        $('char-in').value = mode === 'a2h' && printable(inputs.a2h) ? String.fromCharCode(inputs.a2h) : '';
+    }
+    function setInput(v) {
+        inputs[mode] = v & 0xFF;
+        syncInputBoxes();
+        W.setInputs({ 0x4200: inputs[mode] });
+        hints(); renderPaper(); updateRecord();
+    }
+    $('num-in').addEventListener('change', e => {
+        const t = e.target.value.trim().toUpperCase().replace(/H$/, '');
+        if (!/^[0-9A-F]{1,2}$/.test(t)) { e.target.classList.add('bad'); return; }
+        setInput(parseInt(t, 16));
+    });
+    $('num-in').addEventListener('keydown', e => { if (e.key === 'Enter') e.target.dispatchEvent(new Event('change')); });
+    $('char-in').addEventListener('input', e => { const ch = e.target.value; if (ch) setInput(ch.charCodeAt(0)); });
+    $('cpu').addEventListener('change', e => {
+        if (!e.target.closest('input[data-cell]')) return;
+        const c = W.cells.find(x => x.addr === 0x4200);
+        if (!c) return;
+        inputs[mode] = c.initial & 0xFF;
+        syncInputBoxes(); hints(); renderPaper(); updateRecord();
+    });
+    function sampleLabel(s) {
+        const v = h2(s.inputs[0x4200]);
+        if (mode === 'a2h') return s.name + ' = ' + v + 'H';
+        if (s.name.indexOf(v) >= 0) return s.name;
+        return s.name + ' (' + v + (mode === 'd2h' ? '' : 'H') + ')';
+    }
+    function renderSamples() {
+        $('samples').innerHTML = PROG[mode].samples.map((s, i) => '<button class="btn btn-sm" data-sample="' + i + '">' + sampleLabel(s) + '</button>').join('');
+    }
+    $('samples').addEventListener('click', e => {
+        const b = e.target.closest('[data-sample]');
+        if (b) setInput(PROG[mode].samples[Number(b.dataset.sample)].inputs[0x4200]);
+    });
+
+    // jump buttons for the counting loop
+    function stepUntil(pred, max) {
+        W.pause();
+        if (W.machine.halted) W.reset();
+        for (let k = 0; k < max && !W.machine.halted; k++) { const info = W.step(); if (info && pred(info)) break; }
+    }
+    $('jump-daa').addEventListener('click', () => stepUntil(i => i.mn === 'DAA' && i.after.A !== i.before.A, 600));
+    $('jump-loop').addEventListener('click', () => stepUntil(i => i.mn === 'CMP M', 60));
+
+    function setMode(t) {
+        mode = t;
+        CFG.stuckHint = INFO[t].stuck;
+        W.setCells(cellsFor(t));
+        W.setSource(PROG[t].source);
+        const counting = t === 'd2h' || t === 'h2d';
+        $('in-lab').textContent = INFO[t].lab;
+        $('char-wrap').hidden = t !== 'a2h';
+        $('vis-title').textContent = INFO[t].title;
+        $('vis-counter').hidden = !counting;
+        $('vis-bits').hidden = counting;
+        $('ascii-card').hidden = counting;
+        $('memmap').innerHTML = 'Memory: ' + INFO[t].map + ' Type a number above, click an example, or type straight into the kit’s memory table.';
+        $('ctr-a-box').querySelector('.ctr-name').innerHTML = 'A' + (t === 'h2d' ? ' (and C)' : '') + ' — counts in <b>decimal</b> (BCD)';
+        syncInputBoxes(); renderSamples(); hints(); renderPaper();
+        $('prog-notes').innerHTML = (PROG[t].notes || []).concat(PAGE_NOTES[t] || []).map(x => '<div class="note warn"><span class="note-tag">Check your record</span>' + x + '</div>').join('');
+        scheduleRender();
+    }
+    MSC.onTab('conv', t => { if (t !== mode) setMode(t); });
+
+    // ------------------------------------------------------------------ record
+    const OUTS = { d2h: [0x4201], h2d: [0x4201, 0x4202], h2a: [0x4201, 0x4202], a2h: [0x4201] };
+    function runOf(k) { try { return CPU8085.run(PROG[k].source, { 0x4200: inputs[k] }, { maxSteps: 20000 }); } catch (e) { return { halted: false, error: e.message, mem: new Uint8Array(65536) }; } }
+    function ioTable(k, m) {
+        const outs = OUTS[k], ok = m.halted && !m.error;
+        const rows = outs.map((a, i) => [i === 0 ? h4(0x4200) : '', i === 0 ? h2(inputs[k]) : '', h4(a), ok ? h2(m.mem[a]) : '??']);
+        return MSC.table([[{ t: 'Input', colspan: 2 }, { t: 'Output', colspan: 2 }], ['Address', 'Data', 'Address', 'Data']], rows.map(r => r.map(t => ({ t, cls: 'mono' })))) +
+            (ok ? '' : '<div class="note warn"><span class="note-tag">Program did not stop</span>The input ' + h2(inputs[k]) + ' is not valid for this conversion — see the hint above.</div>');
+    }
+    function verLine(k, m) {
+        const v = inputs[k], ok = m.halted && !m.error;
+        if (!ok) return '';
+        if (k === 'd2h') { const n = bcd2dec(v), o = m.mem[0x4201]; return 'Verification: ' + h2(o) + 'H = ' + nib(o, 1) + ' × 16 + ' + nib(o, 0) + ' = ' + o + (n === o ? ' ✓ (the given decimal number ' + h2(v) + ')' : ''); }
+        if (k === 'h2d') return 'Verification: ' + h2(v) + 'H = ' + nib(v, 1) + ' × 16 + ' + nib(v, 0) + ' = ' + v + ' → 4202H = ' + h2(m.mem[0x4202]) + ', 4201H = ' + h2(m.mem[0x4201]) + ' ✓';
+        if (k === 'h2a') return 'Verification: ' + h2(v) + 'H has the digits ' + hx(nib(v, 1)) + ' and ' + hx(nib(v, 0)) + ' → ASCII ' + h2(m.mem[0x4202]) + 'H (“' + chr(m.mem[0x4202]) + '”) and ' + h2(m.mem[0x4201]) + 'H (“' + chr(m.mem[0x4201]) + '”) ✓';
+        return 'Verification: ' + h2(v) + 'H (“' + chr(v) + '”) − 30H' + (((v - 0x30) & 0xFF) >= 0x0A ? ' − 07H' : '') + ' = ' + h2(m.mem[0x4201]) + 'H';
+    }
+    function updateRecord() {
+        const M = {};
+        ['d2h', 'h2d', 'h2a', 'a2h'].forEach(k => {
+            M[k] = runOf(k);
+            $('alg-' + k).innerHTML = PROG[k].algorithm.map(s => '<li>' + s + '</li>').join('');
+            $('prog-' + k).innerHTML = CPU8085.listingHTML(CPU8085.assemble(PROG[k].source));
+            $('io-' + k).innerHTML = ioTable(k, M[k]);
+            $('ver-' + k).innerHTML = verLine(k, M[k]);
+        });
+        const ok = (k) => M[k].halted && !M[k].error, o = (k, a) => (ok(k) ? h2(M[k].mem[a]) : '??');
+        $('rec-result').innerHTML = 'Thus the assembly language programs for code conversion were written and executed using the 8085 microprocessor, and the results were verified: ' +
+            'decimal ' + h2(inputs.d2h) + ' → ' + o('d2h', 0x4201) + 'H; ' +
+            h2(inputs.h2d) + 'H → ' + (ok('h2d') ? parseInt(hx(M.h2d.mem[0x4202]) + h2(M.h2d.mem[0x4201]), 10) : '??') + ' (decimal); ' +
+            h2(inputs.h2a) + 'H → ASCII ' + o('h2a', 0x4202) + 'H, ' + o('h2a', 0x4201) + 'H; ' +
+            'ASCII ' + h2(inputs.a2h) + 'H (“' + chr(inputs.a2h) + '”) → ' + o('a2h', 0x4201) + 'H.';
+    }
+
+    // ------------------------------------------------------------------ diagrams
+    [['fd2h', P.decToHex.flowchart, 'Flowchart — decimal to hexadecimal'], ['fh2d', P.hexToDec.flowchart, 'Flowchart — hexadecimal to decimal'],
+        ['fh2a', P.hexToAscii.flowchart, 'Flowchart — hexadecimal to ASCII (main program)'], ['fsub', P.hexToAscii.subFlowchart, 'Flowchart — subroutine SUB (one hex digit → ASCII)'],
+        ['fa2h', P.asciiToHex.flowchart, 'Flowchart — ASCII to hexadecimal']].forEach(([name, spec, title]) => {
+        const f = MSC.flowchart(Object.assign({ cx: 300 }, spec));
+        MSC.diagram('#draw-' + name, { name, title, viewBox: f.viewBox, steps: f.steps, maxHeight: 900 });
+    });
+
+    // ------------------------------------------------------------------ viva
+    MSC.viva('#viva-list', [
+        { q: 'What is BCD?', a: 'Binary coded decimal: each decimal digit is written with its own 4 bits (0000–1001). Decimal 21 is 0010 0001 in BCD, which looks like 21H — but the true binary value of 21 is 15H.' },
+        { q: 'What does the DAA instruction do?', a: 'Decimal Adjust Accumulator: after an addition it corrects A to valid BCD. It adds 06H if the lower digit is more than 9 or AC = 1, and 60H if the upper digit is more than 9 or CY = 1 (then CY is set).' },
+        { q: 'How does the decimal-to-hex program work?', a: 'It counts up in two registers at the same time: B counts in plain binary (hex) and A counts in BCD (ADI 01H + DAA). When A equals the given decimal number, B holds the same count in hex.' },
+        { q: 'Why is ADI 01H used and not INR A?', a: 'DAA must follow an addition, because it uses the AC and CY flags set by it. INR A does not change CY, so the carry out of 99 → 100 needed for the hundreds would be lost.' },
+        { q: 'Why is the C register used in the hex-to-decimal program?', a: 'An 8-bit number can be up to FFH = 255, which has three decimal digits. A holds only two BCD digits (tens and units); the carry from DAA (CY = 1 after 99) is counted in C as the hundreds digit.' },
+        { q: 'Why does the program save A in D before CMP M (hex to decimal)?', a: 'CMP M compares the accumulator, but the hex count is in B. So A is saved in D, B is copied into A for the comparison, and A is restored from D — MOV does not change the flags, so JNZ still tests the result of CMP.' },
+        { q: 'What is ASCII? What are the codes of “0” and “A”?', a: 'American Standard Code for Information Interchange — a 7-bit code for letters, digits and symbols. “0”–“9” are 30H–39H and “A”–“F” are 41H–46H.' },
+        { q: 'Why is 07H added for the digits A–F?', a: 'Between “9” (39H) and “A” (41H) there are seven other characters (: ; < = > ? @, codes 3AH–40H). So a letter needs 30H + 07H = 37H added, e.g. 0AH + 37H = 41H (“A”).' },
+        { q: 'What do ANI 0FH and ANI F0H do?', a: 'They mask the byte. ANI 0FH (AND 0000 1111) clears the upper nibble and keeps the lower digit; ANI F0H (AND 1111 0000) clears the lower nibble and keeps the upper digit.' },
+        { q: 'Why is RLC used four times?', a: 'Each RLC rotates A left by one bit. Four rotations move the upper nibble into the lower nibble (the masked-off zeros come round to the top), so the upper digit can be converted like the lower one.' },
+        { q: 'Why is a subroutine used in the hex-to-ASCII program?', a: 'The same conversion is needed for both digits. CALL SUB saves the return address on the stack and jumps to the routine; RET takes the address back from the stack and returns.' },
+        { q: 'What does CPI 0AH do?', a: 'It compares A with 0AH by computing A − 0AH without changing A. CY = 1 if A < 0AH (a digit 0–9); CY = 0 if A ≥ 0AH (a letter A–F). JC then chooses the path.' },
+    ]);
+
+    setMode('d2h');
+    updateRecord();
+    render();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Wedge - Thickness of a Thin Wire - M.Sc. Practicals - Science Lab</title>
+    <meta name="description" content="Interactive air wedge experiment: sodium-light interference fringes, a travelling microscope with a 50-division vernier, Table I and the thickness of a thin wire t = Lλ/2β — with draw-along diagrams, record sheet and viva.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/msc.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F50D;</text></svg>">
+    <style>
+        :root { --accent: #00897B; --accent-soft: rgba(0, 137, 123, 0.12); --accent-border: rgba(0, 137, 123, 0.5); --ray: #E68A00; }
+        /* set-up (side view) and film inset */
+        #setup .glass, #film .glass { fill: rgba(0, 137, 123, 0.10); stroke-width: 1.4; }
+        #setup .ray, #film .ray { stroke: var(--ray); stroke-width: 2.4; stroke-dasharray: 9 5; fill: none; }
+        #setup .ray.up, #film .ray.up { stroke: #B26A00; stroke-width: 1.8; stroke-dasharray: 4 5; }
+        #setup .rayhead, #film .rayhead { fill: var(--ray); stroke: var(--ray); stroke-width: 1; }
+        #setup .wire { fill: #6D4C41; stroke: #3E2723; }
+        #setup text.wl { fill: #fff; }
+        #setup .tie { stroke: var(--logic1); stroke-width: 2.2; fill: none; }
+        #setup .lamp { fill: #455A64; stroke: #263238; }
+        #setup .bulb, #film .bulb { fill: #FFC400; stroke: #E6A100; }
+        #setup .glow { fill: url(#glowG); stroke: none; }
+        #setup .rail { fill: #E3E7EE; stroke: #90A4AE; stroke-width: 1; }
+        #setup .ruler { fill: #FFF6DC; stroke: #A1887F; stroke-width: 1; }
+        #setup .tick { stroke-width: 1; }
+        #setup .mark { stroke: var(--accent); stroke-width: 3; }
+        #setup .scope rect { fill: #fff; }
+        #setup .hit { fill: transparent; stroke: none; cursor: ew-resize; }
+        #film { display: block; width: 100%; height: auto; }
+        .film-eq p { font-size: 0.88rem; margin-top: 0.35rem; }
+        .film-eq .formula { font-size: 1.05rem; }
+        /* microscope */
+        #fov { cursor: grab; }
+        #fov:active { cursor: grabbing; }
+        #fov:focus-visible, #vernier:focus-visible { outline: 3px solid var(--accent-border); outline-offset: -3px; }
+        #vernier { cursor: ew-resize; }
+        .readout .rd-val.sm { font-family: var(--font-body); font-weight: 800; font-size: 0.9rem; color: var(--ink); }
+        .readout .rd-val.sm.ok { color: var(--good); }
+        .coarse { align-items: stretch !important; width: 100%; }
+        .coarse input[type="range"] { width: 100%; }
+        .fine .btn { min-width: 4.3rem; justify-content: center; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+        .check-row { display: flex; gap: 0.45rem; flex-wrap: wrap; align-items: center; font-weight: 800; font-size: 0.86rem; }
+        .check-row input { width: 5rem; }
+        .sub { font-family: var(--font-body); font-size: 0.8rem; color: var(--ink-soft); font-weight: 700; }
+        .table-wrap small { color: var(--ink-soft); font-size: 0.7rem; font-family: var(--font-body); }
+        table.obs td.warnc { color: var(--warn); font-weight: 800; }
+        table.obs td.nw { white-space: nowrap; }
+        .avg-line { font-weight: 800; margin-top: 0.45rem; font-size: 0.9rem; }
+        .demo-ctl { display: flex; flex-wrap: wrap; gap: 0.9rem 1.6rem; justify-content: center; margin-top: 0.7rem; }
+        .fr { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; line-height: 1.15; margin: 0 0.15em; }
+        .fr > span:first-child { border-bottom: 1.5px solid currentColor; padding: 0 0.25em; }
+        .reveal-row { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-top: 0.6rem; }
+        .small-note { font-size: 0.8rem; color: var(--ink-soft); margin-top: 0.4rem; }
+        .calc-line b { font-family: var(--font-body); }
+    </style>
+</head>
+<body>
+    <header class="top-bar">
+        <a href="index.html" class="back-btn">&larr; Practicals</a>
+        <div class="exp-heading">
+            <span class="exp-chip">Practical II &middot; Exp 3</span>
+            <h1 class="exp-title">&#x1F50D; Air Wedge — Thickness of a Thin Wire</h1>
+        </div>
+        <a href="../../index.html" class="back-btn">&#x1F3E0; Lab</a>
+    </header>
+    <p class="big-idea">Two optically plane glass plates touch at one end and a thin wire props them apart at the other, trapping a <strong>wedge of air</strong>.
+        Sodium light reflected from the top and bottom of this film <strong>interferes</strong>, giving straight, equally spaced fringes. Measure the fringe width β with a
+        travelling microscope and the wire’s thickness follows: <strong style="white-space:nowrap">t = Lλ / 2β</strong>.</p>
+    <nav class="section-nav">
+        <a href="#simulate">&#x1F52C; Simulate</a><a href="#draw">&#x270F;&#xFE0F; Draw it</a><a href="#record">&#x1F4DD; Record</a><a href="#viva">&#x1F3A4; Viva</a>
+    </nav>
+
+    <main>
+        <!-- ================= SIMULATE ================= -->
+        <section id="simulate" class="block">
+            <h2 class="block-title">&#x1F52C; Simulate <span class="hint-inline">Drag the microscope (or the fringes in the eyepiece) across the wedge, set the cross-wire on every 5th dark band, read the vernier and record.</span></h2>
+            <div class="grid-2">
+                <div class="stage"><svg id="setup" class="pen" viewBox="0 0 900 456" role="img" aria-label="Side view of the air wedge set-up with sodium lamp, condensing lens, 45 degree glass plate and travelling microscope"></svg></div>
+                <div class="card">
+                    <h3>Inside the air film</h3>
+                    <svg id="film" class="pen" viewBox="0 0 440 300" role="img" aria-label="Two reflected rays from the air film"></svg>
+                    <div class="film-eq">
+                        <p><b>①</b> reflects at <b>P</b>, the lower surface of the upper plate (glass → air): <b>no</b> phase change.<br>
+                            <b>②</b> reflects at <b>Q</b>, the upper surface of the lower plate (air → glass): phase change of <b>π</b>, i.e. an extra λ/2.</p>
+                        <div class="formula">Path difference Δ = 2t + λ/2 <span class="up">(air, normal incidence)</span></div>
+                        <p>Dark fringe: Δ = (2n + 1)λ/2 &rArr; <b>2t = nλ</b> &nbsp;·&nbsp; Bright fringe: 2t = (2n − 1)λ/2</p>
+                        <p>At the tied end t = 0, so Δ = λ/2 and the edge of contact is <b>dark</b>. Along a line parallel to that edge t is constant, so each fringe is a straight line; t grows uniformly with distance, so the fringes are equally spaced.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="ctl"><span class="ctl-label">Wire distance L (from the tied end)</span><span class="ctl-value" id="L-val">6.0 cm</span><input type="range" id="L" min="4" max="8" step="0.1" value="6" aria-label="Distance L between tied end and wire"></div>
+                <div class="btn-row">
+                    <button class="btn" id="new-wire">&#x1F3B2; New wire (new unknown thickness)</button>
+                </div>
+            </div>
+
+            <!-- microscope -->
+            <div class="grid-2" style="margin-top:1rem">
+                <div class="stack">
+                    <div class="stage"><canvas id="fov" tabindex="0" aria-label="Microscope field of view: drag sideways or use the arrow keys to move the microscope"></canvas></div>
+                    <div class="stage"><canvas id="vernier" aria-label="Travelling microscope main scale and vernier with a reading lens"></canvas></div>
+                </div>
+                <div class="stack">
+                    <div class="card">
+                        <h3>Travelling microscope</h3>
+                        <div class="readout">
+                            <div class="rd"><div class="rd-label">Vertical cross-wire</div><div class="rd-val sm" id="rd-cross">—</div></div>
+                            <div class="rd"><div class="rd-label">Dark fringes crossed since n</div><div class="rd-val" id="rd-count">—</div></div>
+                            <div class="rd"><div class="rd-label">Next reading</div><div class="rd-val sm" id="rd-next">—</div></div>
+                        </div>
+                        <div class="ctl coarse" style="margin-top:0.8rem">
+                            <span class="ctl-label">Coarse traverse (slide the carriage)</span>
+                            <input type="range" id="coarse" min="0" max="10" step="0.001" value="3" aria-label="Coarse microscope position">
+                        </div>
+                        <div class="ctl" style="margin-top:0.6rem">
+                            <span class="ctl-label">Fine screw (hold to keep turning)</span>
+                            <div class="btn-row fine">
+                                <button class="btn btn-sm" data-step="-0.01" title="Back 0.01 cm">&#x23EA; 0.01</button>
+                                <button class="btn btn-sm" data-step="-0.001" title="Back 0.001 cm">&#x25C0; 0.001</button>
+                                <button class="btn btn-sm" data-step="0.001" title="Forward 0.001 cm">0.001 &#x25B6;</button>
+                                <button class="btn btn-sm" data-step="0.01" title="Forward 0.01 cm">0.01 &#x23E9;</button>
+                            </div>
+                        </div>
+                        <div class="btn-row" style="margin-top:0.8rem">
+                            <button class="btn btn-primary" id="rec-reading">&#x1F4CD; Record reading</button>
+                            <button class="btn btn-sm" id="undo">&#x21B6; Undo</button>
+                            <button class="btn btn-sm" id="clear">Clear table</button>
+                            <button class="btn btn-sm" id="auto">&#x25B6; Auto-take all 15</button>
+                        </div>
+                        <div class="note" id="msg"><span class="note-tag">How</span>Set the vertical cross-wire on the centre of any dark band — call it the n<sup>th</sup> — and record it. Then count 5 dark bands at a time and record again, up to n+70.</div>
+                        <p class="small-note">Keyboard: click the eyepiece, then ← / → move 0.001 cm (Shift = 0.01 cm) and Enter records.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Read the vernier yourself</h3>
+                        <p style="font-size:0.86rem">LC = 1 MSD / 50 = 0.05 cm / 50 = <b>0.001 cm</b>. MSR = main-scale mark just before the vernier zero; VSC = the vernier line that lines up with a main-scale mark. Drag the reading lens to see it magnified.</p>
+                        <div class="check-row" style="margin-top:0.5rem">
+                            <label>MSR <input id="in-msr" class="field mono" inputmode="decimal" placeholder="2.35"> cm</label>
+                            <label>VSC <input id="in-vsc" class="field mono" inputmode="numeric" placeholder="27"> div</label>
+                            <button class="btn btn-sm btn-primary" id="check">Check</button>
+                            <button class="btn btn-sm" id="show-rd">&#x1F441;&#xFE0F; Show my reading</button>
+                        </div>
+                        <div id="check-msg"></div>
+                        <p class="calc-line" id="true-rd" style="margin-top:0.4rem"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2-even" style="margin-top:1rem">
+                <div class="card">
+                    <h3>Table I — to determine the fringe width β <span class="sub">(LC = 0.001 cm)</span></h3>
+                    <div id="obs-sim"></div>
+                </div>
+                <div class="stack">
+                    <div class="card">
+                        <h3>Microscope reading vs fringe order</h3>
+                        <div class="stage"><canvas id="graph" aria-label="Graph of microscope reading against fringe order"></canvas></div>
+                        <p class="small-note" id="slope-line">A straight line shows the fringes are equally spaced; its slope is the fringe width β.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Calculation</h3>
+                        <div id="sim-calc"></div>
+                        <div class="reveal-row"><button class="btn btn-sm" id="reveal">&#x1F513; Reveal the true thickness</button></div>
+                        <div id="reveal-out"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:1rem">
+                <h3>Thicker wire &rarr; narrower fringes <span class="sub">(a separate demo — not your hidden wire)</span></h3>
+                <div class="stage"><canvas id="demo" aria-label="Demo: wedge angle and fringe width"></canvas></div>
+                <div class="demo-ctl">
+                    <div class="ctl"><span class="ctl-label">Wire thickness t</span><span class="ctl-value" id="dt-val">0.050 mm</span><input type="range" id="dt" min="0.02" max="0.15" step="0.005" value="0.05"></div>
+                    <div class="ctl"><span class="ctl-label">Wire distance L</span><span class="ctl-value" id="dl-val">6.0 cm</span><input type="range" id="dl" min="2" max="10" step="0.5" value="6"></div>
+                </div>
+                <div class="readout" id="demo-rd" style="margin-top:0.7rem"></div>
+                <div class="note"><span class="note-tag">Idea</span>β = λL / 2t = λ / 2 tan θ. A thicker wire, or the same wire pushed closer to the tied end, makes the wedge steeper, so the film thickness changes by λ/2 over a shorter distance and the fringes crowd together.</div>
+            </div>
+        </section>
+
+        <!-- ================= DRAW ================= -->
+        <section id="draw" class="block">
+            <h2 class="block-title">&#x270F;&#xFE0F; Draw it <span class="hint-inline">Press ▶ Draw and copy each step into your record.</span></h2>
+            <div class="tabs" data-tabs="draw">
+                <button class="tab-btn active" data-tab="arrangement">Air wedge arrangement</button>
+                <button class="tab-btn" data-tab="fringes">Fringe pattern</button>
+                <button class="tab-btn" data-tab="geometry">Wedge geometry (formula)</button>
+                <button class="tab-btn" data-tab="vernier">Vernier reading</button>
+            </div>
+            <div class="tab-panel" data-group="draw" data-panel="arrangement" id="draw-arrangement"></div>
+            <div class="tab-panel" data-group="draw" data-panel="fringes" id="draw-fringes"></div>
+            <div class="tab-panel" data-group="draw" data-panel="geometry" id="draw-geometry"></div>
+            <div class="tab-panel" data-group="draw" data-panel="vernier" id="draw-vernier"></div>
+        </section>
+
+        <!-- ================= RECORD ================= -->
+        <section id="record" class="block">
+            <h2 class="block-title">&#x1F4DD; Record sheet</h2>
+            <div class="rec-actions no-print">
+                <button class="btn btn-sm" data-print-record>&#x1F5A8;&#xFE0F; Print record</button>
+            </div>
+            <article class="record">
+                <div class="rec-head"><div class="rec-box">Expt. No. ______<br>Date ______</div><div class="rec-box">Page No. ______</div></div>
+                <h2 class="rec-title">THICKNESS OF A THIN WIRE — AIR WEDGE</h2>
+
+                <h3>Aim</h3>
+                <p>To calculate the thickness of a thin wire by forming interference fringes using an air wedge arrangement.</p>
+
+                <h3>Apparatus required</h3>
+                <p>Two optically plane glass plates, sodium vapour lamp, a thin wire, condensing lens, travelling microscope, reading lens.</p>
+
+                <h3>Formula</h3>
+                <div class="formula">Thickness of the thin wire &nbsp;t = <span class="fr"><span>Lλ</span><span>2β</span></span> <span class="up">(m)</span></div>
+                <p>where L = distance between the tied end and the wire (m), β = fringe width (m), λ = wavelength of the sodium light (5893 × 10<sup>−10</sup> m).</p>
+
+                <h3>Least count of the travelling microscope</h3>
+                <p class="calc-line">Least count (LC) = value of 1 main scale division (MSD) / number of divisions on the vernier</p>
+                <p class="calc-line">20 MSD = 1 cm &nbsp;⇒&nbsp; value of 1 MSD = 1/20 cm = 0.05 cm</p>
+                <p class="calc-line">Number of divisions on the vernier = 50</p>
+                <p class="calc-line">LC = 0.05 / 50 = <b>0.001 cm</b></p>
+
+                <h3>Principle</h3>
+                <p>When a wedge-shaped air film between two optically plane glass plates is illuminated normally with monochromatic light, the rays reflected from the lower surface
+                    of the upper plate and from the upper surface of the lower plate interfere. Their path difference is 2t + λ/2 (the λ/2 comes from the phase change of π on
+                    reflection at the denser lower plate), so a dark fringe is formed wherever 2t = nλ. Since the thickness of the film is constant along lines parallel to the edge of
+                    contact and increases uniformly away from it, the fringes are straight, parallel to the edge and equally spaced (fringes of equal thickness). The fringe width is
+                    β = λ / (2 tan θ), and with tan θ = t / L the thickness of the wire is t = Lλ / 2β.</p>
+
+                <h3>Diagram</h3>
+                <div class="rec-diagram" data-diagram="arrangement"></div>
+                <div class="rec-diagram" data-diagram="fringes"></div>
+
+                <h3>Procedure</h3>
+                <ol>
+                    <li>Two optically plane glass plates are placed one over the other and tied at one end. The given wire is introduced near the other end, so that an air wedge is formed.</li>
+                    <li>The distance L between the wire and the tied end is measured using a scale.</li>
+                    <li>Light from a sodium vapour lamp, made parallel by a condensing lens, is incident on a plane glass plate inclined at 45° to the horizontal.</li>
+                    <li>The light reflected from the plane glass plate is incident normally on the optically plane glass plates forming the air wedge and is reflected back.</li>
+                    <li>The reflected light from the air wedge is viewed through the eyepiece of the travelling microscope. The microscope is moved up and down and adjusted until clear interference fringes of alternate dark and bright bands are seen.</li>
+                    <li>The microscope is fixed so that the vertical cross-wire coincides with a dark band (say the n<sup>th</sup> band) and the reading is noted.</li>
+                    <li>The microscope is moved across the fringes and readings are noted when the vertical cross-wire coincides with the (n+5)<sup>th</sup>, (n+10)<sup>th</sup> … (n+70)<sup>th</sup> dark bands.</li>
+                    <li>The observed readings are tabulated; the width of 30 fringes S is found and the band width β = S / 30 is calculated.</li>
+                    <li>The thickness of the given wire is calculated using the formula t = Lλ / 2β.</li>
+                </ol>
+
+                <h3>Observations</h3>
+                <p class="calc-line" id="rec-obs"></p>
+                <p style="margin-top:0.5rem"><b>Table I — To determine the fringe width (β)</b> &nbsp; L.C = 0.001 cm</p>
+                <div id="obs-rec"></div>
+
+                <h3>Calculation</h3>
+                <div id="rec-calc"></div>
+
+                <h3>Result</h3>
+                <div class="result-box" id="rec-result"></div>
+
+                <h3>Precautions</h3>
+                <ol>
+                    <li>The glass plates must be optically plane and clean; the wire is placed parallel to the tied edge.</li>
+                    <li>The microscope is focused on the air film until sharp dark and bright bands are seen, with the vertical cross-wire parallel to the fringes.</li>
+                    <li>The microscope screw is turned in one direction only while taking readings, to avoid backlash error.</li>
+                    <li>The fringes are counted carefully without missing any, and the cross-wire is set at the centre of each dark band.</li>
+                    <li>L is measured from the edge of contact (tied end) to the wire.</li>
+                </ol>
+            </article>
+        </section>
+
+        <!-- ================= VIVA ================= -->
+        <section id="viva" class="block">
+            <h2 class="block-title">&#x1F3A4; Viva voce</h2>
+            <div id="viva-list"></div>
+        </section>
+    </main>
+
+    <footer class="page-footer">Practical II &middot; Exp 3 &bull; Simplified model for learning &mdash; values are illustrative</footer>
+
+    <script src="assets/msc-common.js"></script>
+    <script>
+    'use strict';
+    const S = MSC.sym;
+    const $ = (id) => document.getElementById(id);
+
+    // ------------------------------------------------------------------ constants & state (lengths in cm unless stated)
+    const LAM_M = 5893e-10, LAM_CM = 5.893e-5;                   // sodium light
+    const MSD = 0.05, NV = 50, LC = MSD / NV, VSD = MSD * (NV - 1) / NV;   // 50 VSD = 49 MSD → LC = 0.001 cm
+    const ORDERS = Array.from({ length: 15 }, (_, k) => (k === 0 ? 'n' : 'n+' + 5 * k));
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    const state = { t: 0.005, L: 6, Redge: 1.8, R: 3.5, rows: [], dir: 0, revealed: false, showRd: false, lensOff: 0.15 };
+    const dirty = { setup: true, fov: true, ver: true, graph: true, demo: true };
+
+    const beta = () => LAM_CM * state.L / (2 * state.t);           // fringe width (cm)
+    const phaseAt = (R) => (R - state.Redge) / beta();              // dark-fringe order under the cross-wire
+    const rMin = () => state.Redge - 0.4;
+    const rMax = () => state.Redge + state.L + 0.8;
+    /* What the vernier shows: nearest 0.001 cm; MSR = mark before the zero, VSC = coinciding line. */
+    function reading(R) {
+        const q = Math.round(R / LC);
+        const vsc = ((q % NV) + NV) % NV;
+        return { q, msr: (q - vsc) * LC, vsc, cr: q * LC };
+    }
+    function sci(v, sig) {
+        if (!isFinite(v) || v === 0) return '0';
+        let e = Math.floor(Math.log10(Math.abs(v))), m = v / Math.pow(10, e);
+        if (Number(Math.abs(m).toFixed(sig - 1)) >= 10) { e += 1; m /= 10; }
+        return m.toFixed(sig - 1) + ' × 10<sup>' + (e < 0 ? '−' + (-e) : e) + '</sup>';
+    }
+    const ordName = (x) => (Math.abs(x) < 0.05 ? 'n' : x > 0 ? 'n+' + x.toFixed(1) : 'n−' + (-x).toFixed(1));
+
+    /* Canvas fitted to its container; the logical size may depend on the width (bigger text on phones). */
+    function fitCanvas(canvas, pick) {
+        const ctx = canvas.getContext('2d');
+        const api = { ctx, W: 0, H: 0, scale: 1, dirty: true };
+        function fit() {
+            const w = canvas.parentElement.clientWidth;
+            if (!w) return;
+            const d = pick(w), dpr = Math.min(window.devicePixelRatio || 1, 2);
+            api.W = d.W; api.H = d.H;
+            canvas.style.width = w + 'px';
+            canvas.style.height = Math.round(w * d.H / d.W) + 'px';
+            canvas.width = Math.round(w * dpr);
+            canvas.height = Math.round(w * d.H / d.W * dpr);
+            api.scale = canvas.width / d.W;
+            api.dirty = true;               // resizing clears the bitmap, so always redraw
+        }
+        api.begin = () => ctx.setTransform(api.scale, 0, 0, api.scale, 0, 0);
+        api.pt = (e) => { const r = canvas.getBoundingClientRect(); return { x: (e.clientX - r.left) * api.W / r.width, y: (e.clientY - r.top) * api.H / r.height }; };
+        if ('ResizeObserver' in window) new ResizeObserver(fit).observe(canvas.parentElement); else window.addEventListener('resize', fit);
+        fit();
+        return api;
+    }
+
+    // ------------------------------------------------------------------ side view of the set-up
+    const SV = { K: 52, XE: 110, YB: 372, RW: 15, TH: 12 };          // 52 px per cm along the wedge; thickness exaggerated
+    function setupMarkup() {
+        const L = state.L, xw = SV.XE + L * SV.K, xEnd = xw + 42, rise = 2 * SV.RW;
+        const yL = (x) => SV.YB - rise * (x - SV.XE) / (xw - SV.XE);
+        const filmY = (x) => (x < SV.XE || x > xEnd ? SV.YB : yL(x));
+        const Xm = SV.XE + (state.R - state.Redge) * SV.K;
+        let s = '<defs><radialGradient id="glowG"><stop offset="0" stop-color="#FFD54F" stop-opacity="0.95"/><stop offset="1" stop-color="#FFD54F" stop-opacity="0"/></radialGradient></defs>';
+        s += S.text(892, 16, 'Side view · film thickness exaggerated', { anchor: 'end', size: 13, cls: 'soft' });
+        // rail of the travelling microscope
+        s += S.rect(50, 96, 620, 10, { rx: 4, cls: 'rail' });
+        s += S.text(56, 84, 'microscope carriage slides ↔ along its main scale', { anchor: 'start', size: 12, cls: 'soft' });
+        // sodium lamp + condensing lens
+        s += '<circle cx="806" cy="215" r="46" class="glow"/>';
+        s += S.rect(808, 180, 72, 72, { rx: 10, cls: 'lamp' }) + S.circle(808, 215, 11, 'bulb');
+        s += S.text(844, 166, 'Sodium lamp S', { size: 14 }) + S.text(844, 268, 'λ = 5893 Å', { size: 13, cls: 'soft' });
+        s += S.path('M700,168 Q718,215 700,262 Q682,215 700,168 Z', 'glass') + S.text(700, 282, 'Condensing lens', { size: 13 });
+        // lower plate, upper plate, wire, tie
+        s += S.rect(SV.XE, SV.YB, 540, 14, { cls: 'glass' });
+        s += S.poly([[SV.XE, SV.YB], [xEnd, yL(xEnd)], [xEnd, yL(xEnd) - SV.TH], [SV.XE, SV.YB - SV.TH]], 'glass');
+        s += S.circle(xw, SV.YB - SV.RW, SV.RW, 'wire') + S.text(xw, SV.YB - SV.RW, 'w', { size: 13, cls: 'wl' });
+        s += S.rect(SV.XE - 6, SV.YB - SV.TH - 5, 13, SV.TH + 24, { rx: 4, cls: 'tie' });
+        s += S.text(SV.XE - 12, SV.YB - 24, 'tied end', { anchor: 'end', size: 12 });
+        s += S.text(656, SV.YB + 8, 'L_1', { anchor: 'start', size: 14 }) + S.text(xEnd + 6, yL(xEnd) - 8, 'L_2', { anchor: 'start', size: 14 });
+        s += S.text(xw - 58, SV.YB - 7, 'air film', { size: 11, cls: 'soft' });
+        const a = Math.atan(rise / (xw - SV.XE));
+        s += S.path('M' + (SV.XE + 80) + ',' + SV.YB + ' A80,80 0 0 0 ' + (SV.XE + 80 * Math.cos(a)).toFixed(2) + ',' + (SV.YB - 80 * Math.sin(a)).toFixed(2), 'thin');
+        s += S.text(SV.XE + 88, SV.YB - 8, 'θ', { anchor: 'start', size: 15, italic: true });
+        // metre scale for L
+        const ry = 392;
+        s += S.rect(SV.XE - 8, ry, 9.6 * SV.K + 16, 22, { cls: 'ruler' });
+        let d = '';
+        for (let mm = 0; mm <= 95; mm++) { const x = SV.XE + mm * SV.K / 10; d += 'M' + x.toFixed(1) + ',' + ry + 'v' + (mm % 10 === 0 ? 10 : mm % 5 === 0 ? 7 : 4); }
+        s += S.path(d, 'tick');
+        for (let cm = 0; cm <= 9; cm++) s += S.text(SV.XE + cm * SV.K, ry + 16, String(cm), { size: 10 });
+        s += S.text(SV.XE + 9.6 * SV.K + 14, ry + 11, 'scale (cm)', { anchor: 'start', size: 11, cls: 'soft' });
+        s += S.line(xw, SV.YB + 14, xw, ry + 22, 'mark');
+        s += S.line(SV.XE, ry + 22, SV.XE, 440, 'thin dash') + S.line(xw, ry + 22, xw, 440, 'thin dash');
+        s += S.arrow(SV.XE, 432, xw, 432, { both: true, size: 7 });
+        s += S.text((SV.XE + xw) / 2, 447, 'L = ' + L.toFixed(1) + ' cm (read on the scale)', { size: 13, cls: 'accent' });
+        // rays: lamp → lens → G → wedge → back up into T
+        [200, 215, 230].forEach((y, i) => {
+            const xh = Xm + 215 - y, yf = filmY(xh), xu = xh + 6;
+            s += S.line(798, 215, 700, y, 'ray') + S.line(700, y, xh, y, 'ray') + S.line(xh, y, xh, yf, 'ray');
+            s += S.line(xu, filmY(xu), xu, 163, 'ray up');
+            s += S.arrowHead((700 + xh) / 2 - 10 * i, y, Math.PI, 8, 'rayhead') + S.arrowHead(xh, (y + yf) / 2 + 20, Math.PI / 2, 8, 'rayhead');
+            s += S.arrowHead(xu, 180 + (yf - 180) * 0.35, -Math.PI / 2, 7, 'rayhead');
+        });
+        // microscope T + 45° plate G (moves as one)
+        s += '<g class="scope">';
+        s += S.rect(Xm - 11, 24, 22, 44, { rx: 3 }) + S.rect(Xm - 24, 66, 48, 86, { rx: 8 }) + S.rect(Xm - 15, 150, 30, 13, { rx: 2 });
+        s += S.text(Xm, 110, 'T', { size: 17 });
+        s += S.poly([[Xm - 44.55, 255.31], [Xm + 40.31, 170.45], [Xm + 44.55, 174.69], [Xm - 40.31, 259.55]], 'glass');
+        s += '</g>';
+        s += S.text(Xm + 32, 44, 'T — travelling microscope', { anchor: 'start', size: 13 });
+        s += S.text(Xm - 50, 266, 'G', { anchor: 'end', size: 15 });
+        s += S.path('M' + (Xm + 37) + ',200 A22,22 0 0 0 ' + (Xm + 30.56).toFixed(2) + ',184.44', 'thin') + S.text(Xm + 42, 186, '45°', { anchor: 'start', size: 12 });
+        s += S.rect(Xm - 50, 18, 100, 250, { cls: 'hit' });
+        return s;
+    }
+
+    function filmMarkup() {
+        const yl = (x) => 150 - 0.08 * (x - 20);
+        let s = '';
+        s += S.poly([[20, yl(20)], [420, yl(420)], [420, yl(420) - 55], [20, yl(20) - 55]], 'glass');
+        s += S.rect(20, 230, 400, 48, { cls: 'glass' });
+        s += S.text(66, 118, 'upper plate', { size: 13 }) + S.text(96, 256, 'lower plate', { size: 13 }) + S.text(330, 204, 'air film', { size: 13, cls: 'soft' });
+        s += S.arrow(392, 229, 392, yl(392) + 1, { both: true, size: 7 }) + S.text(402, 180, 't', { anchor: 'start', size: 16, italic: true });
+        const I0 = [120, 8], P = [175, yl(175)], Q = [214.2, 230];
+        s += S.line(I0[0], I0[1], P[0], P[1], 'ray') + S.line(P[0], P[1], Q[0], Q[1], 'ray');
+        s += S.line(P[0], P[1], 230, 8, 'ray up') + S.line(Q[0], Q[1], 308.4, 8, 'ray up');
+        const down = Math.atan2(129.6, 55), up = Math.atan2(-129.6, 55);
+        s += S.arrowHead(148, 74, down, 9, 'rayhead') + S.arrowHead(206, 64, up, 9, 'rayhead') + S.arrowHead(286, 60, up, 9, 'rayhead');
+        s += S.dot(P[0], P[1], 3.2) + S.dot(Q[0], Q[1], 3.2);
+        s += S.text(162, 150, 'P', { size: 13 }) + S.text(206, 244, 'Q', { anchor: 'end', size: 13 }) + S.text(222, 246, 'phase change π', { anchor: 'start', size: 11, cls: 'hot' });
+        s += S.text(112, 14, 'incident', { anchor: 'end', size: 12 });
+        s += S.circle(244, 18, 9) + S.text(244, 18, '1', { size: 12 }) + S.circle(322, 18, 9) + S.text(322, 18, '2', { size: 12 });
+        s += S.text(220, 292, '(drawn slanted for clarity — really normal incidence)', { size: 11, cls: 'soft' });
+        return s;
+    }
+    $('film').innerHTML = filmMarkup();
+
+    // ------------------------------------------------------------------ microscope field of view
+    const fov = fitCanvas($('fov'), () => ({ W: 700, H: 470 }));
+    const F = { cx: 350, cy: 235, r: 205 };
+    F.k = 2 * F.r / 0.30;                                            // field of view ≈ 3 mm → px per cm
+    function crossInfo() {
+        const ph = phaseAt(state.R), d = state.R - state.Redge;
+        if (d < -0.002) return { txt: 'Beyond the tied end — no fringes', ok: false };
+        if (Math.abs(d - state.L) < state.t / 2 + 0.002) return { txt: 'On the wire', ok: false };
+        if (d > state.L) return { txt: 'Beyond the wire', ok: false };
+        const f = ph - Math.round(ph), a = Math.abs(f);
+        if (a < 0.07) return { txt: 'Centred on a dark band ✓', ok: true };
+        if (a < 0.2) return { txt: 'Near a dark band — fine-adjust ' + (f > 0 ? '◀' : '▶'), ok: false };
+        if (a > 0.4) return { txt: 'On a bright band', ok: false };
+        return { txt: 'Between bands', ok: false };
+    }
+    function counter() {
+        if (!state.rows.length) return null;
+        const m0 = Math.round(state.rows[0].ph), rel = phaseAt(state.R) - m0;
+        const dir = state.dir || (rel >= 0 ? 1 : -1);
+        return { rel, dir, crossed: Math.round(dir * rel) };
+    }
+    function drawFOV() {
+        const { ctx } = fov;
+        fov.begin();
+        ctx.clearRect(0, 0, 700, 470);
+        ctx.fillStyle = '#FBFAFF'; ctx.fillRect(0, 0, 700, 470);
+        ctx.fillStyle = '#2B2F3A'; ctx.beginPath(); ctx.arc(F.cx, F.cy, F.r + 22, 0, Math.PI * 2); ctx.fill();
+        ctx.save();
+        ctx.beginPath(); ctx.arc(F.cx, F.cy, F.r, 0, Math.PI * 2); ctx.clip();
+        const b = beta(), L = state.L, t = state.t, R = state.R, E = state.Redge;
+        for (let x = Math.floor(F.cx - F.r); x < F.cx + F.r; x++) {
+            const d = R + (x + 0.5 - F.cx) / F.k - E;
+            let col;
+            if (Math.abs(d - L) < t / 2) {                                   // the wire, seen from above
+                const u = (d - L) / (t / 2), v = 40 + 55 * (1 - u * u);
+                col = 'rgb(' + Math.round(v * 1.15) + ',' + Math.round(v * 0.8) + ',' + Math.round(v * 0.55) + ')';
+            } else {
+                const I = (d < 0 || d > L + 0.8) ? 0.42 : Math.pow(Math.sin(Math.PI * d / b), 2);
+                col = 'rgb(' + Math.round(38 + 217 * I) + ',' + Math.round(26 + 170 * I) + ',' + Math.round(4 + 36 * I) + ')';
+            }
+            ctx.fillStyle = col;
+            ctx.fillRect(x, F.cy - F.r, 1.05, 2 * F.r);
+        }
+        const vg = ctx.createRadialGradient(F.cx, F.cy, F.r * 0.55, F.cx, F.cy, F.r);
+        vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.5)');
+        ctx.fillStyle = vg; ctx.fillRect(F.cx - F.r, F.cy - F.r, 2 * F.r, 2 * F.r);
+        // landmarks
+        ctx.font = '800 15px Nunito, sans-serif'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+        ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 4; ctx.fillStyle = '#fff';
+        const xe = F.cx + (E - R) * F.k, xw = F.cx + (E + L - R) * F.k;
+        if (xe > F.cx - F.r + 10 && xe < F.cx + F.r - 60) ctx.fillText('← edge of contact', xe + 6, F.cy + F.r * 0.62);
+        if (xw > F.cx - F.r + 10 && xw < F.cx + F.r - 40) ctx.fillText('← wire', xw + t * F.k / 2 + 6, F.cy + F.r * 0.62);
+        ctx.shadowBlur = 0;
+        // cross-wires
+        ctx.strokeStyle = 'rgba(8,8,8,0.92)'; ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.moveTo(F.cx, F.cy - F.r); ctx.lineTo(F.cx, F.cy + F.r); ctx.moveTo(F.cx - F.r, F.cy); ctx.lineTo(F.cx + F.r, F.cy); ctx.stroke();
+        ctx.restore();
+        // index marks on the ring so the vertical cross-wire can be seen over a dark band
+        ctx.fillStyle = '#4DD0C4';
+        [[F.cy - F.r - 3, 1], [F.cy + F.r + 3, -1]].forEach(([y, s]) => { ctx.beginPath(); ctx.moveTo(F.cx, y); ctx.lineTo(F.cx - 9, y - 15 * s); ctx.lineTo(F.cx + 9, y - 15 * s); ctx.closePath(); ctx.fill(); });
+        // margin texts
+        ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+        ctx.fillStyle = '#5F5F6E'; ctx.font = '800 13px Nunito, sans-serif';
+        ctx.fillText('EYEPIECE', 62, 40); ctx.fillText('field ≈ 3 mm', 62, 60);
+        ctx.fillText('drag ↔', 62, 440);
+        ctx.fillText('CROSS-WIRE ON', 638, 40);
+        const c = counter();
+        ctx.fillStyle = '#00897B'; ctx.font = '800 26px Nunito, sans-serif';
+        ctx.fillText(c ? (c.crossed === 0 ? 'n' : (c.crossed > 0 ? 'n+' : 'n') + c.crossed) : 'n = ?', 638, 74);
+        ctx.fillStyle = '#5F5F6E'; ctx.font = '700 12px Nunito, sans-serif';
+        ctx.fillText(c ? 'dark bands' : 'pick any', 638, 96); ctx.fillText(c ? 'from n' : 'dark band', 638, 112);
+    }
+
+    // ------------------------------------------------------------------ travelling-microscope scale
+    const ver = fitCanvas($('vernier'), (w) => (w < 640 ? { W: 480, H: 340 } : { W: 900, H: 340 }));
+    const VJ = 92, ZJ = 256, ZM = 4, ZTOP = 172, ZBOT = 334;
+    const vGeom = () => (ver.W < 700 ? { VZ: 22, VK: 176, narrow: true } : { VZ: 40, VK: 336, narrow: false });
+    function drawScales(ctx, o) {
+        const R = state.R, xAt = (p) => o.x0 + (p - R) * o.k, pAt = (x) => R + (x - o.x0) / o.k, z = o.zoom;
+        const mainH = z ? 72 : 58, verH = z ? 70 : 50;
+        const L1 = z ? 26 : 14, L2 = z ? 36 : 22, L3 = z ? 46 : 30, V1 = z ? 26 : 14, V2 = z ? 40 : 22;
+        ctx.fillStyle = '#F3EEE2'; ctx.fillRect(o.xmin, o.jy - mainH, o.xmax - o.xmin, mainH);
+        const vx1 = o.x0 - (z ? 48 : 14), vx2 = o.x0 + NV * VSD * o.k + (z ? 48 : 14);
+        ctx.fillStyle = '#DDEFEC'; ctx.fillRect(vx1, o.jy, vx2 - vx1, verH);
+        ctx.strokeStyle = 'rgba(31,42,68,0.35)'; ctx.lineWidth = 1; ctx.strokeRect(vx1, o.jy, vx2 - vx1, verH);
+        ctx.beginPath(); ctx.moveTo(o.xmin, o.jy - mainH); ctx.lineTo(o.xmax, o.jy - mainH); ctx.stroke();
+        // main-scale ticks (0.05 cm)
+        const j1 = Math.max(0, Math.floor(pAt(o.xmin) / MSD) - 1), j2 = Math.ceil(pAt(o.xmax) / MSD) + 1;
+        const tl = (j) => (j % 20 === 0 ? L3 : j % 10 === 0 ? L2 : L1);
+        ctx.strokeStyle = '#1F2A44'; ctx.lineWidth = z ? 1.6 : 1.1;
+        ctx.beginPath();
+        for (let j = j1; j <= j2; j++) { const x = xAt(j * MSD); ctx.moveTo(x, o.jy); ctx.lineTo(x, o.jy - tl(j)); }
+        ctx.stroke();
+        ctx.fillStyle = '#1F2A44'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+        for (let j = j1; j <= j2; j++) {
+            const x = xAt(j * MSD);
+            if (x < o.xmin - 30 || x > o.xmax + 30) continue;
+            if (!z) { if (j % 20 === 0) { ctx.font = '800 15px Nunito, sans-serif'; ctx.fillText(String(j / 20), x, o.jy - L3 - 6); } }
+            else if (j % 20 === 0) { ctx.font = '800 15px Nunito, sans-serif'; ctx.fillText((j * MSD).toFixed(2), x, o.jy - tl(j) - 6); }
+            else if (j % (o.narrow ? 2 : 1) === 0) { ctx.font = '700 12px Nunito, sans-serif'; ctx.fillText((j * MSD).toFixed(2), x, o.jy - tl(j) - 6); }
+        }
+        // vernier ticks (50 divisions = 49 MSD)
+        ctx.beginPath();
+        for (let v = 0; v <= NV; v++) { const x = o.x0 + v * VSD * o.k; ctx.moveTo(x, o.jy); ctx.lineTo(x, o.jy + (v % 5 === 0 ? V2 : V1)); }
+        ctx.stroke();
+        for (let v = 0; v <= NV; v++) {
+            const x = o.x0 + v * VSD * o.k;
+            if (x < o.xmin - 20 || x > o.xmax + 20) continue;
+            if (!z) { if (v % 5 === 0) { ctx.font = '700 12px Nunito, sans-serif'; ctx.fillText(String(v), x, o.jy + V2 + 13); } }
+            else { ctx.font = v % 5 === 0 ? '800 15px Nunito, sans-serif' : '700 12px Nunito, sans-serif'; ctx.fillText(String(v), x, o.jy + (v % 5 === 0 ? V2 : V1) + 15); }
+        }
+        if (o.hl) {
+            const line = (x, y1, y2, c) => { ctx.strokeStyle = c; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y1); ctx.lineTo(x, y2); ctx.stroke(); };
+            line(xAt(o.hl.msr), o.jy, o.jy - L3 - 2, '#0288D1');
+            line(o.x0, o.jy, o.jy + V2 + 2, '#0288D1');
+            line(o.x0 + o.hl.vsc * VSD * o.k, o.jy - L2, o.jy + V2 + 2, '#00897B');
+        }
+    }
+    function drawVernier() {
+        const { ctx, W, H } = ver, g = vGeom();
+        ver.begin();
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = '#FBFAFF'; ctx.fillRect(0, 0, W, H);
+        const rd = reading(state.R), hl = state.showRd ? rd : null;
+        ctx.fillStyle = '#5F5F6E'; ctx.font = '800 12px Nunito, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+        ctx.fillText(g.narrow ? 'MAIN SCALE (cm) · fixed' : 'MAIN SCALE (cm) · fixed to the base', 8, 24);
+        drawScales(ctx, { x0: g.VZ, k: g.VK, jy: VJ, zoom: false, xmin: 0, xmax: W, narrow: g.narrow, hl });
+        ctx.fillStyle = '#5F5F6E'; ctx.font = '800 12px Nunito, sans-serif'; ctx.textAlign = 'left';
+        ctx.fillText(g.narrow ? 'VERNIER · 50 div' : 'VERNIER · 50 div = 49 MSD, moves with the microscope', 8, 160);
+        ctx.textAlign = 'right'; ctx.fillText('READING LENS ×4 ▼ drag', W - 8, 160);
+        // reading-lens window
+        const lx = MSC.clamp(g.VZ + state.lensOff * g.VK, 0, W), hw = W / (2 * ZM);
+        ctx.fillStyle = 'rgba(0,137,123,0.08)'; ctx.fillRect(lx - hw, VJ - 64, 2 * hw, 120);
+        ctx.strokeStyle = '#00897B'; ctx.lineWidth = 2; ctx.strokeRect(lx - hw, VJ - 64, 2 * hw, 120);
+        ctx.strokeStyle = 'rgba(0,137,123,0.35)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(lx - hw, VJ + 56); ctx.lineTo(1, ZTOP); ctx.moveTo(lx + hw, VJ + 56); ctx.lineTo(W - 1, ZTOP); ctx.stroke();
+        // magnified strip
+        ctx.save();
+        ctx.beginPath(); ctx.rect(0, ZTOP, W, ZBOT - ZTOP); ctx.clip();
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, ZTOP, W, ZBOT - ZTOP);
+        drawScales(ctx, { x0: W / 2 + (g.VZ - lx) * ZM, k: g.VK * ZM, jy: ZJ, zoom: true, xmin: 0, xmax: W, narrow: g.narrow, hl });
+        ctx.restore();
+        ctx.strokeStyle = '#00897B'; ctx.lineWidth = 2; ctx.strokeRect(1, ZTOP, W - 2, ZBOT - ZTOP);
+    }
+
+    // ------------------------------------------------------------------ graph
+    const graph = fitCanvas($('graph'), () => ({ W: 520, H: 330 }));
+    function fitLine(rows) {
+        const n = rows.length, xs = rows.map((_, k) => 5 * k), ys = rows.map(r => r.cr);
+        const mx = xs.reduce((a, b) => a + b, 0) / n, my = ys.reduce((a, b) => a + b, 0) / n;
+        let sxy = 0, sxx = 0;
+        xs.forEach((x, i) => { sxy += (x - mx) * (ys[i] - my); sxx += (x - mx) * (x - mx); });
+        const b = sxy / sxx;
+        return { a: my - b * mx, b };
+    }
+    function drawGraph() {
+        const { ctx } = graph, W = 520, H = 330;
+        graph.begin();
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = '#FBFAFF'; ctx.fillRect(0, 0, W, H);
+        const x0 = 76, y0 = 272, w = 418, h = 226, rows = state.rows;
+        let ymin, ymax;
+        if (rows.length) { ymin = Math.min(...rows.map(r => r.cr)); ymax = Math.max(...rows.map(r => r.cr)); }
+        else { ymin = 2; ymax = 3; }
+        if (ymax - ymin < 0.05) { const m = (ymax + ymin) / 2; ymin = m - 0.025; ymax = m + 0.025; }
+        const pad = (ymax - ymin) * 0.08; ymin -= pad; ymax += pad;
+        const X = (n) => x0 + n / 70 * w, Y = (v) => y0 - (v - ymin) / (ymax - ymin) * h;
+        ctx.strokeStyle = 'rgba(0,0,0,0.07)'; ctx.lineWidth = 1;
+        ctx.fillStyle = '#1F2A44'; ctx.font = '700 11px Nunito, sans-serif';
+        for (let n = 0; n <= 70; n += 10) {
+            ctx.beginPath(); ctx.moveTo(X(n), y0); ctx.lineTo(X(n), y0 - h); ctx.stroke();
+            ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillText(n === 0 ? 'n' : 'n+' + n, X(n), y0 + 6);
+        }
+        for (let i = 0; i <= 5; i++) {
+            const v = ymin + (ymax - ymin) * i / 5;
+            ctx.strokeStyle = 'rgba(0,0,0,0.07)'; ctx.beginPath(); ctx.moveTo(x0, Y(v)); ctx.lineTo(x0 + w, Y(v)); ctx.stroke();
+            ctx.textAlign = 'right'; ctx.textBaseline = 'middle'; ctx.fillText(v.toFixed(3), x0 - 6, Y(v));
+        }
+        ctx.strokeStyle = '#1F2A44'; ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.moveTo(x0, y0 - h - 6); ctx.lineTo(x0, y0); ctx.lineTo(x0 + w + 8, y0); ctx.stroke();
+        ctx.font = '800 12px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.fillText('Order of the dark fringe', x0 + w / 2, y0 + 26);
+        ctx.save(); ctx.translate(16, y0 - h / 2); ctx.rotate(-Math.PI / 2); ctx.textBaseline = 'middle'; ctx.fillText('Microscope reading CR (cm)', 0, 0); ctx.restore();
+        if (!rows.length) {
+            ctx.fillStyle = '#5F5F6E'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '700 13px Nunito, sans-serif';
+            ctx.fillText('Your readings will be plotted here', x0 + w / 2, y0 - h / 2);
+            return;
+        }
+        if (rows.length >= 2) {
+            const f = fitLine(rows);
+            ctx.strokeStyle = 'rgba(0,137,123,0.6)'; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
+            ctx.beginPath(); ctx.moveTo(X(0), Y(f.a)); ctx.lineTo(X(70), Y(f.a + 70 * f.b)); ctx.stroke(); ctx.setLineDash([]);
+        }
+        rows.forEach((r, k) => {
+            ctx.fillStyle = r.warn ? '#E67700' : '#00897B';
+            ctx.beginPath(); ctx.arc(X(5 * k), Y(r.cr), 5, 0, Math.PI * 2); ctx.fill();
+        });
+    }
+
+    // ------------------------------------------------------------------ thicker-wire demo
+    const demo = fitCanvas($('demo'), (w) => (w < 640 ? { W: 520, H: 500 } : { W: 900, H: 300 }));
+    const dem = { t: 0.05, L: 6 };                  // t in mm, L in cm
+    function drawDemo() {
+        const { ctx, W, H } = demo;
+        demo.begin();
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = '#FBFAFF'; ctx.fillRect(0, 0, W, H);
+        const narrow = W < 700;
+        const sb = narrow ? { x: 14, y: 6, w: 492, h: 250 } : { x: 14, y: 6, w: 486, h: 288 };
+        const vb = narrow ? { x: 14, y: 266, w: 492, h: 226 } : { x: 520, y: 6, w: 366, h: 288 };
+        ctx.fillStyle = '#5F5F6E'; ctx.font = '800 14px Nunito, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+        ctx.fillText('Side view (angle exaggerated)', sb.x + 6, sb.y + 18);
+        ctx.fillText('Microscope view · 3 mm of the wedge', vb.x + 6, vb.y + 18);
+        // side view
+        const base = sb.y + sb.h - 66, x0 = sb.x + 24, span = sb.w - 76;
+        const xw = x0 + dem.L / 10 * span, rise = dem.t * 700;
+        const xe = Math.min(xw + 36, x0 + span + 44), ye = base - rise * (xe - x0) / (xw - x0);
+        ctx.fillStyle = 'rgba(0,137,123,0.12)'; ctx.strokeStyle = '#1F2A44'; ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.rect(x0, base, span + 44, 12); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x0, base); ctx.lineTo(xe, ye); ctx.lineTo(xe, ye - 10); ctx.lineTo(x0, base - 10); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#6D4C41'; ctx.beginPath(); ctx.arc(xw, base - rise / 2, rise / 2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        const a = Math.atan(rise / (xw - x0));
+        ctx.beginPath(); ctx.arc(x0, base, 46, -a, 0); ctx.stroke();
+        ctx.fillStyle = '#1F2A44'; ctx.font = 'italic 800 15px Nunito, sans-serif'; ctx.textBaseline = 'middle';
+        ctx.fillText('θ', x0 + 52, base - 8);
+        ctx.font = '800 13px Nunito, sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('t = ' + dem.t.toFixed(3) + ' mm', MSC.clamp(xw, x0 + 50, sb.x + sb.w - 50), base - rise - 26);
+        // L arrow
+        const ay = base + 32;
+        ctx.beginPath(); ctx.moveTo(x0, ay); ctx.lineTo(xw, ay); ctx.stroke();
+        [[x0, 1], [xw, -1]].forEach(([x, s]) => { ctx.beginPath(); ctx.moveTo(x, ay); ctx.lineTo(x + 8 * s, ay - 4); ctx.lineTo(x + 8 * s, ay + 4); ctx.closePath(); ctx.fill(); });
+        ctx.fillText('L = ' + dem.L.toFixed(1) + ' cm', (x0 + xw) / 2, ay + 16);
+        // microscope strip
+        const fx = vb.x + 8, fy = vb.y + 32, fw = vb.w - 16, fh = vb.h - 86;
+        const bcm = LAM_CM * dem.L / (2 * dem.t / 10), k = fw / 0.3, bpx = bcm * k, ph0 = 0.9;
+        for (let x = fx; x < fx + fw; x++) {
+            const I = Math.pow(Math.sin(Math.PI * (x + 0.5 - fx) / bpx + ph0), 2);
+            ctx.fillStyle = 'rgb(' + Math.round(38 + 217 * I) + ',' + Math.round(26 + 170 * I) + ',' + Math.round(4 + 36 * I) + ')';
+            ctx.fillRect(x, fy, 1.05, fh);
+        }
+        ctx.strokeStyle = '#2B2F3A'; ctx.lineWidth = 2; ctx.strokeRect(fx, fy, fw, fh);
+        let m = Math.ceil(ph0 / Math.PI + 8 / bpx), xa = fx + (m - ph0 / Math.PI) * bpx;
+        while (xa < fx + 6) { m++; xa = fx + (m - ph0 / Math.PI) * bpx; }
+        const xb = xa + bpx, yy = fy + fh + 14;
+        ctx.fillStyle = '#1F2A44'; ctx.strokeStyle = '#1F2A44'; ctx.lineWidth = 1.4; ctx.font = '800 13px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        if (xb < fx + fw) {
+            ctx.beginPath(); ctx.moveTo(xa, fy + fh); ctx.lineTo(xa, yy + 5); ctx.moveTo(xb, fy + fh); ctx.lineTo(xb, yy + 5); ctx.moveTo(xa, yy); ctx.lineTo(xb, yy); ctx.stroke();
+            ctx.fillText('β = ' + (bcm * 10).toFixed(3) + ' mm', MSC.clamp((xa + xb) / 2, fx + 60, fx + fw - 60), yy + 20);
+        } else ctx.fillText('β = ' + (bcm * 10).toFixed(3) + ' mm (wider than the field)', fx + fw / 2, yy + 20);
+    }
+    function renderDemo() {
+        $('dt-val').textContent = dem.t.toFixed(3) + ' mm';
+        $('dl-val').textContent = dem.L.toFixed(1) + ' cm';
+        const tcm = dem.t / 10, th = tcm / dem.L, bmm = LAM_CM * dem.L / (2 * tcm) * 10, N = 2 * tcm / LAM_CM;
+        const rd = (l, v) => '<div class="rd"><div class="rd-label">' + l + '</div><div class="rd-val">' + v + '</div></div>';
+        $('demo-rd').innerHTML = rd('Wedge angle θ ≈ t / L', sci(th, 2) + ' rad (' + (th * 180 / Math.PI).toFixed(3) + '°)') +
+            rd('Fringe width β = λL / 2t', bmm.toFixed(3) + ' mm') + rd('Dark bands from edge to wire ≈ 2t / λ', String(Math.round(N)));
+        dirty.demo = true;
+    }
+
+    // ------------------------------------------------------------------ readings, tables & calculation
+    function note(html, kind) { const m = $('msg'); m.className = 'note' + (kind ? ' ' + kind : ''); m.innerHTML = html; }
+    function compute() {
+        const r = state.rows, S30 = [];
+        for (let k = 0; k < 9 && k + 6 < r.length; k++) S30.push(Math.abs(r[k + 6].q - r[k].q) * LC);
+        if (!S30.length) return null;
+        const Savg = S30.reduce((a, b) => a + b, 0) / S30.length;
+        const bcm = Savg / 30, bm = bcm / 100, t = (state.L / 100) * LAM_M / (2 * bm);
+        return { S: S30, Savg, bcm, bm, t, slope: r.length >= 2 ? Math.abs(fitLine(r).b) : null };
+    }
+    function tableI(forRecord) {
+        const rows = [], blank = forRecord ? '' : '—';
+        for (let k = 0; k < 15; k++) {
+            const r = state.rows[k], r6 = state.rows[k + 6];
+            const Sv = k < 9 && r && r6 ? (Math.abs(r6.q - r.q) * LC).toFixed(3) : '';
+            const warn = r && r.warn && !forRecord;
+            rows.push([
+                String(k + 1),
+                { t: ORDERS[k] + (warn ? ' ⚠' : ''), cls: warn ? 'warnc' : '' },
+                r ? { t: r.msr.toFixed(2), cls: 'mono' } : { t: blank, cls: 'empty' },
+                r ? { t: String(r.vsc), cls: 'mono' } : { t: blank, cls: 'empty' },
+                r ? { t: r.cr.toFixed(3), cls: 'mono' } : { t: blank, cls: 'empty' },
+                Sv ? { t: Sv + (forRecord ? '' : ' <small>(' + (k + 7) + '−' + (k + 1) + ')</small>'), raw: true, cls: 'mono nw' } : { t: k < 9 ? blank : '', cls: 'empty' },
+            ]);
+        }
+        const head = [
+            [{ t: 'S. No', rowspan: 2 }, { t: 'Order of the fringe', rowspan: 2 }, { t: 'Microscope reading (cm)', colspan: 3 }, { t: 'Width of 30 fringes, S (cm)', rowspan: 2 }],
+            ['MSR (cm)', 'VSC (div)', 'CR = MSR + (VSC × LC) (cm)'],
+        ];
+        const c = compute();
+        return MSC.table(head, rows, { highlight: forRecord || state.rows.length >= 15 ? -1 : state.rows.length }) +
+            '<p class="avg-line">Average S = ' + (c ? c.Savg.toFixed(4) + ' cm = ' + sci(c.Savg / 100, 4) + ' m' : '………… m') + '</p>';
+    }
+    function calcHTML(c) {
+        if (!c) return '<p class="calc-line">Record at least seven readings (n to n+30) and the calculation fills in here automatically.</p>';
+        const Ls = sci(state.L / 100, 2);
+        return '<p class="calc-line">Average width of 30 fringes S = (' + c.S.map(v => v.toFixed(3)).join(' + ') + ') / ' + c.S.length + ' = <b>' + c.Savg.toFixed(4) + ' cm</b></p>' +
+            '<p class="calc-line">Fringe width β = S / 30 = ' + c.Savg.toFixed(4) + ' / 30 = ' + c.bcm.toFixed(5) + ' cm = <b>' + sci(c.bm, 4) + ' m</b></p>' +
+            '<p class="calc-line">L = ' + state.L.toFixed(1) + ' cm = ' + Ls + ' m, &nbsp; λ = 5893 × 10<sup>−10</sup> m</p>' +
+            '<p class="calc-line">t = Lλ / 2β = (' + Ls + ' × 5893 × 10<sup>−10</sup>) / (2 × ' + sci(c.bm, 4) + ')</p>' +
+            '<p class="calc-line">&nbsp;&nbsp;&nbsp;= <b>' + sci(c.t, 4) + ' m</b> &nbsp;(= ' + (c.t * 1000).toFixed(4) + ' mm)</p>';
+    }
+    function renderReveal(c) {
+        const out = $('reveal-out');
+        if (!state.revealed) { out.innerHTML = ''; return; }
+        const tm = state.t / 100;
+        let h = '<div class="note good"><span class="note-tag">True</span>The wire is <b>' + (state.t * 10).toFixed(3) + ' mm</b> = ' + sci(tm, 3) + ' m thick.';
+        if (c) { const e = (c.t - tm) / tm * 100; h += ' Your value differs by <b>' + (e >= 0 ? '+' : '−') + Math.abs(e).toFixed(2) + ' %</b>' + (Math.abs(e) < 2 ? ' — excellent!' : Math.abs(e) < 5 ? ' — good.' : ' — check the rows marked ⚠ and your counting.'); }
+        out.innerHTML = h + '</div>';
+    }
+    function renderTables() {
+        const c = compute();
+        $('obs-sim').innerHTML = tableI(false);
+        $('obs-rec').innerHTML = tableI(true);
+        $('sim-calc').innerHTML = calcHTML(c);
+        $('rec-calc').innerHTML = calcHTML(c);
+        $('rec-obs').innerHTML = 'Least count of the travelling microscope = 0.001 cm<br>Distance between the tied end and the wire L = ' + state.L.toFixed(1) + ' cm = ' + sci(state.L / 100, 2) + ' m' +
+            '<br>Wavelength of the sodium light λ = 5893 × 10<sup>−10</sup> m<br>Fringe width β = ' + (c ? sci(c.bm, 4) : '…………') + ' m';
+        $('rec-result').innerHTML = 'The thickness of the given wire by the air wedge method t = ' + (c ? sci(c.t, 4) + ' m &nbsp;(' + (c.t * 1000).toFixed(4) + ' mm)' : '………… m');
+        $('slope-line').innerHTML = c && c.slope ? 'Slope of the best-fit line = <b>' + c.slope.toFixed(5) + ' cm per fringe</b> = β (from S/30: ' + c.bcm.toFixed(5) + ' cm).' :
+            'A straight line shows the fringes are equally spaced; its slope is the fringe width β.';
+        renderReveal(c);
+        dirty.graph = true;
+    }
+    function renderStatus() {
+        const ci = crossInfo(), c = counter(), k = state.rows.length;
+        $('rd-cross').textContent = ci.txt;
+        $('rd-cross').classList.toggle('ok', ci.ok);
+        $('rd-count').textContent = c ? String(c.crossed) : '—';
+        if (k >= 15) $('rd-next').textContent = 'Table I complete ✓';
+        else if (!c) $('rd-next').textContent = 'Row 1 · n (any dark band)';
+        else {
+            const more = 5 * k - c.crossed;
+            $('rd-next').textContent = 'Row ' + (k + 1) + ' · ' + ORDERS[k] + (more > 0 ? ' — ' + more + ' more' : more < 0 ? ' — ' + (-more) + ' too far' : ' — you are here');
+        }
+        $('rec-reading').innerHTML = k >= 15 ? '✓ Table I complete' : '&#x1F4CD; Record reading → row ' + (k + 1) + ' (' + ORDERS[k] + ')';
+        $('rec-reading').disabled = k >= 15 || !!auto;
+        $('undo').disabled = !k || !!auto;
+        if (state.showRd) {
+            const r = reading(state.R);
+            $('true-rd').innerHTML = 'MSR = <b>' + r.msr.toFixed(2) + ' cm</b>, VSC = <b>' + r.vsc + '</b> &nbsp;⇒&nbsp; CR = ' + r.msr.toFixed(2) + ' + ' + r.vsc + ' × 0.001 = <b>' + r.cr.toFixed(3) + ' cm</b>';
+        }
+    }
+    function setR(v) {
+        state.R = MSC.clamp(v, rMin(), rMax());
+        $('coarse').value = state.R;
+        dirty.setup = dirty.fov = dirty.ver = true;
+        renderStatus();
+    }
+    function updateBounds() { const c = $('coarse'); c.min = rMin(); c.max = rMax(); c.value = state.R; }
+    function clearRows() { state.rows = []; state.dir = 0; renderTables(); renderStatus(); dirty.fov = true; }
+    function record() {
+        const k = state.rows.length;
+        if (k >= 15) { note('Table I is full — clear it to take a fresh set.', 'warn'); return false; }
+        const ph = phaseAt(state.R), rd = reading(state.R), d = state.R - state.Redge;
+        let dev, warn, where = 0;
+        if (k === 0) {
+            dev = ph - Math.round(ph);
+            warn = Math.abs(dev) > 0.25 || d < 0 || d > state.L;
+        } else {
+            const rel = ph - Math.round(state.rows[0].ph);
+            if (k === 1) state.dir = rel >= 0 ? 1 : -1;
+            where = state.dir * rel;
+            dev = where - 5 * k;
+            warn = Math.abs(dev) > 0.25;
+        }
+        state.rows.push({ q: rd.q, msr: rd.msr, vsc: rd.vsc, cr: rd.cr, ph, dev, warn });
+        const lab = 'Row ' + (k + 1) + ' (' + ORDERS[k] + '): MSR ' + rd.msr.toFixed(2) + ' cm, VSC ' + rd.vsc + ' → CR = ' + rd.cr.toFixed(3) + ' cm.';
+        if (warn) note('⚠ ' + lab + (k === 0 ? ' The cross-wire was not centred on a dark band' : ' The cross-wire was not on dark band ' + ORDERS[k] + ' (it was near ' + ordName(where) + ')') + ' — press ↶ Undo and set it again.', 'warn');
+        else note('✓ ' + lab + (k === 14 ? ' Table I is complete — see the calculation below.' : ''), 'good');
+        renderTables(); renderStatus();
+        dirty.fov = true;
+        return true;
+    }
+    function undo() {
+        if (!state.rows.length) return;
+        state.rows.pop();
+        if (state.rows.length < 2) state.dir = 0;
+        note('Last reading removed.', '');
+        renderTables(); renderStatus(); dirty.fov = true;
+    }
+    function newWire() {
+        state.t = Math.round(rnd(0.030, 0.100) * 1000) / 1000 / 10;          // 0.030–0.100 mm, stored in cm
+        state.revealed = false;
+        $('reveal').innerHTML = '&#x1F513; Reveal the true thickness';
+        clearRows();
+    }
+    /* Positions of the 15 dark bands n, n+5 … n+70 (with a tiny setting error), starting near the current position. */
+    function autoPlan() {
+        const b = beta(), Nw = Math.floor(state.L / b);
+        let m0 = Math.max(3, Math.round(phaseAt(state.R)));
+        if (m0 + 70 > Nw - 3) m0 = Math.max(3, Nw - 75);
+        return Array.from({ length: 15 }, (_, k) => state.Redge + (m0 + 5 * k) * b + rnd(-0.0004, 0.0004));
+    }
+    let auto = null;
+    function stopAuto() { if (!auto) return; auto = null; $('auto').innerHTML = '&#x25B6; Auto-take all 15'; renderStatus(); }
+    function startAuto() {
+        if (auto) { stopAuto(); return; }
+        clearRows();
+        auto = { plan: autoPlan(), i: 0, wait: 0.2 };
+        $('auto').innerHTML = '&#x23F8; Stop';
+        note('Auto mode: the microscope moves 5 dark bands at a time and records each reading…', '');
+        renderStatus();
+    }
+    function autoStep(dt) {
+        if (!auto) return;
+        if (auto.wait > 0) { auto.wait -= dt; return; }
+        const target = auto.plan[auto.i], d = target - state.R, v = Math.max(5 * beta() / 0.6, 0.05) * dt;
+        if (Math.abs(d) <= v) {
+            setR(target);
+            record();
+            auto.i++; auto.wait = 0.3;
+            if (auto.i >= 15) stopAuto();
+        } else setR(state.R + Math.sign(d) * v);
+    }
+    function fillAll() {
+        stopAuto(); clearRows();
+        autoPlan().forEach(R => { setR(R); record(); });
+        return compute();
+    }
+    function checkReading() {
+        const r = reading(state.R), out = $('check-msg');
+        const m = parseFloat($('in-msr').value), v = parseInt($('in-vsc').value, 10);
+        if (isNaN(m) || isNaN(v)) { out.className = 'note warn'; out.innerHTML = 'Type both the MSR (in cm, e.g. 2.35) and the VSC (a whole number 0–49).'; return false; }
+        const okM = Math.abs(m - r.msr) < 1e-6, okV = v === r.vsc;
+        if (okM && okV) { out.className = 'note good'; out.innerHTML = '✓ Correct! CR = ' + r.msr.toFixed(2) + ' + ' + r.vsc + ' × 0.001 = <b>' + r.cr.toFixed(3) + ' cm</b>'; return true; }
+        const tips = [];
+        if (!okM) tips.push('MSR: take the main-scale mark just <b>before</b> the vernier zero — the marks are 0.05 cm apart.');
+        if (!okV) tips.push(Math.abs(v - r.vsc) <= 1 ? 'VSC: very close — look again with the reading lens; a neighbouring line matches better.' : 'VSC: slide the reading lens along the vernier and find the one line that is exactly in line with a main-scale mark.');
+        out.className = 'note warn'; out.innerHTML = '✗ Not quite. ' + tips.join(' ');
+        return false;
+    }
+
+    // ------------------------------------------------------------------ events
+    $('L').addEventListener('input', e => {
+        stopAuto();
+        const had = state.rows.length;
+        state.L = Number(e.target.value);
+        $('L-val').textContent = state.L.toFixed(1) + ' cm';
+        updateBounds(); setR(state.R); clearRows();
+        if (had) note('Readings cleared — moving the wire changes the fringe width, so Table I must be taken again.', 'warn');
+    });
+    $('new-wire').addEventListener('click', () => {
+        stopAuto();
+        const had = state.rows.length;
+        newWire();
+        note('A new wire of unknown thickness is in place' + (had ? ' — Table I was cleared.' : '.'), '');
+    });
+    $('coarse').addEventListener('input', e => { stopAuto(); setR(Number(e.target.value)); });
+    document.querySelectorAll('.fine [data-step]').forEach(b => {
+        let t1 = null, t2 = null;
+        const once = () => setR(state.R + Number(b.dataset.step));
+        const stop = () => { clearTimeout(t1); clearInterval(t2); t1 = t2 = null; };
+        b.addEventListener('pointerdown', e => { if (e.button > 0) return; e.preventDefault(); stopAuto(); once(); stop(); t1 = setTimeout(() => { t2 = setInterval(once, 60); }, 380); });
+        ['pointerup', 'pointerleave', 'pointercancel', 'blur'].forEach(ev => b.addEventListener(ev, stop));
+        b.addEventListener('click', e => { if (e.detail === 0) once(); });
+        b.addEventListener('contextmenu', e => e.preventDefault());
+    });
+    $('rec-reading').addEventListener('click', record);
+    $('undo').addEventListener('click', undo);
+    $('clear').addEventListener('click', () => { stopAuto(); clearRows(); note('Table I cleared.', ''); });
+    $('auto').addEventListener('click', startAuto);
+    $('reveal').addEventListener('click', () => {
+        state.revealed = !state.revealed;
+        $('reveal').innerHTML = state.revealed ? 'Hide the true thickness' : '&#x1F513; Reveal the true thickness';
+        renderReveal(compute());
+    });
+    $('check').addEventListener('click', checkReading);
+    ['in-msr', 'in-vsc'].forEach(id => $(id).addEventListener('keydown', e => { if (e.key === 'Enter') checkReading(); }));
+    $('show-rd').addEventListener('click', () => {
+        state.showRd = !state.showRd;
+        $('show-rd').classList.toggle('on', state.showRd);
+        if (state.showRd) state.lensOff = reading(state.R).vsc * VSD;
+        else $('true-rd').innerHTML = '';
+        dirty.ver = true; renderStatus();
+    });
+    // eyepiece: drag the image (fringes follow the finger), arrow keys = fine screw
+    const fovC = $('fov');
+    let fovDrag = null;
+    fovC.addEventListener('pointerdown', e => { stopAuto(); fovC.setPointerCapture(e.pointerId); fovDrag = { x: fov.pt(e).x, R: state.R }; fovC.focus({ preventScroll: true }); });
+    fovC.addEventListener('pointermove', e => { if (fovDrag) setR(fovDrag.R - (fov.pt(e).x - fovDrag.x) / F.k); });
+    ['pointerup', 'pointercancel'].forEach(ev => fovC.addEventListener(ev, () => { fovDrag = null; }));
+    fovC.addEventListener('keydown', e => {
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); stopAuto(); setR(state.R + (e.key === 'ArrowRight' ? 1 : -1) * (e.shiftKey ? 0.01 : 0.001)); }
+        else if (e.key === 'Enter') { e.preventDefault(); record(); }
+    });
+    // side view: drag the microscope
+    const setupSvg = $('setup');
+    let scopeDrag = null;
+    const svgX = (e) => { const r = setupSvg.getBoundingClientRect(); return (e.clientX - r.left) * 900 / r.width; };
+    setupSvg.addEventListener('pointerdown', e => { if (!e.target.closest('.hit')) return; stopAuto(); setupSvg.setPointerCapture(e.pointerId); scopeDrag = { x: svgX(e), R: state.R }; });
+    setupSvg.addEventListener('pointermove', e => { if (scopeDrag) setR(scopeDrag.R + (svgX(e) - scopeDrag.x) / SV.K); });
+    ['pointerup', 'pointercancel'].forEach(ev => setupSvg.addEventListener(ev, () => { scopeDrag = null; }));
+    // vernier: drag the reading lens (top view) or the magnified strip
+    const verC = $('vernier');
+    let verDrag = null;
+    const setLens = (x) => { const g = vGeom(); state.lensOff = MSC.clamp((x - g.VZ) / g.VK, -g.VZ / g.VK, (ver.W - g.VZ) / g.VK); dirty.ver = true; };
+    verC.addEventListener('pointerdown', e => {
+        verC.setPointerCapture(e.pointerId);
+        const p = ver.pt(e), g = vGeom();
+        verDrag = { zoom: p.y > ZTOP, x: p.x, lx: g.VZ + state.lensOff * g.VK };
+        if (!verDrag.zoom) setLens(p.x);
+    });
+    verC.addEventListener('pointermove', e => { if (!verDrag) return; const p = ver.pt(e); setLens(verDrag.zoom ? verDrag.lx - (p.x - verDrag.x) / ZM : p.x); });
+    ['pointerup', 'pointercancel'].forEach(ev => verC.addEventListener(ev, () => { verDrag = null; }));
+    $('dt').addEventListener('input', e => { dem.t = Number(e.target.value); renderDemo(); });
+    $('dl').addEventListener('input', e => { dem.L = Number(e.target.value); renderDemo(); });
+
+    // ------------------------------------------------------------------ animation loop
+    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let tph = 0;
+    MSC.loop(dt => {
+        tph += dt;
+        autoStep(dt);
+        if (dirty.setup) { dirty.setup = false; setupSvg.innerHTML = setupMarkup(); }
+        if (!reduceMotion) {
+            const off = String(-(tph * 32) % 126);
+            document.querySelectorAll('#setup .ray, #film .ray').forEach(p => { p.style.strokeDashoffset = off; });
+        }
+        if (dirty.fov || fov.dirty) { dirty.fov = fov.dirty = false; drawFOV(); }
+        if (dirty.ver || ver.dirty) { dirty.ver = ver.dirty = false; drawVernier(); }
+        if (dirty.graph || graph.dirty) { dirty.graph = graph.dirty = false; drawGraph(); }
+        if (dirty.demo || demo.dirty) { dirty.demo = demo.dirty = false; drawDemo(); }
+    });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { Object.keys(dirty).forEach(k => { dirty[k] = true; }); });
+
+    // ------------------------------------------------------------------ draw-along diagrams
+    (function buildDiagrams() {
+        // ---- Fig. 1: air wedge arrangement (as in the manual)
+        const yl = (x) => 400 - 0.09 * (x - 190);
+        const rays8 = [205, 220, 235].map(y => { const xh = 520 - y; return S.line(700, 220, 560, y) + S.arrowHead(630, (220 + y) / 2, Math.atan2(y - 220, -140), 7) + S.line(560, y, xh, y) + S.arrowHead(450, y, Math.PI, 8); }).join('');
+        const rays9 = [205, 220, 235].map(y => { const x = 520 - y; return S.line(x, y, x, yl(x)) + S.arrowHead(x, 335, Math.PI / 2, 7); }).join('');
+        const rays10 = [290, 305, 320].map(x => S.line(x, yl(x) - 1, x, 131, 'dash') + S.arrowHead(x, 160, -Math.PI / 2, 7)).join('');
+        MSC.diagram('#draw-arrangement', {
+            name: 'arrangement', title: 'Fig. 1 Air wedge arrangement', viewBox: '0 0 760 472',
+            steps: [
+                { c: 'Draw the lower optically plane glass plate L_{1} as a thin horizontal rectangle.', s: S.rect(190, 400, 240, 10) + S.text(440, 407, 'L_1', { anchor: 'start', size: 14 }) },
+                { c: 'Place the upper plate L_{2} on it so that the plates touch along the left edge, and tie them together at that end.', s: S.poly([[190, 400], [425, yl(425)], [425, yl(425) - 8], [190, 392]]) + S.rect(185, 386, 11, 30, { rx: 3, cls: 'thin' }) + S.text(440, yl(425) - 6, 'L_2', { anchor: 'start', size: 14 }) + S.text(178, 378, 'tied end', { anchor: 'end', size: 12 }) },
+                { c: 'Insert the thin wire w between the plates near the other end — the air between the plates is now a thin wedge.', s: S.circle(390, 391, 9) + S.text(390, 391, 'w', { size: 11 }) },
+                { c: 'Mark L, the distance from the tied end (edge of contact) to the wire.', s: S.line(190, 412, 190, 438, 'thin dash') + S.line(390, 402, 390, 438, 'thin dash') + S.arrow(190, 430, 390, 430, { both: true, size: 7 }) + S.text(290, 444, 'L', { size: 15, italic: true }) },
+                { c: 'Draw the plane glass plate G above the wedge, inclined at 45° to the horizontal.', s: S.poly([[212, 302], [382, 132], [388, 138], [218, 308]]) + S.text(206, 318, 'G', { anchor: 'end', size: 15 }) + S.text(394, 126, 'Glass plate', { anchor: 'start', size: 13 }) },
+                { c: 'Draw the travelling microscope T vertically above G, looking down at the wedge.', s: S.rect(288, 14, 24, 28, { rx: 2 }) + S.rect(272, 42, 56, 78, { rx: 8 }) + S.rect(282, 120, 36, 10, { rx: 2 }) + S.text(300, 81, 'T', { size: 16 }) + S.arrow(372, 70, 334, 70, { size: 7 }) + S.text(378, 70, 'Travelling microscope', { anchor: 'start', size: 13 }) },
+                { c: 'On the right draw the sodium vapour lamp S and the condensing lens.', s: S.dot(700, 220, 5) + S.text(700, 198, 'Source S', { size: 13 }) + S.text(700, 244, '(sodium lamp)', { size: 11, cls: 'soft' }) + S.path('M560,170 Q580,220 560,270 Q540,220 560,170 Z') + S.text(560, 290, 'Condensing lens', { size: 13 }) },
+                { c: 'Draw rays from S through the lens: they come out as a parallel horizontal beam that meets G. Mark the 45° angle.', s: rays8 + S.path('M337,205 A22,22 0 0 0 330.56,189.44', 'thin') + S.text(344, 190, '45°', { anchor: 'start', size: 12 }) },
+                { c: 'G reflects the beam vertically downwards, so the light falls normally on the air wedge.', s: rays9 },
+                { c: 'Light reflected from the two surfaces of the air film goes back up through G into the microscope (dashed). Write the legend.', s: rays10 + S.text(380, 462, 'L_1, L_2 – optically plane glass plates;  w – thin wire;  G – glass plate at 45°', { size: 12 }) },
+            ],
+        });
+
+        // ---- Fig. 2: fringe pattern
+        const FX = 100, FY = 40, FW = 560, FH = 170, FB = 40;
+        let bands = '';
+        for (let m = 1; m <= 13; m++) bands += S.rect(FX + FB * m - 8, FY, 16, FH, { cls: 'solid' });
+        MSC.diagram('#draw-fringes', {
+            name: 'fringes', title: 'Fig. 2 Fringe pattern (seen through the microscope)', viewBox: '0 0 760 282',
+            steps: [
+                { c: 'Draw a rectangle for the air wedge seen from above; the left side is the edge of contact (tied end).', s: S.rect(FX, FY, FW, FH) + S.line(FX, FY, FX, FY + FH, 'thick') + S.text(FX, 266, 'Edge of contact (tied end)', { anchor: 'start', size: 13 }) + S.text(FX + FW, 266, 'towards the wire →', { anchor: 'end', size: 13 }) },
+                { c: 'At the edge of contact the film thickness is zero, so the path difference is only λ/2 — draw a dark band there.', s: S.rect(FX, FY, 8, FH, { cls: 'solid' }) + S.text(FX - 8, 116, 't = 0', { anchor: 'end', size: 12 }) + S.text(FX - 8, 134, 'dark', { anchor: 'end', size: 12 }) },
+                { c: 'Draw straight dark bands parallel to the edge and equally spaced; the gaps between them are the bright bands.', s: bands },
+                { c: 'Mark the fringe width β — the distance between the centres of two successive dark bands.', s: S.line(220, 22, 220, FY, 'thin') + S.line(260, 22, 260, FY, 'thin') + S.arrow(220, 28, 260, 28, { both: true, size: 6 }) + S.text(240, 13, 'β', { size: 15, italic: true }) },
+                { c: 'Show the vertical cross-wire set on the n^{th} dark band, and label the n, n+5 and n+10 bands.', s: S.line(180, 32, 180, 218, 'accent thick') + S.line(FX, 125, FX + FW, 125, 'accent thin') + S.text(180, 230, 'n', { size: 13 }) + S.text(380, 230, 'n+5', { size: 13 }) + S.text(580, 230, 'n+10', { size: 13 }) },
+            ],
+        });
+
+        // ---- Fig. 3: wedge geometry for the formula
+        const tn = 90 / 530, yT = (x) => 300 - tn * (x - 70), ang = Math.atan(tn);
+        MSC.diagram('#draw-geometry', {
+            name: 'geometry', title: 'Fig. 3 Geometry of the air wedge', viewBox: '0 0 760 380',
+            steps: [
+                { c: 'Draw the lower plate as a horizontal line. O is the edge of contact.', s: S.line(70, 300, 700, 300) + S.text(62, 306, 'O', { anchor: 'end', size: 15 }) + S.text(490, 314, 'lower plate', { size: 12 }) },
+                { c: 'Draw the upper plate as a line from O inclined at a small angle θ (the wedge angle).', s: S.line(70, 300, 700, yT(700)) + S.path('M130,300 A60,60 0 0 0 ' + (70 + 60 * Math.cos(ang)).toFixed(2) + ',' + (300 - 60 * Math.sin(ang)).toFixed(2), 'thin') + S.text(142, 292, 'θ', { anchor: 'start', size: 15, italic: true }) + S.text(470, 220, 'upper plate', { size: 12, rotate: -ang * 180 / Math.PI }) },
+                { c: 'Draw the wire of thickness t between the plates at distance L from O.', s: S.circle(600, 255, 45) + S.line(600, 210, 676, 210, 'thin dash') + S.arrow(670, 212, 670, 298, { both: true, size: 7 }) + S.text(680, 255, 't', { anchor: 'start', size: 15, italic: true }) + S.line(70, 302, 70, 358, 'thin dash') + S.line(600, 302, 600, 358, 'thin dash') + S.arrow(70, 350, 600, 350, { both: true, size: 7 }) + S.text(335, 366, 'L', { size: 15, italic: true }) },
+                { c: 'Mark the n^{th} dark fringe at distance x_{n} from O; the film thickness there is t_{n}.', s: S.line(300, 300, 300, yT(300), 'dash') + S.text(306, 286, 't_n', { anchor: 'start', size: 13 }) + S.text(300, 246, 'n^{th} dark', { size: 11, cls: 'soft' }) + S.arrow(70, 322, 300, 322, { both: true, size: 6 }) + S.text(185, 334, 'x_n', { size: 13 }) },
+                { c: 'Mark the (n+1)^{th} dark fringe; the gap between the two is the fringe width β.', s: S.line(380, 300, 380, yT(380), 'dash') + S.text(386, 282, 't_{n+1}', { anchor: 'start', size: 13 }) + S.text(390, 232, '(n+1)^{th}', { size: 11, cls: 'soft' }) + S.arrow(300, 322, 380, 322, { both: true, size: 6 }) + S.text(340, 334, 'β', { size: 14, italic: true }) },
+                { c: 'Write: t_{n} = x_{n} tan θ, and the condition for the n^{th} dark fringe 2t_{n} = nλ, so x_{n} = nλ / (2 tan θ).', s: S.text(40, 36, 'Film thickness at the nth dark fringe:  t_n = x_n tan θ', { anchor: 'start', size: 14 }) + S.text(40, 66, 'Dark fringe (λ/2 phase change included):  2t_n = nλ   ⇒   x_n = nλ / (2 tan θ)', { anchor: 'start', size: 14 }) },
+                { c: 'Subtract for two successive dark fringes: β = x_{n+1} − x_{n} = λ / (2 tan θ).', s: S.text(40, 96, 'Fringe width:  β = x_{n+1} − x_n = λ / (2 tan θ)', { anchor: 'start', size: 14 }) },
+                { c: 'From the triangle tan θ = t / L. Substitute and box the result: t = Lλ / 2β.', s: S.text(40, 126, 'From the wedge:  tan θ = t / L   ⇒   β = λL / 2t', { anchor: 'start', size: 14 }) + S.rect(36, 142, 220, 34, { rx: 6 }) + S.text(146, 159, 't = Lλ / 2β', { size: 17, weight: 800 }) },
+            ],
+        });
+
+        // ---- Fig. 4: reading the travelling-microscope vernier (MSR 2.35 cm, VSC 27)
+        const VX = (p) => 50 + (p - 1.95) * 240, VZ0 = VX(2.377), JY = 150;
+        let mt = '', mn = '', vt = '', vn = '';
+        for (let j = 39; j <= 97; j++) { const x = VX(j * 0.05); mt += 'M' + x.toFixed(2) + ',' + JY + 'v-' + (j % 20 === 0 ? 30 : j % 10 === 0 ? 20 : 12); if (j % 20 === 0) mn += S.text(x, 110, String(j / 20), { size: 14 }); }
+        for (let k = 0; k <= 50; k++) { const x = VZ0 + k * 11.76; vt += 'M' + x.toFixed(2) + ',' + JY + 'v' + (k % 5 === 0 ? 20 : 12); if (k % 5 === 0) vn += S.text(x, 182, String(k), { size: 11 }); }
+        MSC.diagram('#draw-vernier', {
+            name: 'vernier', title: 'Fig. 4 Reading the travelling microscope', viewBox: '0 0 760 306',
+            steps: [
+                { c: 'Draw the main scale, divided into MSDs of 0.05 cm (20 MSD = 1 cm). Number the centimetre marks.', s: S.rect(40, 95, 716, 55) + S.path(mt, 'thin') + mn + S.text(752, 86, 'Main scale (cm)', { anchor: 'end', size: 12 }) },
+                { c: 'Below it draw the vernier: 50 divisions that together equal 49 MSD. Number every fifth division.', s: S.rect(140, 150, 614, 45) + S.path(vt, 'thin') + vn + S.text(146, 212, 'Vernier (50 div = 49 MSD)', { anchor: 'start', size: 12 }) },
+                { c: 'Least count: LC = 1 MSD / number of vernier divisions = 0.05 cm / 50 = 0.001 cm.', s: S.text(40, 262, 'LC = 1 MSD / no. of vernier divisions = 0.05 cm / 50 = 0.001 cm', { anchor: 'start', size: 14 }) },
+                { c: 'Read the main-scale mark just before the vernier zero: MSR = 2.35 cm.', s: S.line(VX(2.35), JY, VX(2.35), 112, 'hot thick') + S.line(VZ0, JY, VZ0, 172, 'hot thick') + S.arrow(VX(2.35), 56, VX(2.35), 92, { size: 7, cls: 'hot' }) + S.text(VX(2.35) + 8, 48, 'MSR = 2.35 cm (mark just before the vernier zero)', { anchor: 'start', size: 13, cls: 'hot' }) },
+                { c: 'Find the vernier line that coincides exactly with a main-scale mark: VSC = 27.', s: S.line(470, 116, 470, 176, 'accent thick') + S.arrow(470, 226, 470, 199, { size: 7, cls: 'accent' }) + S.text(478, 236, 'coinciding line: VSC = 27', { anchor: 'start', size: 13, cls: 'accent' }) },
+                { c: 'Total reading: CR = MSR + VSC × LC = 2.35 + 27 × 0.001 = 2.377 cm.', s: S.text(40, 290, 'CR = MSR + VSC × LC = 2.35 + 27 × 0.001 = 2.377 cm', { anchor: 'start', size: 15, weight: 800 }) },
+            ],
+        });
+    })();
+
+    // ------------------------------------------------------------------ viva
+    MSC.viva('#viva-list', [
+        { q: 'What is an air wedge?', a: 'A thin wedge-shaped film of air between two optically plane glass plates that touch along one edge and are separated by a thin object (here the wire) at the other. Its thickness increases uniformly from zero at the edge of contact.' },
+        { q: 'Why are the fringes straight, parallel to the edge and equally spaced?', a: 'Each fringe is a locus of constant film thickness (fringes of equal thickness). In the wedge t = x tan θ is the same all along any line parallel to the edge of contact, so the fringes are straight and parallel to it. Because t increases uniformly with x, successive dark fringes (t increasing by λ/2 each time) are equally spaced: β = λ / 2 tan θ.' },
+        { q: 'Why is the fringe at the edge of contact dark?', a: 'There t = 0, so the only path difference is the λ/2 due to the phase change of π on reflection at the air-to-glass surface of the lower plate. A path difference of λ/2 gives destructive interference, so the contact edge is dark — this also proves the phase change on reflection from a denser medium.' },
+        { q: 'Why is a glass plate inclined at 45° used?', a: 'It reflects the horizontal beam from the lamp vertically downwards so that the light falls normally on the wedge (cos r = 1 in 2μt cos r), and it also lets the light reflected from the wedge pass straight up through it into the microscope.' },
+        { q: 'Why is sodium light used? What happens with white light?', a: 'A monochromatic source of known wavelength (λ = 5893 Å) gives a large number of sharp fringes of one definite width. With white light each colour forms fringes of a different width, so only a few coloured fringes are seen near the (dark) edge of contact; farther away they overlap and the field looks uniformly white.' },
+        { q: 'What happens to the fringes if a thicker wire is used, or the wire is moved towards the tied end?', a: 'Both make the wedge angle larger (tan θ = t / L), so β = λL / 2t decreases — the fringes become narrower and crowd together. A thinner wire, or moving the wire away from the tied end, widens the fringes.' },
+        { q: 'Why do we measure the width of 30 fringes and not just one?', a: 'One fringe is only a fraction of a millimetre wide, comparable to the least count, so its measurement would have a large percentage error. Measuring across many fringes and averaging the nine values of (n+30) − n, (n+35) − (n+5) … reduces both the reading error and random errors.' },
+        { q: 'Why not simply measure the wire with the travelling microscope?', a: 'The wire is only about 0.05 mm thick — just a few least counts (0.001 cm), so a direct reading would have an error of 20 % or more. Interference spreads this tiny thickness over many fringes covering several centimetres, which can be measured accurately.' },
+        { q: 'What is the least count of the travelling microscope?', a: 'LC = value of 1 MSD / number of vernier divisions = 0.05 cm / 50 = 0.001 cm (20 MSD = 1 cm, and 50 vernier divisions = 49 MSD).' },
+        { q: 'Where are the fringes formed, and what are they called?', a: 'They are localised in the air film itself, so the microscope is focused on the film. They are called fringes of equal thickness (Fizeau fringes).' },
+        { q: 'How is an air wedge used to test the optical flatness of a surface?', a: 'A wedge is formed between the surface under test and an optical flat. If the surface is perfectly plane the fringes are straight, parallel and equidistant; any bending or irregularity of the fringes shows the surface is not flat (one fringe of distortion corresponds to a height of λ/2).' },
+        { q: 'What happens if the air is replaced by a liquid of refractive index μ?', a: 'The condition for a dark fringe becomes 2μt = nλ, so β = λL / 2μt — the fringes become narrower by the factor μ. Measuring β in air and in the liquid gives μ = β<sub>air</sub> / β<sub>liquid</sub>.' },
+    ]);
+
+    // ------------------------------------------------------------------ start
+    state.Redge = Math.round(rnd(1.2, 2.3) * 1000) / 1000;
+    state.t = Math.round(rnd(0.030, 0.100) * 1000) / 1000 / 10;
+    state.R = state.Redge + state.L * rnd(0.22, 0.34);
+    updateBounds();
+    setR(state.R);
+    renderTables();
+    renderDemo();
+
+    // handle for testing / self-checks
+    window.airWedge = { state, beta, phaseAt, reading, setR, record, undo, compute, fillAll, clearRows, checkReading, darkAt: (m) => state.Redge + m * beta() };
+    </script>
+</body>
+</html>

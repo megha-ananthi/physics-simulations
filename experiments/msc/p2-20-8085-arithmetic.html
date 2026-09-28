@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8085 8-bit Arithmetic - M.Sc. Practicals - Science Lab</title>
+    <meta name="description" content="Step through the 8085 programs for 8-bit addition, subtraction, multiplication and division, with the carry, borrow, 2's complement, repeated addition and repeated subtraction animated.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/msc.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x2797;</text></svg>">
+    <style>
+        :root { --accent: #8E24AA; --accent-soft: rgba(142, 36, 170, 0.12); --accent-border: rgba(142, 36, 170, 0.5); }
+        [hidden] { display: none !important; }
+        .try-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+        .try-lab { font-size: 0.78rem; font-weight: 800; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.4px; }
+        .memmap { font-size: 0.86rem; color: var(--ink-soft); margin-top: 0.55rem; }
+        .memmap b { font-family: var(--font-mono); color: var(--ink); }
+        .mono { font-family: var(--font-mono); font-weight: 800; }
+        .chips { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 0.7rem; }
+        .chip { background: #F6F2FE; border: 1px solid var(--line); border-radius: 50px; padding: 0.22rem 0.75rem; font-size: 0.8rem; font-weight: 800; }
+        .chip b { color: var(--accent); font-family: var(--font-mono); }
+        .chip.pulse { animation: chipPulse 0.9s ease; }
+        @keyframes chipPulse { 0% { background: #FFD27A; transform: scale(1.08); } 100% { background: #F6F2FE; transform: scale(1); } }
+        .say { font-size: 0.88rem; margin-top: 0.65rem; background: #FBFAFF; border: 1px dashed var(--accent-border); border-radius: 10px; padding: 0.5rem 0.75rem; }
+        .say b { color: var(--accent); }
+        .say.bad { background: var(--bad-soft); border: 1px solid rgba(198, 40, 40, 0.45); }
+        .eqn { font-family: 'Times New Roman', Georgia, serif; font-size: 1.08rem; margin-top: 0.5rem; }
+        .eqn b { color: var(--accent); }
+        .legend-s { font-size: 0.78rem; color: var(--ink-soft); margin-top: 0.35rem; text-align: center; }
+        /* column addition + 2's complement grids */
+        .cs-wrap { display: flex; flex-wrap: wrap; gap: 0.9rem 1.8rem; justify-content: center; align-items: flex-start; }
+        .cs-block { text-align: center; }
+        .cs-title { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ink-soft); margin-bottom: 0.15rem; }
+        .cs { display: inline-grid; font-family: var(--font-mono); font-weight: 800; align-items: stretch; }
+        .cs.hex { grid-template-columns: 3rem repeat(3, 1.9rem); }
+        .cs.bin { grid-template-columns: 3rem 1.7rem repeat(4, 1.35rem) 0.45rem repeat(4, 1.35rem); }
+        .cs.tc { grid-template-columns: 7.2rem 1.6rem repeat(4, 1.35rem) 0.45rem repeat(4, 1.35rem) 3.2rem; }
+        .cs > span { text-align: center; font-size: 1.05rem; line-height: 1.75; }
+        .cs > .lab { text-align: right; padding-right: 0.45rem; font-family: var(--font-body); font-size: 0.72rem; color: var(--ink-soft); white-space: nowrap; }
+        .cs > .hd { font-family: var(--font-body); font-size: 0.62rem; color: var(--ink-soft); line-height: 1.3; }
+        .cs > .car { font-size: 0.8rem; line-height: 1.2; color: var(--warn); min-height: 1rem; }
+        .cs > .sr { border-top: 2px solid var(--pen); }
+        .cs > .cy { border-radius: 0 0 7px 7px; }
+        .cs > .cy.lit { background: var(--warn); color: #fff; box-shadow: 0 0 0 3px rgba(230, 119, 0, 0.22); }
+        .cs > .dim { color: #B0B0B8; }
+        .cs > .hx { color: var(--accent); text-align: left; padding-left: 0.5rem; }
+        .cs > .soft { color: #8A8FA3; }
+        .cs > .newrow { border-top: 1px dashed #C9C2DA; }
+        .cs .q { color: #B0B0B8; font-style: normal; }
+        /* repeated addition / subtraction bars */
+        .segbar { display: flex; gap: 2px; height: 36px; margin: 0.4rem 0 0.2rem; }
+        .segbar i { flex: 1 1 0; min-width: 0; overflow: hidden; background: #ECEAF2; border-radius: 5px; display: flex; align-items: center; justify-content: center;
+            font-style: normal; font-family: var(--font-mono); font-size: 0.7rem; font-weight: 800; color: #9A94AA; transition: background 0.25s; }
+        .segbar i.on { background: var(--accent); color: #fff; }
+        .segbar i.now { background: var(--warn); color: #fff; }
+        .segbar.dense { gap: 0; }
+        .segbar.dense i { border-radius: 0; font-size: 0; }
+        .divbar { display: flex; height: 42px; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); background: #fff; margin: 0.4rem 0 0.2rem; }
+        .divbar > i { font-style: normal; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); font-weight: 800; font-size: 0.72rem; overflow: hidden; flex: none; }
+        .divbar .chunk { background: repeating-linear-gradient(45deg, #E4D7F0, #E4D7F0 6px, #F3ECF9 6px, #F3ECF9 12px); border-right: 2px solid #fff; color: var(--accent); }
+        .divbar .chunk.now { background: var(--warn); color: #fff; }
+        .divbar .left { background: var(--accent); color: #fff; }
+        .trail { font-family: var(--font-mono); font-size: 0.82rem; color: var(--ink-soft); margin-top: 0.3rem; overflow-wrap: anywhere; }
+        .trail b { color: var(--accent); }
+        .rec-sub { font-size: 0.86rem; color: var(--ink-soft); margin-top: 0.2rem; }
+        @media (max-width: 600px) {
+            .cs.tc { grid-template-columns: 4.9rem 1.3rem repeat(4, 1.2rem) 0.35rem repeat(4, 1.2rem) 2.6rem; }
+            .cs.tc > span { font-size: 0.95rem; }
+            .cs.tc > .lab { font-size: 0.64rem; padding-right: 0.3rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="top-bar">
+        <a href="index.html" class="back-btn">&larr; Practicals</a>
+        <div class="exp-heading">
+            <span class="exp-chip">Practical II &middot; Exp 20</span>
+            <h1 class="exp-title">&#x2797; 8085 — 8-bit Addition, Subtraction, Multiplication &amp; Division</h1>
+        </div>
+        <a href="../../index.html" class="back-btn">&#x1F3E0; Lab</a>
+    </header>
+    <p class="big-idea">The 8085 can only <strong>add</strong> and <strong>subtract</strong> directly. Subtraction is done by adding the <strong>2’s complement</strong>,
+        <strong>multiplication</strong> by adding the multiplicand again and again, and <strong>division</strong> by subtracting the divisor again and again and counting how many times it fits.</p>
+    <nav class="section-nav">
+        <a href="#simulate">&#x1F52C; Simulate</a><a href="#draw">&#x270F;&#xFE0F; Draw it</a><a href="#record">&#x1F4DD; Record</a><a href="#viva">&#x1F3A4; Viva</a>
+    </nav>
+
+    <main>
+        <section id="simulate" class="block">
+            <h2 class="block-title">&#x1F52C; Simulate <span class="hint-inline">Pick an operation, load an example and press ⏭ Step — the working below follows every instruction.</span></h2>
+            <div class="tabs" data-tabs="op">
+                <button class="tab-btn active" data-tab="add">&#x2795; Addition</button>
+                <button class="tab-btn" data-tab="sub">&#x2796; Subtraction</button>
+                <button class="tab-btn" data-tab="mul">&#x2716;&#xFE0F; Multiplication</button>
+                <button class="tab-btn" data-tab="div">&#x2797; Division</button>
+            </div>
+
+            <div class="card">
+                <div class="try-row">
+                    <span class="try-lab" id="try-lab">Try</span>
+                    <span class="btn-row" id="samples"></span>
+                    <button class="btn btn-sm" id="mul16" hidden aria-pressed="false">16-bit product (count the carries)</button>
+                </div>
+                <p class="memmap" id="memmap"></p>
+                <div id="input-hint"></div>
+            </div>
+
+            <div class="card" style="margin-top:1rem">
+                <h3 id="vis-title">How it works</h3>
+                <div class="chips" id="chips"></div>
+                <div id="vis-add">
+                    <div id="colsum"></div>
+                    <p class="legend-s">A = second number (8051H), B = first number (8050H) — ADD B adds them column by column.</p>
+                </div>
+                <div id="vis-sub" hidden>
+                    <div id="twos"></div>
+                    <p class="legend-s">The 8085 subtracts by adding the 2’s complement: A − B = A + (2’s complement of B).</p>
+                </div>
+                <div id="vis-mul" hidden>
+                    <div class="segbar" id="mul-bar"></div>
+                    <p class="legend-s" id="mul-leg"></p>
+                    <p class="trail" id="mul-trail"></p>
+                    <p class="eqn" id="mul-eqn"></p>
+                </div>
+                <div id="vis-div" hidden>
+                    <div class="divbar" id="div-bar"></div>
+                    <p class="legend-s" id="div-leg"></p>
+                    <p class="eqn" id="div-eqn"></p>
+                </div>
+                <p class="say" id="say"></p>
+            </div>
+
+            <div style="margin-top:0.9rem" id="cpu"></div>
+            <div id="prog-notes"></div>
+        </section>
+
+        <section id="draw" class="block">
+            <h2 class="block-title">&#x270F;&#xFE0F; Draw it <span class="hint-inline">Press ▶ Draw and copy each step into your record.</span></h2>
+            <div class="tabs" data-tabs="draw">
+                <button class="tab-btn active" data-tab="fadd">Addition</button>
+                <button class="tab-btn" data-tab="fsub">Subtraction</button>
+                <button class="tab-btn" data-tab="fmul">Multiplication</button>
+                <button class="tab-btn" data-tab="fdiv">Division</button>
+                <button class="tab-btn" data-tab="trace">Division trace (case 1)</button>
+            </div>
+            <div class="tab-panel" data-group="draw" data-panel="fadd" id="draw-fadd"></div>
+            <div class="tab-panel" data-group="draw" data-panel="fsub" id="draw-fsub"></div>
+            <div class="tab-panel" data-group="draw" data-panel="fmul" id="draw-fmul"></div>
+            <div class="tab-panel" data-group="draw" data-panel="fdiv" id="draw-fdiv"></div>
+            <div class="tab-panel" data-group="draw" data-panel="trace" id="draw-trace"></div>
+        </section>
+
+        <section id="record" class="block">
+            <h2 class="block-title">&#x1F4DD; Record sheet</h2>
+            <div class="rec-actions no-print"><button class="btn btn-sm" data-print-record>&#x1F5A8;&#xFE0F; Print record</button></div>
+            <article class="record">
+                <div class="rec-head"><div class="rec-box">Expt. No. ______<br>Date ______</div><div class="rec-box">Page No. ______</div></div>
+                <h2 class="rec-title">8-BIT ARITHMETIC OPERATIONS USING 8085</h2>
+                <h3>Aim</h3>
+                <p>To add, subtract, multiply and divide two 8-bit binary numbers using the 8085 microprocessor kit.</p>
+                <h3>Apparatus required</h3>
+                <p>8085 microprocessor kit &amp; power supply.</p>
+
+                <h3>(A) Addition — Algorithm</h3><ol id="alg-add"></ol>
+                <h3>Flowchart (addition)</h3><div class="rec-diagram" data-diagram="fadd"></div>
+                <h3>Program (addition)</h3><div id="prog-add"></div>
+                <h3>Output (addition)</h3><div id="out-add"></div>
+
+                <h3>(B) Subtraction — Algorithm</h3><ol id="alg-sub"></ol>
+                <h3>Flowchart (subtraction)</h3><div class="rec-diagram" data-diagram="fsub"></div>
+                <h3>Program (subtraction)</h3><div id="prog-sub"></div>
+                <h3>Output (subtraction)</h3><div id="out-sub"></div>
+
+                <h3>(C) Multiplication — Algorithm</h3><ol id="alg-mul"></ol>
+                <h3>Flowchart (multiplication)</h3><div class="rec-diagram" data-diagram="fmul"></div>
+                <h3>Program (multiplication)</h3><div id="prog-mul"></div>
+                <h3>Output (multiplication)</h3><div id="out-mul"></div>
+                <div id="mul16-rec" hidden>
+                    <h3>(C′) Multiplication with a 16-bit product — Program</h3>
+                    <p class="rec-sub">Extension: the carries of each addition are counted in D, so the full product is stored at 8052H (lower byte) and 8053H (upper byte).</p>
+                    <div id="prog-mul16"></div>
+                    <h3>Output (16-bit product)</h3><div id="out-mul16"></div>
+                </div>
+
+                <h3>(D) Division — Algorithm</h3><ol id="alg-div"></ol>
+                <h3>Flowchart (division)</h3><div class="rec-diagram" data-diagram="fdiv"></div>
+                <h3>Program (division)</h3><div id="prog-div"></div>
+                <h3>Output (division)</h3><div id="out-div"></div>
+
+                <h3>Result</h3>
+                <div class="result-box">The arithmetic operations such as addition, subtraction, multiplication and division are done on the 8-bit binary numbers by using 8085 microprocessor assembly language program.</div>
+            </article>
+        </section>
+
+        <section id="viva" class="block">
+            <h2 class="block-title">&#x1F3A4; Viva voce</h2>
+            <div id="viva-list"></div>
+        </section>
+    </main>
+
+    <footer class="page-footer">Practical II &middot; Exp 20 &bull; The simulator runs the real 8085 instructions of the program</footer>
+
+    <script src="assets/msc-common.js"></script>
+    <script src="assets/cpu8085.js"></script>
+    <script src="assets/programs8085.js"></script>
+    <script>
+    'use strict';
+    const $ = (id) => document.getElementById(id);
+    const P = PROGRAMS8085, h2 = CPU8085.h2, h4 = CPU8085.h4;
+    const hexd = (v, k) => ((v >> (4 * k)) & 15).toString(16).toUpperCase();
+    const hx = (n) => n.toString(16).toUpperCase();
+
+    // state (declared before mount: the widget callbacks use them)
+    let op = 'add', mul16 = false;
+    const inputs = {
+        add: { 0x8050: 0x25, 0x8051: 0x12 },
+        sub: { 0x8050: 0x45, 0x8051: 0x23 },
+        mul: { 0x8050: 0x05, 0x8051: 0x04 },
+        div: { 0x8150: 0x05, 0x8151: 0x2E },
+    };
+    let W = null, pending = false;
+    const vis = {};
+    const chipPrev = {};
+    const prog = (o) => { o = o || op; return o === 'add' ? P.add8 : o === 'sub' ? P.sub8 : o === 'mul' ? (mul16 ? P.mul8c : P.mul8) : P.div8; };
+    const cellsFor = (o) => prog(o).cells.map(c => Object.assign({}, c, c.input ? { value: inputs[o][c.addr] } : {}));
+    const INFO = {
+        add: { title: 'Column addition done by ADD B', map: '<b>8050H</b> = first number, <b>8051H</b> = second number &rarr; <b>8052H</b> = sum, <b>8053H</b> = carry.' },
+        sub: { title: 'Subtraction by 2’s complement (SUB B)', map: '<b>8050H</b> = first number (minuend), <b>8051H</b> = second number (subtrahend) &rarr; <b>8052H</b> = difference, <b>8053H</b> = borrow (01 means the answer is negative).' },
+        mul: { title: 'Multiplication by repeated addition', map: '<b>8050H</b> = multiplicand, <b>8051H</b> = multiplier &rarr; <b>8052H</b> = product' },
+        div: { title: 'Division by repeated subtraction', map: '<b>8150H</b> = divisor, <b>8151H</b> = dividend &rarr; <b>8152H</b> = remainder, <b>8153H</b> = quotient.' },
+    };
+    const STUCK_DIV = 'The divisor is 00H: subtracting 0 never makes A smaller than B, so CMP B never sets CY and the loop never ends. Press ⏮ Reset, enter a divisor from 01H to FFH and run again.';
+
+    function resetVis(api) {
+        const mem = api.machine.mem;
+        Object.assign(vis, { last: '', flash: {}, stopped: false });
+        vis.add = { a: mem[0x8051], b: mem[0x8050], aReady: false, bReady: false, done: false };
+        vis.sub = { a: mem[0x8050], b: mem[0x8051], aReady: false, bReady: false, done: false, cma: null, inr: null, res: null, borrow: 0 };
+        vis.mul = { m1: mem[0x8050], m2: mem[0x8051], adds: 0, trail: [], lastAdd: null, carries: 0 };
+        vis.div = { dvs: mem[0x8150], dvd: mem[0x8151], subs: 0, left: mem[0x8151], cmp: null, started: false, lastSub: false };
+    }
+
+    const CFG = {
+        source: P.add8.source,
+        cells: cellsFor('add'),
+        speed: 3,
+        editable: true,
+        stepHookOnRun: true,
+        maxSteps: 5000,
+        monitor: P.div8.monitor,
+        stuckHint: 'Check the program.',
+        onReset(api) { W = api; resetVis(api); scheduleRender(); },
+        onStep(info, api) {
+            W = api;
+            const mn = info.mn || '', a = info.after, b = info.before;
+            vis.last = mn;
+            if (op === 'add') {
+                const v = vis.add;
+                if (mn === 'MOV B,A') { v.b = a.B; v.bReady = true; }
+                else if (mn === 'LDA 8051H') { v.a = a.A; v.aReady = true; }
+                else if (mn === 'ADD B') { v.a = b.A; v.b = b.B; v.aReady = v.bReady = true; v.done = true; }
+            } else if (op === 'sub') {
+                const v = vis.sub;
+                if (mn === 'MOV B,A') { v.b = a.B; v.bReady = true; }
+                else if (mn === 'LDA 8050H') { v.a = a.A; v.aReady = true; }
+                else if (mn === 'SUB B') { v.a = b.A; v.b = b.B; v.aReady = v.bReady = true; v.done = true; v.res = a.A; v.borrow = a.F.CY; }
+                else if (mn === 'CMA') v.cma = a.A;
+                else if (mn === 'INR A') v.inr = a.A;
+            } else if (op === 'mul') {
+                const v = vis.mul;
+                if (mn === 'MOV B,M') v.m1 = a.B;
+                else if (mn === 'MOV C,M') v.m2 = a.C;
+                else if (mn === 'ADD B') { v.adds++; v.trail.push(a.A); if (v.trail.length > 12) v.trail.shift(); v.lastAdd = { from: b.A, to: a.A, cy: a.F.CY }; }
+                else if (mn === 'INR D') v.carries++;
+            } else {
+                const v = vis.div;
+                if (mn === 'MOV B,A') v.dvs = a.B;
+                else if (mn === 'LDA 8151H') { v.dvd = a.A; v.left = a.A; v.started = true; }
+                else if (mn === 'SUB B') { v.subs++; v.left = a.A; }
+                else if (mn === 'CMP B') v.cmp = { a: b.A, b: b.B, cy: a.F.CY };
+                if (v.dvs === 0 && v.subs === 3 && mn === 'SUB B') { api.pause(); vis.stopped = true; }
+            }
+            scheduleRender();
+        },
+        onHalt(api) { W = api; scheduleRender(); },
+    };
+    const cpu = CPU8085.mount('#cpu', CFG);
+    W = cpu;
+
+    function scheduleRender() {
+        if (pending) return;
+        pending = true;
+        const go = () => { pending = false; render(); };
+        if (document.hidden) setTimeout(go, 30); else requestAnimationFrame(go);
+    }
+
+    // ------------------------------------------------------------------ visuals
+    const cell = (t, c) => '<span' + (c ? ' class="' + c + '"' : '') + '>' + t + '</span>';
+    const bitsRow = (f) => { let t = ''; for (let i = 7; i >= 0; i--) { if (i === 3) t += f(-1); t += f(i); } return t; };
+    function colSumHTML(o) {
+        const a = o.a & 0xFF, b = o.b & 0xFF, s = a + b, r = s & 0xFF, cy = s > 0xFF ? 1 : 0, done = o.done;
+        const car = [0];
+        for (let i = 0; i < 8; i++) car.push((((a >> i) & 1) + ((b >> i) & 1) + car[i]) >> 1);
+        const q = (t) => (done ? t : '<i class="q">?</i>');
+        const ac = o.aReady ? '' : 'dim', bc = o.bReady ? '' : 'dim';
+        let hxg = cell('', 'lab') + cell('CY', 'hd') + cell('16¹', 'hd') + cell('16⁰', 'hd');
+        hxg += cell('carry', 'lab car') + cell(done && cy ? '1' : '', 'car') + cell(done && car[4] ? '1' : '', 'car') + cell('', 'car');
+        hxg += cell('A', 'lab') + cell('') + cell(hexd(a, 1), ac) + cell(hexd(a, 0), ac);
+        hxg += cell('+ B', 'lab') + cell('') + cell(hexd(b, 1), bc) + cell(hexd(b, 0), bc);
+        hxg += cell('sum', 'lab') + cell(done ? String(cy) : '?', 'sr cy' + (done && cy ? ' lit' : '')) + cell(q(hexd(r, 1)), 'sr') + cell(q(hexd(r, 0)), 'sr');
+        let bn = cell('', 'lab') + cell('CY', 'hd') + bitsRow(i => (i < 0 ? cell('') : cell('D' + i, 'hd')));
+        bn += cell('carry', 'lab car') + cell(done && car[8] ? '1' : '', 'car') + bitsRow(i => (i < 0 ? cell('', 'car') : cell(done && i > 0 && car[i] ? '1' : '', 'car')));
+        bn += cell('A', 'lab') + cell('') + bitsRow(i => (i < 0 ? cell('') : cell((a >> i) & 1, ac)));
+        bn += cell('+ B', 'lab') + cell('') + bitsRow(i => (i < 0 ? cell('') : cell((b >> i) & 1, bc)));
+        bn += cell('sum', 'lab') + cell(done ? String(cy) : '?', 'sr cy' + (done && cy ? ' lit' : '')) + bitsRow(i => (i < 0 ? cell('', 'sr') : cell(q((r >> i) & 1), 'sr')));
+        return '<div class="cs-wrap"><div class="cs-block"><div class="cs-title">Hexadecimal</div><div class="cs hex">' + hxg + '</div></div>' +
+            '<div class="cs-block"><div class="cs-title">Binary (what the ALU adds)</div><div class="cs bin">' + bn + '</div></div></div>';
+    }
+    function twosHTML(o) {
+        const a = o.a & 0xFF, b = o.b & 0xFF, c1 = (~b) & 0xFF, c2 = (c1 + 1) & 0xFF, s = a + c2, r = s & 0xFF, co = s > 0xFF ? 1 : 0;
+        const row = (lab, v, cls, first, hexText) => cell(lab, 'lab' + (first ? ' ' + first : '')) + cell(first === 'sr' && o.done ? String(co) : '', (first || '') + (first === 'sr' ? ' cy' + (co ? ' lit' : '') : '')) +
+            bitsRow(i => (i < 0 ? cell('', first || '') : cell((v >> i) & 1, [cls, first].filter(Boolean).join(' ')))) + cell(hexText || h2(v) + 'H', 'hx ' + (first || '') + (cls ? ' ' + cls : ''));
+        let g = cell('', 'lab') + cell('', 'hd') + bitsRow(i => (i < 0 ? cell('') : cell('D' + i, 'hd'))) + cell('hex', 'hd');
+        g += row('A (minuend)', a, o.aReady ? '' : 'dim');
+        g += row('B (subtrahend)', b, o.bReady ? '' : 'dim');
+        if (o.done) {
+            g += row('1’s comp. of B', c1, 'soft', 'newrow');
+            g += row('+1 → 2’s comp.', c2, '');
+            g += row('A + 2’s comp.', r, '', 'sr');
+            if (o.cma !== null) g += row('CMA', o.cma, '', 'newrow');
+            if (o.inr !== null) g += row('INR A', o.inr, '');
+        } else {
+            g += cell('A − B', 'lab sr') + cell('?', 'sr') + bitsRow(i => cell('<i class="q">?</i>', 'sr')) + cell('', 'sr');
+        }
+        return '<div class="cs-wrap"><div class="cs-block"><div class="cs-title">Binary working (carry out in the first column)</div><div class="cs tc">' + g + '</div></div></div>';
+    }
+    function mulHTML(m) {
+        const v = vis.mul, total = v.m2 || 256, dense = total > 40;
+        let s = '';
+        for (let k = 0; k < total; k++) s += '<i class="' + (k < v.adds ? (k === v.adds - 1 && vis.last === 'ADD B' ? 'now' : 'on') : '') + '">' + (dense ? '' : '+' + h2(v.m1)) + '</i>';
+        $('mul-bar').className = 'segbar' + (dense ? ' dense' : '');
+        $('mul-bar').innerHTML = s;
+        $('mul-leg').textContent = 'One block for each ADD B: the multiplicand ' + h2(v.m1) + 'H is added ' + (v.m2 ? h2(v.m2) + 'H = ' + v.m2 : '256') + ' times. ' + v.adds + ' done' + (m.steps ? ', C = ' + h2(m.C) + ' left to go.' : '.');
+        $('mul-trail').innerHTML = 'A: 00' + v.trail.map((x, i) => ' → ' + (i === v.trail.length - 1 ? '<b>' + h2(x) + '</b>' : h2(x))).join('') + (mul16 ? ' &nbsp; (D = ' + h2(m.D) + ')' : '');
+        const p = v.m1 * v.m2, parts = Array(Math.min(total, 6)).fill(h2(v.m1) + 'H');
+        $('mul-eqn').innerHTML = h2(v.m1) + 'H × ' + h2(v.m2) + 'H = ' + (total <= 6 ? parts.join(' + ') : h2(v.m1) + 'H added ' + total + ' times') + ' = <b>' + (p > 0xFF ? h4(p) : h2(p)) + 'H</b> &nbsp;(' + v.m1 + ' × ' + v.m2 + ' = ' + p + ')';
+    }
+    function divHTML(m) {
+        const v = vis.div, dvd = v.dvd, dvs = v.dvs, bar = $('div-bar');
+        if (!dvd) { bar.innerHTML = '<i class="left" style="width:100%">dividend is 00H — nothing to divide</i>'; }
+        else {
+            let s = '';
+            const w = dvs ? 100 * dvs / dvd : 0;
+            for (let k = 0; k < v.subs && dvs; k++) s += '<i class="chunk' + (k === v.subs - 1 && vis.last === 'SUB B' ? ' now' : '') + '" style="width:' + w + '%">' + (w > 5 ? k + 1 : '') + '</i>';
+            const lw = 100 * v.left / dvd;
+            s += '<i class="left" style="width:' + lw + '%">' + (lw > 8 ? h2(v.left) + 'H' : '') + '</i>';
+            bar.innerHTML = s;
+        }
+        $('div-leg').textContent = 'The whole bar is the dividend ' + h2(dvd) + 'H (' + dvd + '). Each striped block is one divisor (' + h2(dvs) + 'H) taken away by SUB B; the solid part is what is left in A.';
+        const done = m.halted && !m.error;
+        const q = dvs ? Math.floor(dvd / dvs) : 0, r = dvs ? dvd % dvs : dvd;
+        $('div-eqn').innerHTML = !dvs ? '<b>Division by zero is not possible.</b>'
+            : done ? h2(dvd) + 'H = ' + h2(m.mem[0x8153]) + 'H × ' + h2(dvs) + 'H + ' + h2(m.mem[0x8152]) + 'H &nbsp;(' + dvd + ' = ' + q + ' × ' + dvs + ' + ' + r + ') → quotient <b>' + h2(m.mem[0x8153]) + 'H</b>, remainder <b>' + h2(m.mem[0x8152]) + 'H</b>'
+                : h2(dvd) + 'H − ' + h2(dvs) + 'H' + (v.subs > 1 ? ' − … (' + v.subs + ' times)' : v.subs ? '' : ' …') + ' → A = <b>' + h2(v.left) + 'H</b>, C (quotient so far) = <b>' + h2(m.C) + '</b>';
+    }
+    function chipsHTML(m) {
+        const list = op === 'add' ? [['A', m.A], ['B', m.B], ['C (carry)', m.C]]
+            : op === 'sub' ? [['A', m.A], ['B', m.B], ['C (borrow / sign)', m.C]]
+                : op === 'mul' ? [['B (multiplicand)', m.B], ['C (multiplier left)', m.C], ['A (product)', m.A]].concat(mul16 ? [['D (upper byte)', m.D]] : [])
+                    : [['B (divisor)', m.B], ['A (dividend left)', m.A], ['C (quotient)', m.C]];
+        const html = list.map(([n, v]) => {
+            const key = op + n, ch = m.steps > 0 && chipPrev[key] !== undefined && chipPrev[key] !== v;
+            chipPrev[key] = v;
+            return '<span class="chip' + (ch ? ' pulse' : '') + '">' + n + ' <b>' + h2(v) + '</b></span>';
+        }).join('');
+        return html;
+    }
+    function sayText(m) {
+        const done = m.halted && !m.error;
+        if (op === 'add') {
+            const v = vis.add, s = v.a + v.b;
+            if (done) return 'Result: 8052H = <b class="mono">' + h2(m.mem[0x8052]) + 'H</b> (sum), 8053H = <b class="mono">' + h2(m.mem[0x8053]) + 'H</b> (carry) → ' + h2(v.b) + 'H + ' + h2(v.a) + 'H = ' + hx(s) + 'H (' + v.b + ' + ' + v.a + ' = ' + s + ').';
+            if (!v.done) return 'First the program loads the first number into B (LDA 8050H, MOV B,A), then the second number into A (LDA 8051H), and clears C for the carry. Press ⏭ Step.';
+            return '<span class="mono">' + h2(v.a) + 'H + ' + h2(v.b) + 'H = ' + (s > 0xFF ? '1' : '') + h2(s) + 'H</span>. ' + (s > 0xFF
+                ? 'The sum needs a <b>ninth bit</b>, so CY = 1 and A keeps only ' + h2(s) + 'H. JNC does not jump, so <b>INR C</b> makes the carry 01H.'
+                : 'It fits in 8 bits: CY = 0, so JNC SKIP jumps over INR C and the carry stays 00H.');
+        }
+        if (op === 'sub') {
+            const v = vis.sub, d = v.a - v.b;
+            if (done) return 'Result: 8052H = <b class="mono">' + h2(m.mem[0x8052]) + 'H</b>, 8053H = <b class="mono">' + h2(m.mem[0x8053]) + 'H</b> → ' + h2(v.a) + 'H − ' + h2(v.b) + 'H = ' + (d < 0 ? '−' : '') + h2(Math.abs(d)) + 'H (' + v.a + ' − ' + v.b + ' = ' + d + ')' + (d < 0 ? '; the 01H at 8053H is the minus sign.' : '.');
+            if (!v.done) return 'The program puts the second number in B and the first number in A. SUB B then works out A + (2’s complement of B) in one go. Press ⏭ Step.';
+            let t = 'Carry out of the addition = ' + (v.borrow ? 0 : 1) + ', so the 8085 sets the borrow flag <b>CY = ' + v.borrow + '</b>. ';
+            t += v.borrow ? 'A borrow means B was bigger: the answer is negative and A = ' + h2(v.res) + 'H is in 2’s complement form. The program sets C = 01H (minus sign), then <b>CMA</b> and <b>INR A</b> take the 2’s complement again to get the size of the difference' + (v.inr !== null ? ': <b class="mono">' + h2(v.inr) + 'H</b>.' : '.')
+                : 'No borrow: the answer ' + h2(v.res) + 'H is positive, so JNC SKIP jumps straight to STA 8052H.';
+            return t;
+        }
+        if (op === 'mul') {
+            const v = vis.mul, p = v.m1 * v.m2;
+            if (done) {
+                const lo = m.mem[0x8052], hi = mul16 ? m.mem[0x8053] : 0, got = hi * 256 + lo;
+                return 'Result: product = <b class="mono">' + (mul16 ? h2(hi) + h2(lo) : h2(lo)) + 'H</b> (' + got + ').' + (!mul16 && p > 0xFF ? ' <b>But the true product is ' + h4(p) + 'H (' + p + ')</b>: this program keeps only the lower byte. Turn on “16-bit product” to count the carries.' : (got === p ? ' ✓ ' + v.m1 + ' × ' + v.m2 + ' = ' + p : ''));
+            }
+            if (!v.adds) return 'B gets the multiplicand and C the multiplier; A starts at 00H. Then <b>ADD B</b> is repeated while <b>DCR C</b> counts down to zero. Press ⏭ Step.';
+            const L = v.lastAdd;
+            return 'Addition ' + v.adds + ': A = ' + h2(L.from) + 'H + ' + h2(v.m1) + 'H = <b class="mono">' + h2(L.to) + 'H</b>' + (L.cy ? (mul16 ? ' with a carry — <b>INR D</b> adds 1 to the upper byte.' : ' with a carry (CY = 1) that this 8-bit program throws away!') : '.') +
+                ' DCR C then counts the multiplier down; JNZ RPT repeats until C = 00H.';
+        }
+        const v = vis.div;
+        if (!v.dvs && v.started) return '<b>The divisor is 00H.</b> Subtracting 0 never makes A smaller, so the program would loop for ever' + (vis.stopped ? ' — the page paused it after 3 turns.' : '.') + ' Press ⏮ Reset and enter a divisor from 01H to FFH.';
+        if (done) return 'Result: remainder <b class="mono">' + h2(m.mem[0x8152]) + 'H</b> at 8152H and quotient <b class="mono">' + h2(m.mem[0x8153]) + 'H</b> at 8153H. CALL DISP then shows them on the kit’s display (a monitor routine).';
+        if (v.cmp) return 'CMP B: A (' + h2(v.cmp.a) + 'H) ' + (v.cmp.cy ? '&lt; B (' + h2(v.cmp.b) + 'H) → CY = 1: the divisor does not fit any more. ' + (v.subs ? 'A is the remainder and C the quotient.' : 'The dividend is smaller than the divisor, so JC END skips the loop: quotient 00H, remainder = dividend.')
+            : '≥ B (' + h2(v.cmp.b) + 'H) → CY = 0: the divisor fits again, so ' + (v.subs ? 'JNC RPT' : 'the program falls into RPT and') + ' subtracts once more.') + ' C (quotient so far) = ' + h2(W.machine.C) + '.';
+        return 'B gets the divisor and A the dividend; C = 00H will count how many times the divisor can be taken away. Press ⏭ Step.';
+    }
+    function render() {
+        if (!W) return;
+        const m = W.machine;
+        $('chips').innerHTML = chipsHTML(m);
+        if (op === 'add') $('colsum').innerHTML = colSumHTML(vis.add);
+        else if (op === 'sub') $('twos').innerHTML = twosHTML(vis.sub);
+        else if (op === 'mul') mulHTML(m);
+        else divHTML(m);
+        const say = $('say');
+        say.innerHTML = sayText(m);
+        say.classList.toggle('bad', op === 'div' && vis.div.dvs === 0 && vis.div.started);
+    }
+
+    // ------------------------------------------------------------------ controls
+    function sampleLabel(s) {
+        const i = s.inputs;
+        if (op === 'add') return s.name + ' (' + h2(i[0x8050]) + ' + ' + h2(i[0x8051]) + ')';
+        if (op === 'sub') return s.name + ' (' + h2(i[0x8050]) + ' − ' + h2(i[0x8051]) + ')';
+        if (op === 'mul') return s.name;
+        return s.name.replace('Record case', 'Case') + ': ' + h2(i[0x8151]) + 'H ÷ ' + h2(i[0x8150]) + 'H';
+    }
+    function renderSamples() {
+        $('samples').innerHTML = prog().samples.map((s, i) => '<button class="btn btn-sm" data-sample="' + i + '">' + sampleLabel(s) + '</button>').join('');
+        $('try-lab').textContent = op === 'div' ? 'Record cases' : 'Try';
+    }
+    function hints() {
+        const i = inputs[op];
+        let t = '';
+        if (op === 'mul') {
+            const p = i[0x8050] * i[0x8051];
+            if (i[0x8051] === 0) t = 'Multiplier 00H: DCR C turns 00H into FFH, so the loop runs 256 times instead of 0. The 8-bit answer happens to come out 00H, but the 16-bit version gives ' + h2(i[0x8050]) + '00H instead of 0000H. Use a multiplier from 01H.';
+            else if (!mul16 && p > 0xFF) t = 'The true product ' + h2(i[0x8050]) + 'H × ' + h2(i[0x8051]) + 'H = ' + h4(p) + 'H needs 16 bits, but the record’s program keeps only the lower byte (' + h2(p) + 'H). Turn on “16-bit product” to count the carries in D.';
+        } else if (op === 'div') {
+            if (i[0x8150] === 0) t = 'The divisor at 8150H is 00H. Division by zero is not possible: the program would subtract 0 for ever. The simulator stops it, but on the kit you would have to press RESET.';
+        }
+        $('input-hint').innerHTML = t ? '<div class="note warn"><span class="note-tag">Check the input</span>' + t + '</div>' : '';
+    }
+    $('samples').addEventListener('click', e => {
+        const b = e.target.closest('[data-sample]');
+        if (!b) return;
+        const s = prog().samples[Number(b.dataset.sample)];
+        Object.keys(inputs[op]).forEach(a => { if (s.inputs[a] !== undefined) inputs[op][a] = s.inputs[a]; });
+        W.setInputs(inputs[op]);
+        hints(); updateRecord();
+    });
+    $('cpu').addEventListener('change', e => {
+        if (!e.target.closest('input[data-cell]')) return;
+        W.cells.forEach(c => { if (c.input && inputs[op][c.addr] !== undefined) inputs[op][c.addr] = c.initial & 0xFF; });
+        hints(); updateRecord();
+    });
+    $('mul16').addEventListener('click', () => {
+        mul16 = !mul16;
+        $('mul16').classList.toggle('on', mul16);
+        $('mul16').setAttribute('aria-pressed', String(mul16));
+        setOp('mul', true);
+    });
+
+    function setOp(t, force) {
+        if (t === op && !force) return;
+        op = t;
+        CFG.stuckHint = t === 'div' ? STUCK_DIV : 'Check the program and the inputs.';
+        W.setCells(cellsFor(t));
+        W.setSource(prog().source);
+        ['add', 'sub', 'mul', 'div'].forEach(k => { $('vis-' + k).hidden = k !== t; });
+        $('mul16').hidden = t !== 'mul';
+        $('vis-title').textContent = INFO[t].title + (t === 'mul' && mul16 ? ' (16-bit product)' : '');
+        $('memmap').innerHTML = 'Memory: ' + INFO[t].map + (t === 'mul' ? (mul16 ? ' (lower byte), <b>8053H</b> = upper byte.' : '.') : '') + ' Type your own numbers into the kit’s memory table below.';
+        renderSamples(); hints();
+        $('prog-notes').innerHTML = (prog().notes || (t === 'mul' ? P.mul8.notes : []) || []).map(x => '<div class="note warn"><span class="note-tag">Check your record</span>' + x + '</div>').join('');
+        updateRecord();
+        scheduleRender();
+    }
+    MSC.onTab('op', t => setOp(t));
+
+
+    // ------------------------------------------------------------------ record
+    const CASE_ROWS = {
+        add: [[0x8050, 'First number'], [0x8051, 'Second number'], [0x8052, 'Sum'], [0x8053, 'Carry']],
+        sub: [[0x8050, 'First number'], [0x8051, 'Second number'], [0x8052, 'Difference'], [0x8053, 'Borrow (sign)']],
+        mul: [[0x8050, 'Multiplicand'], [0x8051, 'Multiplier'], [0x8052, 'Product']],
+        mul16: [[0x8050, 'Multiplicand'], [0x8051, 'Multiplier'], [0x8052, 'Product (lower)'], [0x8053, 'Product (upper)']],
+        div: [[0x8150, 'Divisor'], [0x8151, 'Dividend'], [0x8152, 'Remainder'], [0x8153, 'Quotient']],
+    };
+    function caseTable(p, rowsDef, own) {
+        const cases = p.samples.map((s, i) => ({ name: /Record case/.test(s.name) ? 'Case ' + (i + 1) : s.name, inputs: s.inputs }));
+        const same = (a, b) => Object.keys(a).every(k => a[k] === b[k]);
+        if (!cases.some(c => same(own, c.inputs))) cases.push({ name: 'Your input', inputs: own });
+        const runs = cases.map(c => { try { return CPU8085.run(p.source, c.inputs, { monitor: p.monitor, maxSteps: 5000 }); } catch (e) { return null; } });
+        const head = [['Memory address', 'Contents'].concat(cases.map(c => c.name))];
+        const rows = rowsDef.map(([addr, label]) => [{ t: h4(addr) + 'H', cls: 'mono' }, { t: label, cls: 'l' }].concat(cases.map((c, i) => {
+            if (c.inputs[addr] !== undefined) return { t: h2(c.inputs[addr]), cls: 'mono' };
+            const m = runs[i];
+            return { t: m && m.halted && !m.error ? h2(m.mem[addr]) : '??', cls: 'mono' };
+        })));
+        return MSC.table(head, rows);
+    }
+    function updateRecord() {
+        ['add', 'sub', 'mul', 'div'].forEach(k => {
+            const p = k === 'mul' ? P.mul8 : prog(k);
+            $('alg-' + k).innerHTML = p.algorithm.map(s => '<li>' + s + '</li>').join('');
+            $('prog-' + k).innerHTML = CPU8085.listingHTML(CPU8085.assemble(p.source));
+            $('out-' + k).innerHTML = caseTable(p, CASE_ROWS[k], inputs[k]);
+        });
+        $('mul16-rec').hidden = !mul16;
+        if (mul16) {
+            $('prog-mul16').innerHTML = CPU8085.listingHTML(CPU8085.assemble(P.mul8c.source));
+            $('out-mul16').innerHTML = caseTable(P.mul8c, CASE_ROWS.mul16, inputs.mul);
+        }
+    }
+
+    // ------------------------------------------------------------------ diagrams
+    [['fadd', P.add8.flowchart, 'Flowchart — addition of two 8-bit numbers'], ['fsub', P.sub8.flowchart, 'Flowchart — subtraction of two 8-bit numbers'],
+        ['fmul', P.mul8.flowchart, 'Flowchart — multiplication by repeated addition'], ['fdiv', P.div8.flowchart, 'Flowchart — division by repeated subtraction']].forEach(([name, spec, title]) => {
+        const f = MSC.flowchart(Object.assign({ cx: 300 }, spec));
+        MSC.diagram('#draw-' + name, { name, title, viewBox: f.viewBox, steps: f.steps, maxHeight: 900 });
+    });
+    (function traceDiagram() {
+        const S = MSC.sym, dvs = 0x05, dvd = 0x2E, X = [60, 175, 330, 480, 600], y0 = 50, rh = 30;
+        const steps = [{
+            c: 'Draw a table with columns: turn, A before, A − B, C (quotient) and the CMP B check. Case 1: dividend 2EH (46), divisor 05H (5).',
+            s: ['Turn', 'A before', 'A − B', 'C', 'CMP B'].map((t, i) => S.text(X[i], y0 - 22, t, { size: 13 })).join('') + S.line(20, y0 - 8, 660, y0 - 8) +
+                S.text(X[0], y0 + 6, '—', { size: 13 }) + S.text(X[1], y0 + 6, '2EH', { size: 13, cls: 'mono' }) + S.text(X[3], y0 + 6, '00', { size: 13, cls: 'mono' }) + S.text(X[4], y0 + 6, '2E ≥ 05', { size: 12, cls: 'mono' }),
+        }];
+        let a = dvd, c = 0, k = 0;
+        while (a >= dvs) {
+            const y = y0 + (k + 1) * rh + 6, na = a - dvs;
+            c++; k++;
+            steps.push({
+                c: 'Turn ' + k + ': subtract the divisor, ' + h2(a) + 'H − 05H = ' + h2(na) + 'H, and add 1 to C (C = ' + h2(c) + '). ' + (na >= dvs ? h2(na) + 'H ≥ 05H, so go round again.' : h2(na) + 'H < 05H, so stop.'),
+                s: S.text(X[0], y, String(k), { size: 13 }) + S.text(X[1], y, h2(a) + 'H', { size: 13, cls: 'mono' }) + S.text(X[2], y, h2(na) + 'H', { size: 13, cls: 'mono' }) +
+                    S.text(X[3], y, h2(c), { size: 13, cls: 'mono' }) + S.text(X[4], y, h2(na) + (na >= dvs ? ' ≥ 05' : ' < 05'), { size: 12, cls: 'mono' + (na >= dvs ? '' : ' accent') }),
+            });
+            a = na;
+        }
+        const yEnd = y0 + (k + 1) * rh + 32;
+        steps.push({
+            c: 'Read the answer: A = 01H is the remainder and C = 09H the quotient — 46 = 9 × 5 + 1. They are stored at 8152H and 8153H.',
+            s: S.line(20, yEnd - 18, 660, yEnd - 18) + S.text(340, yEnd, 'Remainder = 01H (8152H)     Quotient = 09H (8153H)', { size: 14, cls: 'accent' }),
+        });
+        MSC.diagram('#draw-trace', { name: 'trace', title: 'Repeated subtraction — case 1 (2EH ÷ 05H)', viewBox: '0 0 680 ' + (yEnd + 22), steps });
+    })();
+
+    // ------------------------------------------------------------------ viva
+    MSC.viva('#viva-list', [
+        { q: 'How does the 8085 subtract?', a: 'By 2’s complement addition: A − B = A + (2’s complement of B). The carry flag is then used as a borrow flag: CY = 1 means a borrow was needed (B was bigger than A).' },
+        { q: 'Why are CMA and INR A used in the subtraction program?', a: 'When there is a borrow the result is negative and is left in 2’s complement form. CMA (1’s complement) followed by INR A (+1) takes the 2’s complement again, giving the magnitude; C = 01H records the minus sign.' },
+        { q: 'Is there a multiply or divide instruction in the 8085?', a: 'No. The 8085 has only ADD/SUB type instructions, so multiplication is done by repeated addition and division by repeated subtraction (or by shift-and-add methods).' },
+        { q: 'In the multiplication program, what do B, C and A hold?', a: 'B holds the multiplicand, C the multiplier (used as a down counter) and A the product being built up. ADD B is repeated and DCR C / JNZ RPT stop the loop when C reaches 00H.' },
+        { q: 'What is the largest product of two 8-bit numbers?', a: 'FFH × FFH = FE01H (255 × 255 = 65025), which needs 16 bits. The record’s program keeps only 8 bits, so the product must be at most FFH unless the carries are counted in another register.' },
+        { q: 'How does the division program find the quotient and remainder?', a: 'It subtracts the divisor (B) from the dividend (A) again and again, adding 1 to C each time, until A becomes smaller than B. C is then the quotient and A the remainder.' },
+        { q: 'Why is CMP B done before the loop in the division program?', a: 'If the dividend is already smaller than the divisor, JC END skips the loop, so the quotient is 00H and the remainder is the dividend itself.' },
+        { q: 'What happens if the divisor is 00H?', a: 'Subtracting 0 never makes A smaller than B, so CMP B never sets CY and the loop runs for ever (the kit hangs until RESET). The divisor must be checked for zero.' },
+        { q: 'What does CMP B do to the registers and flags?', a: 'It calculates A − B without storing the result, so A is unchanged. CY = 1 if A < B, Z = 1 if A = B; the other flags are set as for SUB.' },
+        { q: 'Why is the opcode of MOV A,C 79H and not 77H?', a: 'MOV is coded 01 DDD SSS. A = 111 and C = 001, so MOV A,C = 01 111 001 = 79H. 77H = 01 110 111 is MOV M,A.' },
+        { q: 'What is CALL DISP?', a: 'A call to the trainer kit’s monitor routine that shows the result on the kit’s seven-segment display. CALL pushes the return address on the stack; the routine’s address (here 1380H) depends on the kit.' },
+        { q: 'What is the difference between JC and JNC?', a: 'JC jumps if the carry flag is set (CY = 1); JNC jumps if it is reset (CY = 0). Both are 3-byte conditional jumps.' },
+    ]);
+
+    setOp('add', true);
+    render();
+    </script>
+</body>
+</html>

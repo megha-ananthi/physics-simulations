@@ -17,6 +17,9 @@
     --color-forces: #7E57C2;
     --color-forces-light: #EDE7F6;
     --color-forces-glow: rgba(126, 87, 194, 0.3);
+    --color-practicals: #00897B;
+    --color-practicals-light: #E0F2F1;
+    --color-practicals-glow: rgba(0, 137, 123, 0.3);
     --color-bg: #F5F0FF;
     --color-bg-dark: #E8E0F5;
     --color-text: #2D2D2D;
@@ -209,6 +212,10 @@ a {
     background: var(--color-forces);
 }
 
+.legend-badge.practicals {
+    background: var(--color-practicals);
+}
+
 .legend-badge .badge-icon {
     font-size: 1.1rem;
 }
@@ -248,6 +255,7 @@ a {
 .experiment-card:nth-child(4) { animation-delay: 0.4s; }
 .experiment-card:nth-child(5) { animation-delay: 0.5s; }
 .experiment-card:nth-child(6) { animation-delay: 0.6s; }
+.experiment-card:nth-child(7) { animation-delay: 0.7s; }
 
 .experiment-card:hover {
     transform: translateY(-8px) scale(1.02);
@@ -275,6 +283,10 @@ a {
     border-top-color: var(--color-forces);
 }
 
+.experiment-card.practicals {
+    border-top-color: var(--color-practicals);
+}
+
 /* Category glow on hover */
 .experiment-card.magnetic:hover {
     box-shadow: 0 8px 30px var(--color-magnetic-glow), var(--shadow-card-hover);
@@ -290,6 +302,10 @@ a {
 
 .experiment-card.forces:hover {
     box-shadow: 0 8px 30px var(--color-forces-glow), var(--shadow-card-hover);
+}
+
+.experiment-card.practicals:hover {
+    box-shadow: 0 8px 30px var(--color-practicals-glow), var(--shadow-card-hover);
 }
 
 /* --- Card Badge --- */
@@ -320,6 +336,10 @@ a {
 
 .forces .card-badge {
     background: var(--color-forces);
+}
+
+.practicals .card-badge {
+    background: var(--color-practicals);
 }
 
 /* --- Card Icon --- */
@@ -373,6 +393,10 @@ a {
 
 .forces .card-cta {
     color: var(--color-forces);
+}
+
+.practicals .card-cta {
+    color: var(--color-practicals);
 }
 
 .card-cta .arrow {

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8085 Sorting - Ascending &amp; Descending - M.Sc. Practicals - Science Lab</title>
+    <meta name="description" content="Step through the 8085 bubble-sort program for ascending and descending order and watch the numbers being compared and exchanged in memory.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/msc.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F4CA;</text></svg>">
+    <style>
+        :root { --accent: #8E24AA; --accent-soft: rgba(142, 36, 170, 0.12); --accent-border: rgba(142, 36, 170, 0.5); }
+        .arr { display: flex; gap: 0.5rem; align-items: flex-end; justify-content: center; min-height: 190px; padding: 0.8rem 0.4rem 0.2rem; }
+        .cell { flex: 1 1 0; max-width: 84px; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; }
+        .cell .bar { width: 100%; border-radius: 8px 8px 3px 3px; background: #D1C4E9; transition: height 0.35s cubic-bezier(0.34,1.56,0.64,1), background 0.25s; min-height: 8px; }
+        .cell .val { font-family: var(--font-mono); font-weight: 800; font-size: 1.05rem; }
+        .cell .adr { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-soft); }
+        .cell.cmp .bar { background: var(--read); }
+        .cell.swap .bar { background: var(--write); }
+        .cell.done .bar { background: #66BB6A; }
+        .cell.cmp .val { color: var(--read); }
+        .cell.swap .val { color: var(--write); }
+        .chips { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-top: 0.6rem; }
+        .chip { background: #F6F2FE; border: 1px solid var(--line); border-radius: 50px; padding: 0.25rem 0.8rem; font-size: 0.82rem; font-weight: 800; }
+        .chip b { color: var(--accent); font-family: var(--font-mono); }
+        .chip.flag-on { background: var(--warn-soft); border-color: rgba(230,119,0,0.5); }
+        .legend { display: flex; gap: 0.9rem; justify-content: center; flex-wrap: wrap; font-size: 0.78rem; color: var(--ink-soft); margin-top: 0.4rem; }
+        .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 0.3rem; }
+        .diff { font-family: var(--font-mono); background: #FBFAFF; border: 1px dashed var(--accent-border); border-radius: 10px; padding: 0.5rem 0.8rem; font-size: 0.86rem; }
+        .diff b { color: var(--accent); }
+    </style>
+</head>
+<body>
+    <header class="top-bar">
+        <a href="index.html" class="back-btn">&larr; Practicals</a>
+        <div class="exp-heading">
+            <span class="exp-chip">Practical II &middot; Exp 18</span>
+            <h1 class="exp-title">&#x1F4CA; 8085 — Ascending &amp; Descending Order</h1>
+        </div>
+        <a href="../../index.html" class="back-btn">&#x1F3E0; Lab</a>
+    </header>
+    <p class="big-idea"><strong>Bubble sort</strong>: compare each number with the next one and swap them if they are in the wrong order. After every
+        pass the biggest (or smallest) number has “bubbled” to the end. A flag in the <strong>D register</strong> remembers whether any swap happened.</p>
+    <nav class="section-nav">
+        <a href="#simulate">&#x1F52C; Simulate</a><a href="#draw">&#x270F;&#xFE0F; Draw it</a><a href="#record">&#x1F4DD; Record</a><a href="#viva">&#x1F3A4; Viva</a>
+    </nav>
+
+    <main>
+        <section id="simulate" class="block">
+            <h2 class="block-title">&#x1F52C; Simulate <span class="hint-inline">Press ⏭ Step to run one instruction at a time and watch the memory below.</span></h2>
+            <div class="tabs" data-tabs="order">
+                <button class="tab-btn active" data-tab="asc">&#x2B06;&#xFE0F; Ascending order</button>
+                <button class="tab-btn" data-tab="desc">&#x2B07;&#xFE0F; Descending order</button>
+            </div>
+
+            <div class="card">
+                <h3>Memory 8041H onwards <span style="font-family:var(--font-body);font-size:0.8rem;color:var(--ink-soft)">(the numbers being sorted)</span></h3>
+                <div class="arr" id="arr"></div>
+                <div class="chips">
+                    <span class="chip">Pass <b id="c-pass">0</b></span>
+                    <span class="chip">Comparisons left (C) <b id="c-c">--</b></span>
+                    <span class="chip" id="c-flag-chip">Exchange flag (D) <b id="c-flag">00</b></span>
+                    <span class="chip">Swaps so far <b id="c-swaps">0</b></span>
+                </div>
+                <div class="legend"><span><i style="background:var(--read)"></i>being compared</span><span><i style="background:var(--write)"></i>just exchanged</span><span><i style="background:#66BB6A"></i>sorted (program halted)</span></div>
+                <div class="btn-row" style="justify-content:center;margin-top:0.7rem">
+                    <label class="cpu-status">N =
+                        <select id="nsel"><option>3</option><option>4</option><option>5</option><option selected>6</option><option>7</option><option>8</option></select></label>
+                    <button class="btn btn-sm" id="manual">Manual data (06 05 04 01 02 03)</button>
+                    <button class="btn btn-sm" id="random">&#x1F3B2; Random numbers</button>
+                </div>
+            </div>
+
+            <div class="note" id="diff-note"></div>
+            <div style="margin-top:0.9rem" id="cpu"></div>
+            <div id="prog-notes"></div>
+        </section>
+
+        <section id="draw" class="block">
+            <h2 class="block-title">&#x270F;&#xFE0F; Draw it</h2>
+            <div class="tabs" data-tabs="draw">
+                <button class="tab-btn active" data-tab="fa">Flowchart — ascending</button>
+                <button class="tab-btn" data-tab="fd">Flowchart — descending</button>
+                <button class="tab-btn" data-tab="trace">Pass-by-pass trace</button>
+            </div>
+            <div class="tab-panel" data-group="draw" data-panel="fa" id="draw-fa"></div>
+            <div class="tab-panel" data-group="draw" data-panel="fd" id="draw-fd"></div>
+            <div class="tab-panel" data-group="draw" data-panel="trace" id="draw-trace"></div>
+        </section>
+
+        <section id="record" class="block">
+            <h2 class="block-title">&#x1F4DD; Record sheet</h2>
+            <div class="rec-actions no-print"><button class="btn btn-sm" data-print-record>&#x1F5A8;&#xFE0F; Print record</button></div>
+            <article class="record">
+                <div class="rec-head"><div class="rec-box">Expt. No. ______<br>Date ______</div><div class="rec-box">Page No. ______</div></div>
+                <h2 class="rec-title">ASCENDING AND DESCENDING ORDER — 8085</h2>
+                <h3>Aim</h3>
+                <p>To arrange a series of numbers in ascending and descending order using the 8085 microprocessor.</p>
+                <h3>Apparatus required</h3>
+                <p>8085 microprocessor trainer kit, +5 V power supply.</p>
+
+                <h3>(A) Ascending order — Algorithm</h3>
+                <ol id="alg-asc"></ol>
+                <h3>Flowchart (ascending)</h3>
+                <div class="rec-diagram" data-diagram="fa"></div>
+                <h3>Program (ascending)</h3>
+                <div id="prog-asc"></div>
+                <h3>Observation (ascending)</h3>
+                <div id="io-asc"></div>
+
+                <h3>(B) Descending order — Algorithm</h3>
+                <ol id="alg-desc"></ol>
+                <h3>Flowchart (descending)</h3>
+                <div class="rec-diagram" data-diagram="fd"></div>
+                <h3>Program (descending)</h3>
+                <div id="prog-desc"></div>
+                <h3>Observation (descending)</h3>
+                <div id="io-desc"></div>
+
+                <h3>Result</h3>
+                <div class="result-box" id="rec-result"></div>
+            </article>
+        </section>
+
+        <section id="viva" class="block">
+            <h2 class="block-title">&#x1F3A4; Viva voce</h2>
+            <div id="viva-list"></div>
+        </section>
+    </main>
+
+    <footer class="page-footer">Practical II &middot; Exp 18 &bull; The simulator runs the real 8085 instructions of the program</footer>
+
+    <script src="assets/msc-common.js"></script>
+    <script src="assets/cpu8085.js"></script>
+    <script src="assets/programs8085.js"></script>
+    <script>
+    'use strict';
+    const $ = (id) => document.getElementById(id);
+    const P = PROGRAMS8085, h2 = CPU8085.h2, h4 = CPU8085.h4;
+    const MANUAL = [0x06, 0x05, 0x04, 0x01, 0x02, 0x03];
+    let data = MANUAL.slice();
+    let order = 'asc';
+    const prog = () => (order === 'asc' ? P.sortAsc : P.sortDesc);
+
+    const vis = { pass: 0, swaps: 0, cmp: [], swap: [] };
+    let pending = false;
+    function cellsFor() {
+        return [{ addr: 0x8040, label: 'N (count)', input: true, value: data.length }]
+            .concat(data.map((v, i) => ({ addr: 0x8041 + i, label: 'Number ' + (i + 1), input: true, output: true, value: v })));
+    }
+
+    const cpu = CPU8085.mount('#cpu', {
+        source: prog().source,
+        cells: cellsFor(),
+        speed: 5,
+        editable: true,
+        stepHookOnRun: true,
+        stuckHint: 'The ascending program swaps equal numbers forever (JC does not jump when A = M). Use distinct numbers — see the note below.',
+        onReset() { vis.pass = 0; vis.swaps = 0; vis.cmp = []; vis.swap = []; render(); },
+        onStep(info, api) {
+            if (info.pc === api.asm.symbols.START) vis.pass++;
+            vis.cmp = []; vis.swap = [];
+            if (/^CMP/.test(info.mn || '')) { const hl = (info.after.H << 8) | info.after.L; vis.cmp = [hl - 1, hl]; }
+            const w = info.writes.filter(a => a >= 0x8041 && a < 0x8041 + data.length);
+            if (w.length) { vis.swap = w; if (/^MOV M,B/.test(info.mn)) vis.swaps++; }
+            scheduleRender();
+        },
+        onHalt() { scheduleRender(); },
+    });
+
+    function scheduleRender() { if (!pending) { pending = true; requestAnimationFrame(() => { pending = false; render(); }); } }
+    function render() {
+        const m = cpu.machine, n = data.length;
+        const vals = Array.from({ length: n }, (_, i) => m.mem[0x8041 + i]);
+        const max = Math.max(1, ...vals);
+        const halted = m.halted && !m.error;
+        $('arr').innerHTML = vals.map((v, i) => {
+            const a = 0x8041 + i;
+            const cls = halted ? 'done' : vis.swap.includes(a) ? 'swap' : vis.cmp.includes(a) ? 'cmp' : '';
+            return '<div class="cell ' + cls + '"><span class="val">' + h2(v) + '</span><div class="bar" style="height:' + (20 + 130 * v / max) + 'px"></div><span class="adr">' + h4(a) + '</span></div>';
+        }).join('');
+        $('c-pass').textContent = vis.pass;
+        $('c-c').textContent = m.steps ? h2(m.C) : '--';
+        $('c-flag').textContent = h2(m.D);
+        $('c-flag-chip').classList.toggle('flag-on', m.D === 1);
+        $('c-swaps').textContent = vis.swaps;
+    }
+
+    function setOrder(o) {
+        order = o;
+        cpu.setSource(prog().source);
+        $('diff-note').innerHTML = '<span class="note-tag">Only one line differs</span>' +
+            'At 800BH the ' + (o === 'asc' ? 'ascending' : 'descending') + ' program uses <b>' + (o === 'asc' ? 'JC NEXTBYT (DA, 15, 80)' : 'JNC NEXTBYT (D2, 15, 80)') + '</b>: ' +
+            (o === 'asc' ? 'if A < next number (CY = 1) they are already in order, so skip the exchange.' : 'if A ≥ next number (CY = 0) they are already in order, so skip the exchange.');
+        $('prog-notes').innerHTML = (prog().notes || []).map(t => '<div class="note warn"><span class="note-tag">Check your record</span>' + t + '</div>').join('');
+    }
+    MSC.onTab('order', t => setOrder(t));
+
+    $('nsel').addEventListener('change', e => {
+        const n = Number(e.target.value);
+        data = Array.from({ length: n }, (_, i) => data[i] !== undefined ? data[i] : MANUAL[i % 6] + 0x10 * Math.floor(i / 6));
+        cpu.setCells(cellsFor()); updateRecord();
+    });
+    $('manual').addEventListener('click', () => { data = MANUAL.slice(); $('nsel').value = '6'; cpu.setCells(cellsFor()); updateRecord(); });
+    $('random').addEventListener('click', () => {
+        const n = Number($('nsel').value), set = new Set();
+        while (set.size < n) set.add(1 + Math.floor(Math.random() * 0xFE));
+        data = Array.from(set);
+        cpu.setCells(cellsFor()); updateRecord();
+    });
+    // keep the page's data in sync when the student types into the memory table
+    document.getElementById('cpu').addEventListener('change', () => {
+        const cells = cpu.cells;
+        data = cells.filter(c => c.addr >= 0x8041).map(c => c.initial);
+        updateRecord();
+    });
+
+    // ------------------------------------------------------------------ record
+    function ioTable(p) {
+        const inputs = { 0x8040: data.length };
+        data.forEach((v, i) => { inputs[0x8041 + i] = v; });
+        const m = CPU8085.run(p.source, inputs, { maxSteps: 50000 });
+        const rows = [[h4(0x8040), h2(data.length), '', '']].concat(data.map((v, i) => [h4(0x8041 + i), h2(v), h4(0x8041 + i), m.halted ? h2(m.mem[0x8041 + i]) : '??']));
+        const tbl = MSC.table([[{ t: 'Input', colspan: 2 }, { t: 'Output', colspan: 2 }], ['Address', 'Data', 'Address', 'Data']], rows.map(r => r.map(t => ({ t, cls: 'mono' }))));
+        return tbl + (m.halted ? '' : '<div class="note warn"><span class="note-tag">Program did not stop</span>Two numbers are equal — see the note on JC.</div>');
+    }
+    function updateRecord() {
+        $('alg-asc').innerHTML = P.sortAsc.algorithm.map(s => '<li>' + s + '</li>').join('');
+        $('alg-desc').innerHTML = P.sortDesc.algorithm.map(s => '<li>' + s + '</li>').join('');
+        $('prog-asc').innerHTML = CPU8085.listingHTML(CPU8085.assemble(P.sortAsc.source));
+        $('prog-desc').innerHTML = CPU8085.listingHTML(CPU8085.assemble(P.sortDesc.source));
+        $('io-asc').innerHTML = ioTable(P.sortAsc);
+        $('io-desc').innerHTML = ioTable(P.sortDesc);
+        $('rec-result').textContent = 'Using the 8085 microprocessor, a series of ' + data.length + ' numbers stored from 8041H was arranged in ascending and descending order (bubble sort) and the results were verified.';
+    }
+
+    // ------------------------------------------------------------------ diagrams
+    const fa = MSC.flowchart(Object.assign({ cx: 300 }, P.sortAsc.flowchart));
+    MSC.diagram('#draw-fa', { name: 'fa', title: 'Flowchart — ascending order', viewBox: fa.viewBox, steps: fa.steps, maxHeight: 900 });
+    const fd = MSC.flowchart(Object.assign({ cx: 300 }, P.sortDesc.flowchart));
+    MSC.diagram('#draw-fd', { name: 'fd', title: 'Flowchart — descending order', viewBox: fd.viewBox, steps: fd.steps, maxHeight: 900 });
+
+    (function traceDiagram() {
+        const S = MSC.sym, a = MANUAL.slice(), rows = [a.slice()];
+        let swapped = true;
+        while (swapped) {
+            swapped = false;
+            for (let i = 0; i < a.length - 1; i++) if (a[i] > a[i + 1]) { [a[i], a[i + 1]] = [a[i + 1], a[i]]; swapped = true; }
+            rows.push(a.slice());
+            if (!swapped) break;
+        }
+        const cw = 64, x0 = 170, y0 = 58, rh = 50;
+        const steps = [{
+            c: 'Draw a table: one column per memory location 8041H–8046H and one row per pass.',
+            s: S.text(90, y0 - 26, 'Pass', { size: 13 }) + [0, 1, 2, 3, 4, 5].map(i => S.text(x0 + i * cw + cw / 2, y0 - 26, h4(0x8041 + i), { size: 12, cls: 'mono' })).join('') +
+                S.line(40, y0 - 10, x0 + 6 * cw, y0 - 10),
+        }];
+        rows.forEach((r, k) => {
+            const y = y0 + k * rh + rh / 2;
+            let s = S.text(90, y, k === 0 ? 'Start' : String(k), { size: 13 });
+            r.forEach((v, i) => {
+                const settled = k > 0 && i >= r.length - k;
+                s += S.rect(x0 + i * cw + 8, y - 16, cw - 16, 32, { rx: 6, cls: settled ? 'accent' : '' }) + S.text(x0 + i * cw + cw / 2, y, h2(v), { size: 14, cls: 'mono' + (settled ? ' accent' : '') });
+            });
+            const last = k === rows.length - 1;
+            steps.push({
+                c: k === 0 ? 'Write the numbers as they are stored before sorting: 06 05 04 01 02 03.'
+                    : last ? 'Pass ' + k + ': no exchange happens, so D stays 00H and the program stops. The numbers are in ascending order.'
+                        : 'Pass ' + k + ': compare neighbours and swap when the left one is bigger — the largest unsorted number moves to the end (shown in colour).',
+                s,
+            });
+        });
+        MSC.diagram('#draw-trace', { name: 'trace', title: 'Bubble sort — contents of memory after each pass (ascending)', viewBox: '20 0 620 ' + (y0 + rows.length * rh + 20), steps });
+    })();
+
+    // ------------------------------------------------------------------ viva
+    MSC.viva('#viva-list', [
+        { q: 'Which sorting technique is used in this program?', a: 'Bubble sort: neighbouring numbers are compared and exchanged if they are in the wrong order. After each pass the largest (ascending) or smallest (descending) number reaches the end.' },
+        { q: 'What is the use of the D register in the program?', a: 'It is a flag: it is cleared to 00H at the start of a pass and set to 01H whenever an exchange happens. If a whole pass finishes with D = 00H, the list is sorted and the program halts.' },
+        { q: 'Why is RRC used before JC START?', a: 'RRC moves bit D0 of the accumulator (the flag copied from D) into the carry flag, so JC can test whether an exchange occurred.' },
+        { q: 'How does CMP M decide whether to exchange?', a: 'CMP M computes A − M without storing it. CY = 1 if A < M and Z = 1 if A = M. JC (ascending) skips the exchange when A < M; JNC (descending) skips it when A ≥ M.' },
+        { q: 'What is the only difference between the ascending and descending programs?', a: 'The conditional jump after CMP M: JC NEXTBYT for ascending and JNC NEXTBYT for descending.' },
+        { q: 'How many comparisons are made in one pass for N numbers?', a: 'N − 1. The count N is loaded into C and decremented once before the loop.' },
+        { q: 'What is the maximum number of passes needed?', a: 'N − 1 passes to sort, plus one final pass in which no exchange occurs (to confirm the list is sorted).' },
+        { q: 'What addressing mode is used by MOV A,M and CMP M?', a: 'Register indirect addressing — the HL register pair holds the memory address, and M refers to the byte at that address.' },
+        { q: 'What happens if two numbers are equal in the ascending program?', a: 'CMP gives CY = 0, so JC does not jump and the equal numbers are exchanged every pass; D is always set to 01H and the program never stops. Adding JZ NEXTBYT after JC fixes it.' },
+        { q: 'Why is DCR C used immediately after MOV C,M?', a: 'For N numbers only N − 1 comparisons are needed in each pass.' },
+    ]);
+
+    setOrder('asc');
+    updateRecord();
+    render();
+    </script>
+</body>
+</html>

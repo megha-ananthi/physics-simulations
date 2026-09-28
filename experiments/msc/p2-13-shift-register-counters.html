@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shift Register, Ring &amp; Johnson Counters - M.Sc. Practicals - Science Lab</title>
+    <meta name="description" content="Clock four D flip-flops and watch the bits shift: shift register, ring counter and Johnson (twisted ring) counter with truth tables, timing diagrams and the record sheet.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/msc.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F4AB;</text></svg>">
+    <style>
+        :root { --accent: #5C6BC0; --accent-soft: rgba(92, 107, 192, 0.12); --accent-border: rgba(92, 107, 192, 0.5); }
+        #sr .hi { stroke: var(--logic1); stroke-width: 2.6; }
+        #sr .lo { stroke: var(--logic0); }
+        #sr text.hi { fill: var(--logic1); stroke: none; }
+        #sr text.lo { fill: var(--logic0); stroke: none; }
+        #sr .led-on { fill: var(--logic1); stroke: #B71C1C; }
+        #sr .led-off { fill: #ECEFF1; stroke: #90A4AE; }
+        #sr .tok { stroke: #fff; stroke-width: 2; }
+        #sr .tok1 { fill: var(--logic1); }
+        #sr .tok0 { fill: #78909C; }
+        #sr text.tokt { fill: #fff; font-family: var(--font-mono); font-weight: 800; font-size: 13px; }
+        #sr .ff-body { fill: #fff; }
+        #sr .ff-active { fill: rgba(92,107,192,0.1); }
+        .state-word { font-family: var(--font-mono); font-size: 2rem; font-weight: 800; letter-spacing: 0.4rem; text-align: center; margin: 0.3rem 0; }
+        .state-word .b1 { color: var(--logic1); }
+        .state-word .b0 { color: #90A4AE; }
+        #states text { font-family: var(--font-mono); }
+        #states .cur rect { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2.5; }
+        #states .cur text { fill: var(--accent); }
+        .mode-note { font-size: 0.9rem; }
+        .ctl-row { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body>
+    <header class="top-bar">
+        <a href="index.html" class="back-btn">&larr; Practicals</a>
+        <div class="exp-heading">
+            <span class="exp-chip">Practical II &middot; Exp 13</span>
+            <h1 class="exp-title">&#x1F4AB; Shift Register, Ring &amp; Johnson Counters</h1>
+        </div>
+        <a href="../../index.html" class="back-btn">&#x1F3E0; Lab</a>
+    </header>
+    <p class="big-idea">Four <strong>D flip-flops</strong> share one clock, and each Q feeds the next D, so every clock pulse moves the data one stage along.
+        Feed Q<sub>4</sub> back to D<sub>1</sub> and you get a <strong>ring counter</strong> (4 states); feed back Q̄<sub>4</sub> instead and you get a
+        <strong>Johnson counter</strong> (8 states).</p>
+    <nav class="section-nav">
+        <a href="#simulate">&#x1F52C; Simulate</a><a href="#draw">&#x270F;&#xFE0F; Draw it</a><a href="#record">&#x1F4DD; Record</a><a href="#viva">&#x1F3A4; Viva</a>
+    </nav>
+
+    <main>
+        <!-- ================= SIMULATE ================= -->
+        <section id="simulate" class="block">
+            <h2 class="block-title">&#x1F52C; Simulate <span class="hint-inline">Press “Clock pulse” and watch each bit move one flip-flop to the right.</span></h2>
+            <div class="tabs" data-tabs="mode">
+                <button class="tab-btn active" data-tab="shift">&#x27A1;&#xFE0F; Shift register</button>
+                <button class="tab-btn" data-tab="ring">&#x1F504; Ring counter</button>
+                <button class="tab-btn" data-tab="johnson">&#x1F300; Johnson counter</button>
+            </div>
+
+            <div class="stage"><svg id="sr" class="pen" viewBox="0 0 900 300" role="img" aria-label="Four D flip-flops connected as a shift register"></svg></div>
+
+            <div class="controls">
+                <div class="ctl-row">
+                    <button class="btn btn-primary" id="clk">&#x23F1;&#xFE0F; Clock pulse</button>
+                    <button class="btn" id="auto">&#x25B6; Auto clock</button>
+                    <span class="ctl" data-show="shift"><span class="ctl-label">Serial input</span><span class="bit-switch" id="si-sw" role="switch" tabindex="0"><span class="knob"></span><span class="bit-val" id="si-val">0</span></span></span>
+                    <button class="btn" data-show="shift" id="shift-word">Shift in 1011 (4 pulses)</button>
+                    <button class="btn" data-show="shift" id="clear">Clear all (CLR̄)</button>
+                    <label class="ctl" data-show="ring"><span class="ctl-label">Preset pattern</span>
+                        <select id="ring-preset"><option value="1001" selected>1001 (as in the manual)</option><option value="1000">1000</option><option value="0000">0000 (try it!)</option></select></label>
+                    <label class="ctl" data-show="johnson"><span class="ctl-label">Start state</span>
+                        <select id="john-start"><option value="0001" selected>0001 (as in the manual)</option><option value="0000">0000</option></select></label>
+                    <button class="btn" data-show="ring johnson" id="load">Load (PR̄ / CLR̄) &amp; restart</button>
+                </div>
+            </div>
+
+            <div class="grid-2" style="margin-top:1rem">
+                <div class="card">
+                    <h3 id="tt-title">Truth table</h3>
+                    <div id="tt"></div>
+                    <div class="note" id="mode-note"></div>
+                </div>
+                <div class="stack">
+                    <div class="card">
+                        <h3>Present state Q<sub>1</sub> Q<sub>2</sub> Q<sub>3</sub> Q<sub>4</sub></h3>
+                        <div class="state-word" id="word"></div>
+                        <div class="readout" id="readout"></div>
+                    </div>
+                    <div class="card" id="state-card">
+                        <h3 id="states-title">State diagram</h3>
+                        <svg id="states" class="pen" viewBox="0 0 360 300"></svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:1rem">
+                <h3>Timing diagram <span style="font-family:var(--font-body);font-size:0.8rem;color:var(--ink-soft)">(the flip-flops change on the rising edge of the clock)</span></h3>
+                <div class="stage"><canvas id="timing"></canvas></div>
+            </div>
+        </section>
+
+        <!-- ================= DRAW ================= -->
+        <section id="draw" class="block">
+            <h2 class="block-title">&#x270F;&#xFE0F; Draw it <span class="hint-inline">Press ▶ Draw and copy each step into your record.</span></h2>
+            <div class="tabs" data-tabs="draw">
+                <button class="tab-btn active" data-tab="dshift">Shift register</button>
+                <button class="tab-btn" data-tab="dring">Ring counter</button>
+                <button class="tab-btn" data-tab="djohn">Johnson counter</button>
+                <button class="tab-btn" data-tab="dtime">Timing diagrams</button>
+                <button class="tab-btn" data-tab="dpins">IC 7474 pin diagram</button>
+            </div>
+            <div class="tab-panel" data-group="draw" data-panel="dshift" id="draw-shift"></div>
+            <div class="tab-panel" data-group="draw" data-panel="dring" id="draw-ring"></div>
+            <div class="tab-panel" data-group="draw" data-panel="djohn" id="draw-john"></div>
+            <div class="tab-panel" data-group="draw" data-panel="dtime" id="draw-time"></div>
+            <div class="tab-panel" data-group="draw" data-panel="dpins" id="draw-pins"></div>
+        </section>
+
+        <!-- ================= RECORD ================= -->
+        <section id="record" class="block">
+            <h2 class="block-title">&#x1F4DD; Record sheet</h2>
+            <div class="rec-actions no-print"><button class="btn btn-sm" data-print-record>&#x1F5A8;&#xFE0F; Print record</button></div>
+            <article class="record">
+                <div class="rec-head"><div class="rec-box">Expt. No. ______<br>Date ______</div><div class="rec-box">Page No. ______</div></div>
+                <h2 class="rec-title">SHIFT REGISTER, RING COUNTER AND JOHNSON COUNTER</h2>
+
+                <h3>Aim</h3>
+                <p>To construct and verify the operation of a 4-bit shift register, a ring counter and a Johnson (twisted ring) counter using D flip-flops.</p>
+
+                <h3>Apparatus required</h3>
+                <p>IC 7474 (dual D flip-flop) × 2, digital IC trainer kit, patch cords.</p>
+
+                <h3>Theory</h3>
+                <p><b>Shift register:</b> a chain of D flip-flops with a common clock, in which the output Q of each flip-flop is connected to the D input of the next.
+                    On every clock pulse the data moves one stage along. Data entered one bit at a time at D<sub>1</sub> can be taken out serially at Q<sub>4</sub>
+                    (serial-in serial-out) or all at once from Q<sub>1</sub>–Q<sub>4</sub> (serial-in parallel-out).</p>
+                <p><b>Ring counter:</b> a shift register whose last output Q<sub>4</sub> is fed back to the first input D<sub>1</sub>. A pattern loaded with the preset
+                    and clear inputs circulates as long as clock pulses are applied; with four flip-flops the pattern repeats after every four clock pulses (mod-4).
+                    It is self-decoding — no extra decoder is needed to tell which state it is in.</p>
+                <p><b>Johnson (twisted ring) counter:</b> the inverted output Q̄<sub>4</sub> of the last flip-flop is fed back to D<sub>1</sub>. An n-stage Johnson counter
+                    gives 2n different states, so four flip-flops give eight states (mod-8). Its advantage is that it needs only n flip-flops to produce 2n states.</p>
+
+                <h3>Logic diagrams</h3>
+                <div class="rec-diagram" data-diagram="dshift"></div>
+                <div class="rec-diagram" data-diagram="dring"></div>
+                <div class="rec-diagram" data-diagram="djohn"></div>
+                <h3>Pin diagram of IC 7474</h3>
+                <div class="rec-diagram" data-diagram="dpins"></div>
+
+                <h3>Procedure</h3>
+                <ol>
+                    <li>Connect the circuit as shown in the logic diagram, using two IC 7474s (each contains two D flip-flops). Give +5 V to pin 14 and ground to pin 7 of each IC.</li>
+                    <li>Connect the clock inputs (pins 3 and 11) of all four flip-flops together to the pulser (clock) of the trainer kit.</li>
+                    <li>Keep the PR̄ and CLR̄ inputs at logic 1 during normal operation.</li>
+                    <li><b>Shift register:</b> clear all flip-flops with CLR̄, apply the serial data at D<sub>1</sub>, give clock pulses one at a time and note Q<sub>1</sub>–Q<sub>4</sub> after each pulse.</li>
+                    <li><b>Ring counter:</b> connect Q<sub>4</sub> to D<sub>1</sub>. Load the starting pattern with PR̄ / CLR̄, then apply clock pulses and note the outputs.</li>
+                    <li><b>Johnson counter:</b> connect Q̄<sub>4</sub> to D<sub>1</sub>, clear (or preset) the flip-flops, apply clock pulses and note the outputs.</li>
+                    <li>Verify the truth tables.</li>
+                </ol>
+
+                <h3>Truth tables</h3>
+                <p><b>(a) Shift register (serial-in parallel-out)</b></p>
+                <div id="rec-shift"></div>
+                <p style="margin-top:0.6rem"><b>(b) Ring counter</b></p>
+                <div id="rec-ring"></div>
+                <p style="margin-top:0.6rem"><b>(c) Johnson counter</b></p>
+                <div id="rec-john"></div>
+
+                <h3>Timing diagrams</h3>
+                <div class="rec-diagram" data-diagram="dtime"></div>
+
+                <h3>Result</h3>
+                <div class="result-box">The 4-bit shift register, ring counter and Johnson counter were constructed using D flip-flops and their truth tables were verified.
+                    The ring counter circulates the loaded pattern with 4 states (mod-4) and the Johnson counter goes through 2n = 8 states (mod-8).</div>
+
+                <h3>Precautions</h3>
+                <ol>
+                    <li>Make the connections according to the IC pin diagram and check V<sub>CC</sub> (pin 14) and ground (pin 7) before switching on.</li>
+                    <li>Use a debounced pulser for the clock so that each press gives exactly one pulse.</li>
+                    <li>Keep PR̄ and CLR̄ at logic 1 while counting; they are active-low.</li>
+                </ol>
+            </article>
+        </section>
+
+        <!-- ================= VIVA ================= -->
+        <section id="viva" class="block">
+            <h2 class="block-title">&#x1F3A4; Viva voce</h2>
+            <div id="viva-list"></div>
+        </section>
+    </main>
+
+    <footer class="page-footer">Practical II &middot; Exp 13 &bull; Simplified model for learning &mdash; values are illustrative</footer>
+
+    <script src="assets/msc-common.js"></script>
+    <script>
+    'use strict';
+    const S = MSC.sym;
+    const $ = (id) => document.getElementById(id);
+    const bits = (w) => w.split('').map(Number);
+    const word = (q) => q.join('');
+
+    // ------------------------------------------------------------------ state
+    const MODES = { shift: 'Shift register', ring: 'Ring counter', johnson: 'Johnson counter' };
+    const state = { mode: 'shift', q: [0, 0, 0, 0], si: 0, hist: { shift: [], ring: [], johnson: [] }, anim: null, auto: null, queue: [] };
+
+    function feedback(q) {
+        if (state.mode === 'ring') return q[3];
+        if (state.mode === 'johnson') return 1 - q[3];
+        return state.si;
+    }
+    const nextState = (q) => [feedback(q), q[0], q[1], q[2]];
+
+    function startRow() { state.hist[state.mode] = [{ clk: 0, si: state.mode === 'shift' ? '—' : null, q: state.q.slice() }]; }
+    function initMode() {
+        if (state.mode === 'ring') state.q = bits($('ring-preset').value);
+        else if (state.mode === 'johnson') state.q = bits($('john-start').value);
+        else state.q = [0, 0, 0, 0];
+        startRow();
+        renderAll();
+    }
+
+    // ------------------------------------------------------------------ clocking with animation
+    function pulse() {
+        if (state.anim) { state.queue.push(1); return; }
+        const d = [feedback(state.q), state.q[0], state.q[1], state.q[2]];
+        state.anim = { t: 0, d, si: state.si };
+    }
+    function commit() {
+        const a = state.anim;
+        state.q = a.d.slice();
+        state.anim = null;
+        const h = state.hist[state.mode];
+        h.push({ clk: h.length, si: state.mode === 'shift' ? a.si : null, q: state.q.slice() });
+        if (h.length > 40) h.splice(1, 1);
+        if (state.feed && state.feed.length) { state.si = state.feed.shift(); if (!state.feed.length) state.feed = null; state.queue.push(1); }
+        renderAll();
+        if (state.queue.length) { state.queue.shift(); pulse(); }
+    }
+
+    // ------------------------------------------------------------------ interactive circuit
+    const FX = [150, 340, 530, 720], FY = 100, FW = 70, FH = 92, LEAD = 18;
+    const DY = FY + FH / 3, CY = FY + 2 * FH / 3, CLKY = 262, TOP = 26;
+    const cls = (b) => (b ? 'hi' : 'lo');
+
+    function circuit() {
+        const q = state.q, m = state.mode, din = feedback(q);
+        let s = '';
+        FX.forEach((x, k) => {
+            s += S.rect(x, FY, FW, FH, { rx: 3, cls: 'ff-body' + (state.anim ? ' ff-active' : '') }) + S.dff(x, FY, { title: '' });
+            s += S.text(x + FW / 2, FY - 12, 'FF' + (k + 1), { size: 13, weight: 800 });
+        });
+        // D inputs and Q → D links
+        s += S.line(64, DY, FX[0] - LEAD, DY, cls(din));
+        for (let k = 0; k < 3; k++) s += S.line(FX[k] + FW + LEAD, DY, FX[k + 1] - LEAD, DY, cls(q[k]));
+        s += S.line(FX[3] + FW + LEAD, DY, 820, DY, cls(q[3]));
+        // output taps + LEDs
+        FX.forEach((x, k) => {
+            const tx = x + FW + LEAD + 12 + (k === 3 ? 0 : 0);
+            s += S.dot(tx, DY) + S.line(tx, DY, tx, 70, cls(q[k]));
+            s += '<circle cx="' + tx + '" cy="60" r="10" class="' + (q[k] ? 'led-on' : 'led-off') + '"/>';
+            s += S.text(tx + 16, 60, 'Q_' + (k + 1) + ' = ' + q[k], { anchor: 'start', size: 13, cls: q[k] ? 'hi' : '' });
+        });
+        // input source per mode
+        if (m === 'shift') {
+            s += S.circle(56, DY, 7, 'paper') + S.text(48, DY - 20, 'Serial in = ' + state.si, { size: 12, anchor: 'start', cls: state.si ? 'hi' : '' });
+            s += S.line(FX[3] + FW + LEAD, DY, 850, DY, cls(q[3])) + S.circle(857, DY, 7, 'paper') + S.text(858, DY + 24, 'Serial out', { size: 11 });
+        } else if (m === 'ring') {
+            s += S.wire([[FX[3] + FW + LEAD, DY], [850, DY], [850, TOP], [40, TOP], [40, DY], [64, DY]], cls(q[3]));
+            s += S.text(450, TOP - 10, 'Q_4 fed back to D_1', { size: 12 }) + S.midArrow(600, TOP, 300, TOP);
+        } else {
+            s += S.wire([[FX[3] + FW + LEAD, CY], [866, CY], [866, TOP], [40, TOP], [40, DY], [64, DY]], cls(1 - q[3]));
+            s += S.text(450, TOP - 10, '!{Q}_4 fed back to D_1 (twisted ring)', { size: 12 }) + S.midArrow(600, TOP, 300, TOP);
+        }
+        // clock line
+        s += S.text(40, CLKY + 20, 'CLK', { size: 13, weight: 800 });
+        s += S.wire([[60, CLKY], [FX[3] - 34, CLKY]], state.anim ? 'hi' : 'lo');
+        FX.forEach(x => { s += S.dot(x - 34, CLKY) + S.wire([[x - 34, CLKY], [x - 34, CY], [x - LEAD, CY]], state.anim ? 'hi' : 'lo'); });
+        s += S.path('M64,' + (CLKY + 34) + ' h10 v-12 h14 v12 h10', 'thin');
+        // travelling bits
+        if (state.anim) {
+            const p = Math.min(state.anim.t / 0.55, 1), e = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+            state.anim.d.forEach((b, k) => {
+                const x0 = FX[k] - LEAD - 4, x1 = FX[k] + FW + LEAD + 12, x = x0 + (x1 - x0) * e;
+                s += '<circle cx="' + x + '" cy="' + DY + '" r="12" class="tok ' + (b ? 'tok1' : 'tok0') + '"/>' + S.text(x, DY + 1, String(b), { cls: 'tokt' });
+            });
+        }
+        return s;
+    }
+
+    // ------------------------------------------------------------------ panels
+    function cycleFrom(q) {
+        const seen = [word(q)];
+        let c = q.slice();
+        for (let i = 0; i < 20; i++) { c = nextState(c); const w = word(c); if (seen.includes(w)) break; seen.push(w); }
+        return seen;
+    }
+    function renderStates() {
+        if (state.mode === 'shift') { $('state-card').style.display = 'none'; return; }
+        $('state-card').style.display = '';
+        const cyc = cycleFrom(state.q), n = cyc.length, cx = 180, cy = 150, R = n > 4 ? 112 : 92;
+        $('states-title').textContent = 'State diagram — ' + n + ' state' + (n > 1 ? 's' : '') + ' (mod-' + n + ')';
+        let s = '';
+        const pos = cyc.map((_, i) => [cx + R * Math.sin(2 * Math.PI * i / n), cy - R * Math.cos(2 * Math.PI * i / n)]);
+        if (n > 1) cyc.forEach((_, i) => {
+            const a = pos[i], b = pos[(i + 1) % n], ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
+            const off = 30;
+            s += S.arrow(a[0] + Math.cos(ang) * off, a[1] + Math.sin(ang) * off, b[0] - Math.cos(ang) * off, b[1] - Math.sin(ang) * off, { size: 7, cls: 'soft' });
+        });
+        else s += S.path('M' + (cx + 22) + ',' + (cy - 14) + ' a26,26 0 1 1 0,28', 'soft') + S.text(cx + 70, cy, 'stays here', { size: 11, anchor: 'start', cls: 'soft' });
+        cyc.forEach((w, i) => {
+            s += '<g class="' + (i === 0 ? 'cur' : '') + '">' + S.rect(pos[i][0] - 26, pos[i][1] - 13, 52, 26, { rx: 7, cls: 'paper' }) + S.text(pos[i][0], pos[i][1] + 1, w, { size: 14 }) + '</g>';
+        });
+        $('states').innerHTML = s;
+    }
+    function ttRows(h, withSI) {
+        return h.map(r => [String(r.clk)].concat(withSI ? [r.clk === 0 ? '—' : String(r.si)] : []).concat(r.q.map(String)));
+    }
+    function renderTable() {
+        const h = state.hist[state.mode], withSI = state.mode === 'shift';
+        $('tt-title').textContent = 'Truth table — ' + MODES[state.mode];
+        const head = [[{ t: 'Clock pulse' }].concat(withSI ? ['Serial in'] : []).concat(['Q_1', 'Q_2', 'Q_3', 'Q_4'])];
+        $('tt').innerHTML = MSC.table(head, ttRows(h, withSI), { highlight: h.length - 1 });
+        const notes = {
+            shift: 'Each pulse copies D into every flip-flop at the same instant, so the pattern moves one place right and the serial input enters FF1. After 4 pulses the first bit you entered reaches Q<sub>4</sub> (serial out).',
+            ring: 'Q<sub>4</sub> goes back into D<sub>1</sub>, so the loaded pattern just circulates: 4 flip-flops → 4 states (mod-4). Load 0000 and it can never leave 0000 — that is why a ring counter must be preset.',
+            johnson: 'Q̄<sub>4</sub> goes back into D<sub>1</sub>: 1s fill up from the left, then 0s fill up — 2 × 4 = 8 states (mod-8). Only one bit changes at each step.',
+        };
+        $('mode-note').innerHTML = '<span class="note-tag">How it works</span>' + notes[state.mode];
+    }
+    function renderWord() {
+        $('word').innerHTML = state.q.map(b => '<span class="b' + b + '">' + b + '</span>').join('');
+        const h = state.hist[state.mode];
+        const items = [['Clock pulses', String(h.length - 1)], ['Next D₁', String(feedback(state.q))]];
+        if (state.mode === 'shift') items.push(['Serial out (Q₄)', String(state.q[3])], ['Parallel out', word(state.q)]);
+        else items.push(['Cycle length', 'mod-' + cycleFrom(state.q).length]);
+        $('readout').innerHTML = items.map(([l, v]) => '<div class="rd"><div class="rd-label">' + l + '</div><div class="rd-val mono">' + v + '</div></div>').join('');
+    }
+
+    // ------------------------------------------------------------------ timing canvas
+    const tim = MSC.canvas($('timing'), 860, 230);
+    let timDirty = true, timW = 0;
+    function drawTiming() {
+        const { ctx } = tim;
+        tim.begin();
+        ctx.fillStyle = '#FBFAFF'; ctx.fillRect(0, 0, 860, 230);
+        const h = state.hist[state.mode], rows = state.mode === 'shift' ? ['CLK', 'SI', 'Q1', 'Q2', 'Q3', 'Q4'] : ['CLK', 'Q1', 'Q2', 'Q3', 'Q4'];
+        const x0 = 70, per = 44, rh = 230 / (rows.length + 0.4), amp = rh * 0.5;
+        const shown = h.slice(-17);
+        ctx.font = '800 12px Nunito, sans-serif'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+        rows.forEach((name, r) => {
+            const base = rh * (r + 1);
+            ctx.fillStyle = '#1F2A44'; ctx.fillText(name, 14, base - amp / 2);
+            ctx.strokeStyle = name === 'CLK' ? '#1F2A44' : '#E53935'; ctx.lineWidth = 2; ctx.beginPath();
+            const val = (row, i) => name === 'SI' ? (i === 0 ? 0 : Number(row.si)) : row.q[Number(name[1]) - 1];
+            if (name === 'CLK') {
+                for (let i = 0; i < shown.length; i++) {
+                    const x = x0 + i * per;
+                    ctx.moveTo(x, base); ctx.lineTo(x + per * 0.5, base);
+                    if (i < shown.length - 1) { ctx.lineTo(x + per * 0.5, base - amp); ctx.lineTo(x + per, base - amp); ctx.lineTo(x + per, base); }
+                }
+            } else {
+                // the state after pulse i starts at rising edge i (middle of clock period i − 1)
+                shown.forEach((row, i) => {
+                    const y = base - val(row, i) * amp;
+                    const xs = i === 0 ? x0 : x0 + (i - 1) * per + per * 0.5;
+                    const xe = i === shown.length - 1 ? x0 + shown.length * per : x0 + i * per + per * 0.5;
+                    if (i === 0) ctx.moveTo(xs, y); else ctx.lineTo(xs, y);
+                    ctx.lineTo(xe, y);
+                });
+            }
+            ctx.stroke();
+            ctx.strokeStyle = 'rgba(0,0,0,0.06)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x0, base); ctx.lineTo(850, base); ctx.stroke();
+        });
+        ctx.strokeStyle = 'rgba(92,107,192,0.25)'; ctx.setLineDash([3, 4]);
+        for (let i = 1; i < shown.length; i++) { const x = x0 + (i - 1) * per + per * 0.5; ctx.beginPath(); ctx.moveTo(x, 8); ctx.lineTo(x, 226); ctx.stroke(); }
+        ctx.setLineDash([]);
+        timDirty = false;
+    }
+
+    // ------------------------------------------------------------------ record
+    function simulate(mode, start, n, siSeq) {
+        const rows = [{ clk: 0, si: '—', q: start.slice() }];
+        let q = start.slice();
+        for (let i = 1; i <= n; i++) {
+            const si = siSeq ? siSeq[i - 1] : 0;
+            const d = mode === 'ring' ? q[3] : mode === 'johnson' ? 1 - q[3] : si;
+            q = [d, q[0], q[1], q[2]];
+            rows.push({ clk: i, si, q: q.slice() });
+        }
+        return rows;
+    }
+    function updateRecord() {
+        const head = (si) => [[{ t: 'Clock pulse' }].concat(si ? ['Serial in'] : []).concat(['Q_1', 'Q_2', 'Q_3', 'Q_4'])];
+        const pick = (mode, fallback) => (state.hist[mode].length > 1 ? state.hist[mode] : fallback);
+        const sh = pick('shift', simulate('shift', [0, 0, 0, 0], 8, [1, 0, 1, 1, 0, 0, 0, 0]));
+        const rg = pick('ring', simulate('ring', [1, 0, 0, 1], 4));
+        const jn = pick('johnson', simulate('johnson', [0, 0, 0, 1], 8));
+        $('rec-shift').innerHTML = MSC.table(head(true), ttRows(sh, true));
+        $('rec-ring').innerHTML = MSC.table(head(false), ttRows(rg, false));
+        $('rec-john').innerHTML = MSC.table(head(false), ttRows(jn, false));
+    }
+
+    function renderAll() {
+        $('sr').innerHTML = circuit();
+        renderTable(); renderWord(); renderStates();
+        $('si-sw').classList.toggle('on', !!state.si); $('si-val').textContent = state.si;
+        document.querySelectorAll('[data-show]').forEach(el => { el.style.display = el.dataset.show.split(' ').includes(state.mode) ? '' : 'none'; });
+        timDirty = true;
+        updateRecord();
+    }
+
+    // ------------------------------------------------------------------ controls
+    MSC.onTab('mode', (t) => { state.mode = t; state.queue = []; state.feed = null; state.anim = null; if (state.hist[t].length) { state.q = state.hist[t][state.hist[t].length - 1].q.slice(); renderAll(); } else initMode(); });
+    $('clk').addEventListener('click', pulse);
+    $('si-sw').addEventListener('click', () => { state.si = 1 - state.si; renderAll(); });
+    $('si-sw').addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); state.si = 1 - state.si; renderAll(); } });
+    $('clear').addEventListener('click', () => { state.q = [0, 0, 0, 0]; startRow(); renderAll(); });
+    $('load').addEventListener('click', initMode);
+    $('ring-preset').addEventListener('change', initMode);
+    $('john-start').addEventListener('change', initMode);
+    $('shift-word').addEventListener('click', () => { const w = [1, 0, 1, 1]; state.si = w[0]; state.feed = w.slice(1); state.queue = []; renderAll(); pulse(); });
+    $('auto').addEventListener('click', () => {
+        if (state.auto) { clearInterval(state.auto); state.auto = null; $('auto').innerHTML = '&#x25B6; Auto clock'; return; }
+        state.auto = setInterval(pulse, 1100);
+        $('auto').innerHTML = '&#x23F8; Stop clock';
+    });
+
+    MSC.loop(dt => {
+        if (state.anim) { state.anim.t += dt; $('sr').innerHTML = circuit(); if (state.anim.t >= 0.55) commit(); }
+        if (timDirty || tim.ctx.canvas.width !== timW) { timW = tim.ctx.canvas.width; drawTiming(); }
+    });
+
+    // test hook for the page's own self-check
+    window.SRLAB = {
+        state, nextState, simulate,
+        run(mode, start, n) { return simulate(mode, bits(start), n).map(r => word(r.q)); },
+    };
+
+    // ------------------------------------------------------------------ draw-along diagrams
+    (function buildDiagrams() {
+        const X = [170, 350, 530, 710], Y = 110, W = 70, H = 92, L = 18, dy = Y + H / 3, cy = Y + 2 * H / 3, ck = 290;
+        const ffs = (pr) => X.map((x, k) => S.dff(x, Y, { pr, clr: pr }) + S.text(x + W / 2, Y - (pr ? 36 : 12), 'FF' + (k + 1), { size: 13, weight: 800 })).join('');
+        const links = () => [0, 1, 2].map(k => S.line(X[k] + W + L, dy, X[k + 1] - L, dy) + S.dot(X[k] + W + L + 10, dy)).join('');
+        const outs = () => X.map((x, k) => { const tx = x + W + L + 10; return (k === 3 ? S.line(x + W + L, dy, tx, dy) + S.dot(tx, dy) : '') + S.arrow(tx, dy, tx, 62, { size: 7 }) + S.text(tx, 50, 'Q_' + (k + 1), { size: 14 }); }).join('');
+        const clock = () => S.text(58, ck + 18, 'Clock', { size: 13 }) + S.line(80, ck, X[3] - 36, ck) + X.map(x => S.dot(x - 36, ck) + S.wire([[x - 36, ck], [x - 36, cy], [x - L, cy]])).join('');
+        const vcc = S.text(450, 392, 'All flip-flops: IC 7474 (positive-edge triggered D flip-flops)', { size: 12, cls: 'soft' });
+        const presetLines = () => {
+            // FF1 is preset (PR̄), FF2–FF4 are cleared (CLR̄) to load 1000; tie the unused ones high
+            const prY = Y - L, clY = Y + H + L;
+            return S.wire([[X[0] + W / 2, prY], [X[0] + W / 2, 64 + 20]]) + S.text(X[0] + W / 2 + 6, 76, 'Preset', { anchor: 'start', size: 11 }) +
+                S.line(X[1] + W / 2, clY, X[1] + W / 2, 250) + S.line(X[2] + W / 2, clY, X[2] + W / 2, 250) + S.line(X[3] + W / 2, clY, X[3] + W / 2, 250) +
+                S.line(X[1] + W / 2, 250, X[3] + W / 2, 250) + S.dot(X[2] + W / 2, 250) + S.text(X[3] + W / 2 + 8, 250, 'Clear', { anchor: 'start', size: 11 });
+        };
+        MSC.diagram('#draw-shift', {
+            name: 'dshift', title: 'Fig. 4-bit shift register (serial in, serial / parallel out) using D flip-flops', viewBox: '0 20 900 390',
+            steps: [
+                { c: 'Draw four D flip-flops FF1–FF4 in a row. Mark D and the clock input (>) on the left, Q and Q̄ on the right.', s: ffs(false) },
+                { c: 'Join Q of each flip-flop to D of the next: Q_{1} → D_{2}, Q_{2} → D_{3}, Q_{3} → D_{4}.', s: links() },
+                { c: 'Bring the serial data input to D_{1}.', s: S.arrow(70, dy, X[0] - L, dy, { size: 7 }) + S.text(62, dy - 16, 'Serial input', { anchor: 'start', size: 12 }) },
+                { c: 'Take the outputs Q_{1}–Q_{4} upwards (parallel out); Q_{4} is also the serial output.', s: outs() + S.arrow(X[3] + W + L + 10, dy, 880, dy, { size: 7 }) + S.text(870, dy + 18, 'Serial out', { anchor: 'end', size: 12 }) },
+                { c: 'Connect all clock inputs together to one clock line (synchronous operation).', s: clock() },
+                { c: 'Write the IC used under the diagram.', s: vcc },
+            ],
+        });
+        MSC.diagram('#draw-ring', {
+            name: 'dring', title: 'Fig. 4-bit ring counter using D flip-flops (Q_4 fed back to D_1)', viewBox: '0 0 900 410',
+            steps: [
+                { c: 'Draw the four D flip-flops with preset (PR̄) at the top and clear (CLR̄) at the bottom of each.', s: ffs(true) },
+                { c: 'Join Q_{1} → D_{2}, Q_{2} → D_{3} and Q_{3} → D_{4}.', s: links() },
+                { c: 'Take out Q_{1}–Q_{4}.', s: outs() },
+                { c: 'Feed Q_{4} back to D_{1} — this closes the ring.', s: S.wire([[X[3] + W + L + 10, dy], [870, dy], [870, 20], [60, 20], [60, dy], [X[0] - L - 6, dy]]) + S.arrowHead(X[0] - L, dy, 0, 8) + S.midArrow(600, 20, 300, 20) + S.text(450, 32, 'Q_4 → D_1', { size: 12 }) },
+                { c: 'Connect all the clock inputs to one clock line.', s: clock() },
+                { c: 'Show the preset line (to PR̄ of FF1) and the clear line (to CLR̄ of FF2–FF4) used to load the starting pattern 1000.', s: presetLines() },
+                { c: 'Write the IC used under the diagram.', s: vcc },
+            ],
+        });
+        MSC.diagram('#draw-john', {
+            name: 'djohn', title: 'Fig. 4-bit Johnson (twisted ring) counter — Q̄_4 fed back to D_1', viewBox: '0 0 900 410',
+            steps: [
+                { c: 'Draw the four D flip-flops with D and clock on the left, Q and Q̄ on the right.', s: ffs(false) },
+                { c: 'Join Q_{1} → D_{2}, Q_{2} → D_{3} and Q_{3} → D_{4}.', s: links() },
+                { c: 'Take out Q_{1}–Q_{4}.', s: outs() },
+                { c: 'Feed the INVERTED output Q̄_{4} of the last flip-flop back to D_{1} — the “twist”.', s: S.wire([[X[3] + W + L, cy], [880, cy], [880, 20], [60, 20], [60, dy], [X[0] - L - 6, dy]]) + S.arrowHead(X[0] - L, dy, 0, 8) + S.midArrow(600, 20, 300, 20) + S.text(450, 32, '!{Q}_4 → D_1', { size: 12 }) },
+                { c: 'Connect all the clock inputs to one clock line.', s: clock() },
+                { c: 'Write the IC used under the diagram.', s: vcc },
+            ],
+        });
+
+        // timing diagrams: ring (preset 1000) and Johnson (from 0000)
+        const tw = 46, tx0 = 90;
+        /* vals[j] = state after j clock pulses; it changes at the j-th rising edge (middle of clock period j−1). */
+        function wave(name, vals, y0, label) {
+            let d = 'M' + tx0 + ',' + (y0 - vals[0] * 22);
+            for (let j = 1; j < vals.length; j++) { const x = tx0 + (j - 1) * tw + tw / 2; d += ' H' + x + ' V' + (y0 - vals[j] * 22); }
+            d += ' H' + (tx0 + (vals.length - 1) * tw);
+            return S.text(tx0 - 12, y0 - 11, label || name, { anchor: 'end', size: 12 }) + S.path(d, 'accent') + S.line(tx0, y0, tx0 + (vals.length - 1) * tw, y0, 'ghost thin');
+        }
+        function clockWave(n, y0) {
+            let d = 'M' + tx0 + ',' + y0;
+            for (let i = 0; i < n; i++) { const x = tx0 + i * tw; d += ' H' + (x + tw / 2) + ' V' + (y0 - 22) + ' H' + (x + tw) + ' V' + y0; }
+            return S.text(tx0 - 12, y0 - 11, 'CLK', { anchor: 'end', size: 12 }) + S.path(d);
+        }
+        const ringSeq = simulate('ring', [1, 0, 0, 0], 8).slice(0, 9), johnSeq = simulate('johnson', [0, 0, 0, 0], 8).slice(0, 9);
+        const colVals = (seq, k) => seq.slice(0, 9).map(r => r.q[k]);
+        const edges = (y1, y2, n) => Array.from({ length: n }, (_, i) => S.line(tx0 + i * tw + tw / 2, y1, tx0 + i * tw + tw / 2, y2, 'dash thin ghost')).join('');
+        MSC.diagram('#draw-time', {
+            name: 'dtime', title: 'Timing diagrams — ring counter (preset 1000) and Johnson counter (from 0000)', viewBox: '0 0 900 500',
+            steps: [
+                { c: 'Ring counter: draw the clock waveform (8 pulses) and mark each rising edge.', s: S.text(20, 22, 'Ring counter', { anchor: 'start', size: 14, weight: 800 }) + clockWave(8, 60) + edges(36, 230, 8) },
+                { c: 'Draw Q_{1}–Q_{4}: the single 1 moves one output later at every rising edge and comes back after 4 pulses.', s: [0, 1, 2, 3].map(k => wave('Q' + (k + 1), colVals(ringSeq, k), 100 + k * 36, 'Q_' + (k + 1))).join('') },
+                { c: 'Johnson counter: draw the clock waveform again.', s: S.text(20, 262, 'Johnson counter', { anchor: 'start', size: 14, weight: 800 }) + clockWave(8, 300) + edges(276, 470, 8) },
+                { c: 'Draw Q_{1}–Q_{4}: each output is a square wave of period 8 clock pulses, each delayed by one pulse from the previous one.', s: [0, 1, 2, 3].map(k => wave('Q' + (k + 1), colVals(johnSeq, k), 340 + k * 36, 'Q_' + (k + 1))).join('') },
+            ],
+        });
+
+        const pinNames = ['!{CLR}_1', 'D_1', 'CLK_1', '!{PR}_1', 'Q_1', '!{Q}_1', 'GND', '!{Q}_2', 'Q_2', '!{PR}_2', 'CLK_2', 'D_2', '!{CLR}_2', 'V_{CC}'];
+        MSC.diagram('#draw-pins', {
+            name: 'dpins', title: 'Fig. Pin diagram of IC 7474 (dual D flip-flop)', viewBox: '0 0 700 250',
+            steps: [
+                { c: 'Draw the 14-pin DIP body with the notch at the top.', s: S.dip(290, 24, { n: 14, w: 120, pitch: 28, title: 'IC 7474', only: 'body' }) },
+                { c: 'Number pins 1–7 down the left and 8–14 up the right.', s: S.dip(290, 24, { n: 14, w: 120, pitch: 28, only: 'pins' }) },
+                { c: 'Label the pins: flip-flop 1 uses pins 1–6, flip-flop 2 uses pins 8–13, GND = 7, V_{CC} = 14.', s: S.dip(290, 24, { n: 14, w: 120, pitch: 28, labels: pinNames, only: 'labels' }) },
+            ],
+        });
+    })();
+
+    // ------------------------------------------------------------------ viva
+    MSC.viva('#viva-list', [
+        { q: 'What is a shift register?', a: 'A group of flip-flops connected in a chain with a common clock, so that the stored data moves one position on every clock pulse.' },
+        { q: 'Name the four types of shift register.', a: 'Serial-in serial-out (SISO), serial-in parallel-out (SIPO), parallel-in serial-out (PISO) and parallel-in parallel-out (PIPO).' },
+        { q: 'Why are D flip-flops used?', a: 'A D flip-flop simply copies its D input to Q on the clock edge, so a chain of them passes each bit to the next stage without any extra logic.' },
+        { q: 'What is a ring counter? What is its modulus?', a: 'A shift register with Q of the last flip-flop fed back to D of the first. The loaded pattern circulates; n flip-flops give n states (mod-n). Here mod-4.' },
+        { q: 'Why must a ring counter be preset?', a: 'If all flip-flops are 0, the feedback keeps feeding 0 and the counter stays at 0000 forever. A starting pattern (e.g. 1000) is loaded with PR̄ / CLR̄.' },
+        { q: 'What is a Johnson counter? How many states does it have?', a: 'A shift register with the complement Q̄ of the last flip-flop fed back to the first (twisted ring). n flip-flops give 2n states — 8 for four flip-flops.' },
+        { q: 'What does “self-decoding” mean for a ring counter?', a: 'Each state has a single 1 in a different flip-flop, so each output directly indicates one count — no decoder gates are needed.' },
+        { q: 'How many unused states are there in a 4-bit ring counter and in a 4-bit Johnson counter?', a: 'Ring: 16 − 4 = 12 unused states. Johnson: 16 − 8 = 8 unused states. If noise puts the counter in an unused state it may stay in a wrong sequence (lock-out).' },
+        { q: 'How many clock pulses are needed to load 4 bits serially?', a: 'Four. After the fourth pulse the first bit that was entered is at Q<sub>4</sub> (the serial output).' },
+        { q: 'Are these counters synchronous or asynchronous?', a: 'Synchronous — all flip-flops receive the same clock at the same time.' },
+        { q: 'What are PR̄ and CLR̄ in IC 7474?', a: 'Active-low asynchronous inputs: PR̄ = 0 forces Q = 1, CLR̄ = 0 forces Q = 0, independent of the clock. They are kept at 1 during normal operation.' },
+        { q: 'Give some applications.', a: 'Serial ↔ parallel data conversion, time delays, sequence generators, ring counters for stepper-motor drives, Johnson counters as divide-by-2n frequency dividers.' },
+    ]);
+
+    initMode();
+    </script>
+</body>
+</html>

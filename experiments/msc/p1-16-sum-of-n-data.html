@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8085 Sum of a Set of n Data - M.Sc. Practicals - Science Lab</title>
+    <meta name="description" content="Step through the 8085 addition programs (two 8-bit numbers with carry, and the sum of N numbers) and watch the column addition in hex and binary with the carry bit.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/msc.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F9EE;</text></svg>">
+    <style>
+        :root { --accent: #8E24AA; --accent-soft: rgba(142, 36, 170, 0.12); --accent-border: rgba(142, 36, 170, 0.5); }
+        [hidden] { display: none !important; }
+        .try-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+        .try-lab { font-size: 0.78rem; font-weight: 800; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.4px; }
+        .memmap { font-size: 0.86rem; color: var(--ink-soft); margin-top: 0.55rem; }
+        .memmap b { font-family: var(--font-mono); color: var(--ink); }
+        .chips { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 0.6rem; }
+        .chip { background: #F6F2FE; border: 1px solid var(--line); border-radius: 50px; padding: 0.22rem 0.75rem; font-size: 0.8rem; font-weight: 800; }
+        .chip b { color: var(--accent); font-family: var(--font-mono); }
+        .chip.pulse { animation: chipPulse 0.9s ease; }
+        @keyframes chipPulse { 0% { background: #FFD27A; transform: scale(1.08); } 100% { background: #F6F2FE; transform: scale(1); } }
+        /* column addition */
+        .cs-wrap { display: flex; flex-wrap: wrap; gap: 0.9rem 1.8rem; justify-content: center; align-items: flex-start; }
+        .cs-block { text-align: center; }
+        .cs-title { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ink-soft); margin-bottom: 0.15rem; }
+        .cs { display: inline-grid; font-family: var(--font-mono); font-weight: 800; align-items: stretch; }
+        .cs.hex { grid-template-columns: 3rem repeat(3, 1.9rem); }
+        .cs.bin { grid-template-columns: 3rem 1.7rem repeat(4, 1.35rem) 0.45rem repeat(4, 1.35rem); }
+        .cs > span { text-align: center; font-size: 1.08rem; line-height: 1.75; }
+        .cs > .lab { text-align: right; padding-right: 0.45rem; font-family: var(--font-body); font-size: 0.72rem; color: var(--ink-soft); }
+        .cs > .hd { font-family: var(--font-body); font-size: 0.62rem; color: var(--ink-soft); line-height: 1.3; }
+        .cs > .car { font-size: 0.8rem; line-height: 1.2; color: var(--warn); min-height: 1rem; }
+        .cs > .sr { border-top: 2px solid var(--pen); }
+        .cs > .cy { border-radius: 0 0 7px 7px; }
+        .cs > .cy.lit { background: var(--warn); color: #fff; box-shadow: 0 0 0 3px rgba(230, 119, 0, 0.22); }
+        .cs > .dim { color: #B0B0B8; }
+        .cs .q { color: #B0B0B8; font-style: normal; }
+        .say { font-size: 0.88rem; margin-top: 0.6rem; background: #FBFAFF; border: 1px dashed var(--accent-border); border-radius: 10px; padding: 0.5rem 0.75rem; }
+        .say b { color: var(--accent); }
+        .say .mono { font-family: var(--font-mono); font-weight: 800; }
+        table.obs td.cy1 { color: var(--warn); font-weight: 800; }
+        .tick table.obs { font-size: 0.8rem; }
+        .rec-sub { font-size: 0.86rem; color: var(--ink-soft); margin-top: 0.2rem; }
+    </style>
+</head>
+<body>
+    <header class="top-bar">
+        <a href="index.html" class="back-btn">&larr; Practicals</a>
+        <div class="exp-heading">
+            <span class="exp-chip">Practical I &middot; Exp 16</span>
+            <h1 class="exp-title">&#x1F9EE; 8085 — Sum of a Set of n Data (8-bit)</h1>
+        </div>
+        <a href="../../index.html" class="back-btn">&#x1F3E0; Lab</a>
+    </header>
+    <p class="big-idea"><strong>ADD M</strong> adds the byte in memory (address in HL) to the accumulator. If the answer is bigger than FFH it needs a
+        <strong>ninth bit</strong>: that bit goes into the <strong>carry flag CY</strong>, and the program counts it in the C register so no part of the sum is lost.</p>
+    <nav class="section-nav">
+        <a href="#simulate">&#x1F52C; Simulate</a><a href="#draw">&#x270F;&#xFE0F; Draw it</a><a href="#record">&#x1F4DD; Record</a><a href="#viva">&#x1F3A4; Viva</a>
+    </nav>
+
+    <main>
+        <section id="simulate" class="block">
+            <h2 class="block-title">&#x1F52C; Simulate <span class="hint-inline">Press ⏭ Step to run one instruction at a time and watch the addition happen below.</span></h2>
+            <div class="note"><span class="note-tag">Title vs program</span>This experiment is called <b>“sum of a set of n data”</b>, but the manual’s aim and program add only
+                <b>two</b> numbers (4200H + 4201H → sum at 4202H, carry at 4203H). Don’t worry — both are here: the <b>manual program</b> for your record, and a short
+                <b>loop</b> that really adds a set of N numbers, in case you are asked for it.</div>
+            <div class="tabs" data-tabs="prog" style="margin-top:0.9rem">
+                <button class="tab-btn active" data-tab="two">&#x2795; Manual program (two numbers)</button>
+                <button class="tab-btn" data-tab="n">&#x1F9EE; Sum of N numbers</button>
+            </div>
+
+            <div class="card">
+                <div class="try-row">
+                    <span class="try-lab">Try</span>
+                    <span class="btn-row" id="samples"></span>
+                    <span class="btn-row" id="n-ctl" hidden>
+                        <label class="cpu-status">N =
+                            <select id="nsel"><option>2</option><option>3</option><option>4</option><option selected>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></label>
+                        <button class="btn btn-sm" id="random">&#x1F3B2; Random numbers</button>
+                    </span>
+                </div>
+                <p class="memmap" id="memmap"></p>
+                <div id="input-hint"></div>
+            </div>
+
+            <div class="grid-2-even" style="margin-top:1rem">
+                <div class="card">
+                    <h3>Column addition done by ADD M</h3>
+                    <div id="colsum"></div>
+                    <p class="say" id="cs-say"></p>
+                </div>
+                <div class="card">
+                    <h3>Running sum</h3>
+                    <div class="chips">
+                        <span class="chip">A (sum) <b id="c-a">00</b></span>
+                        <span class="chip" id="chip-c">C (carry count) <b id="c-c">00</b></span>
+                        <span class="chip" id="chip-b">B (numbers left) <b id="c-b">--</b></span>
+                        <span class="chip">HL &rarr; <b id="c-hl">----</b></span>
+                    </div>
+                    <div class="tick" id="ticker"></div>
+                    <p class="say" id="tick-say"></p>
+                </div>
+            </div>
+
+            <div style="margin-top:0.9rem" id="cpu"></div>
+            <div id="prog-notes"></div>
+        </section>
+
+        <section id="draw" class="block">
+            <h2 class="block-title">&#x270F;&#xFE0F; Draw it <span class="hint-inline">Press ▶ Draw and copy each step into your record.</span></h2>
+            <div class="tabs" data-tabs="draw">
+                <button class="tab-btn active" data-tab="ftwo">Flowchart — two numbers</button>
+                <button class="tab-btn" data-tab="fn">Flowchart — N numbers</button>
+                <button class="tab-btn" data-tab="hand">Verify by hand (binary)</button>
+            </div>
+            <div class="tab-panel" data-group="draw" data-panel="ftwo" id="draw-ftwo"></div>
+            <div class="tab-panel" data-group="draw" data-panel="fn" id="draw-fn"></div>
+            <div class="tab-panel" data-group="draw" data-panel="hand" id="draw-hand"></div>
+        </section>
+
+        <section id="record" class="block">
+            <h2 class="block-title">&#x1F4DD; Record sheet</h2>
+            <div class="rec-actions no-print"><button class="btn btn-sm" data-print-record>&#x1F5A8;&#xFE0F; Print record</button></div>
+            <article class="record">
+                <div class="rec-head"><div class="rec-box">Expt. No. ______<br>Date ______</div><div class="rec-box">Page No. ______</div></div>
+                <h2 class="rec-title">SUM OF A SET OF n DATA (8-BIT) — 8085</h2>
+                <h3>Aim</h3>
+                <p>To add two 8 bit numbers stored at consecutive memory locations and also to verify the result.</p>
+                <p class="rec-sub">(Extension: to add a set of N 8-bit numbers stored from 4201H, with the count N at 4200H.)</p>
+                <h3>Apparatus required</h3>
+                <p>8085 microprocessor kit, 5 V power supply, keyboard.</p>
+
+                <h3>(A) Addition of two 8-bit numbers — Algorithm</h3>
+                <ol id="alg-two"></ol>
+                <h3>Flowchart (two numbers)</h3>
+                <div class="rec-diagram" data-diagram="ftwo"></div>
+                <h3>Program (two numbers)</h3>
+                <div id="prog-two"></div>
+                <h3>Observation (two numbers)</h3>
+                <div id="io-two"></div>
+                <p class="calc-line" id="ver-two"></p>
+
+                <h3>(B) Sum of a set of N numbers — Algorithm</h3>
+                <ol id="alg-n"></ol>
+                <h3>Flowchart (N numbers)</h3>
+                <div class="rec-diagram" data-diagram="fn"></div>
+                <h3>Program (N numbers)</h3>
+                <div id="prog-n"></div>
+                <h3>Observation (N numbers)</h3>
+                <div id="io-n"></div>
+                <p class="calc-line" id="ver-n"></p>
+
+                <h3>Result</h3>
+                <div class="result-box" id="rec-result"></div>
+            </article>
+        </section>
+
+        <section id="viva" class="block">
+            <h2 class="block-title">&#x1F3A4; Viva voce</h2>
+            <div id="viva-list"></div>
+        </section>
+    </main>
+
+    <footer class="page-footer">Practical I &middot; Exp 16 &bull; The simulator runs the real 8085 instructions of the program</footer>
+
+    <script src="assets/msc-common.js"></script>
+    <script src="assets/cpu8085.js"></script>
+    <script src="assets/programs8085.js"></script>
+    <script>
+    'use strict';
+    const $ = (id) => document.getElementById(id);
+    const P = PROGRAMS8085, h2 = CPU8085.h2, h4 = CPU8085.h4;
+    const hexd = (v, k) => ((v >> (4 * k)) & 15).toString(16).toUpperCase();
+    const hx = (n) => n.toString(16).toUpperCase();
+
+    // state (declared before mount: the widget callbacks use them)
+    let mode = 'two';
+    let dataTwo = [0x40, 0x20];
+    let dataN = [0x12, 0x34, 0x56, 0x78, 0x9A];
+    let W = null, pending = false;
+    const vis = { add: { a: 0, b: 0, done: false, aReady: false }, rows: [], cur: -1, flashC: false };
+    const prog = () => (mode === 'two' ? P.sumTwo : P.sumN);
+
+    function cellsFor(m) {
+        if (m === 'two') return P.sumTwo.cells.map((c, i) => Object.assign({}, c, i < 2 ? { value: dataTwo[i] } : {}));
+        return [{ addr: 0x4200, label: 'N (count)', input: true, value: dataN.length }]
+            .concat(dataN.map((v, i) => ({ addr: 0x4201 + i, label: 'Data ' + (i + 1), input: true, value: v })))
+            .concat([{ addr: 0x4300, label: 'Sum (LSB)', output: true }, { addr: 0x4301, label: 'Carry (MSB)', output: true }]);
+    }
+
+    // ------------------------------------------------------------------ widget
+    function resetVis(api) {
+        const mem = api.machine.mem;
+        vis.cur = -1; vis.flashC = false;
+        if (mode === 'two') {
+            vis.rows = [{ addr: 0x4200, data: mem[0x4200], op: 'MOV A,M' }, { addr: 0x4201, data: mem[0x4201], op: 'ADD M' }];
+            vis.add = { a: mem[0x4200], b: mem[0x4201], done: false, aReady: false };
+        } else {
+            const n = Math.min(mem[0x4200], 16);
+            vis.rows = [];
+            for (let i = 1; i <= n; i++) vis.rows.push({ addr: 0x4200 + i, data: mem[0x4200 + i], op: 'ADD M #' + i });
+            vis.add = { a: 0, b: n ? mem[0x4201] : 0, done: false, aReady: false };
+        }
+        vis.rows.forEach(r => { r.before = null; r.after = null; r.cy = null; r.c = null; });
+    }
+
+    const cpu = CPU8085.mount('#cpu', {
+        source: P.sumTwo.source,
+        cells: cellsFor('two'),
+        speed: 3,
+        editable: true,
+        stepHookOnRun: true,
+        maxSteps: 20000,
+        onReset(api) { W = api; resetVis(api); scheduleRender(); },
+        onStep(info, api) {
+            W = api;
+            const mn = info.mn || '', mem = api.machine.mem;
+            if (mn === 'MOV A,M' && mode === 'two') {
+                vis.rows[0].after = info.after.A; vis.cur = 0;
+                vis.add.a = info.after.A; vis.add.aReady = true;
+            } else if (mn === 'XRA A' && mode === 'n') {
+                vis.add.a = 0; vis.add.aReady = true;
+            } else if (mn === 'ADD M') {
+                const hl = (info.before.H << 8) | info.before.L;
+                vis.add = { a: info.before.A, b: mem[hl], done: true, aReady: true };
+                const idx = vis.rows.findIndex(r => r.addr === hl && /^ADD/.test(r.op) && r.after === null);
+                if (idx >= 0) {
+                    const r = vis.rows[idx];
+                    r.before = info.before.A; r.after = info.after.A; r.cy = info.after.F.CY; r.c = info.after.C;
+                    vis.cur = idx;
+                }
+            } else if (mn === 'INR C') {
+                if (vis.cur >= 0) vis.rows[vis.cur].c = info.after.C;
+                vis.flashC = true;
+            } else if (mode === 'n' && mn === 'INX H' && info.pc === api.asm.symbols.LOOP) {
+                const hl = (info.after.H << 8) | info.after.L;
+                vis.add = { a: info.after.A, b: mem[hl], done: false, aReady: true };
+            }
+            scheduleRender();
+        },
+        onHalt(api) { W = api; scheduleRender(); },
+    });
+    W = cpu;
+
+    function scheduleRender() {
+        if (pending) return;
+        pending = true;
+        const go = () => { pending = false; render(); };
+        if (document.hidden) setTimeout(go, 30); else requestAnimationFrame(go);
+    }
+
+    // ------------------------------------------------------------------ concept visuals
+    function colSumHTML(o) {
+        const a = o.a & 0xFF, b = o.b & 0xFF, s = a + b, r = s & 0xFF, cy = s > 0xFF ? 1 : 0, done = o.done;
+        const car = [0];
+        for (let i = 0; i < 8; i++) car.push((((a >> i) & 1) + ((b >> i) & 1) + car[i]) >> 1);
+        const cell = (t, c) => '<span' + (c ? ' class="' + c + '"' : '') + '>' + t + '</span>';
+        const q = (t) => (done ? t : '<i class="q">?</i>');
+        const aCls = o.aReady ? '' : 'dim';
+        let hxg = cell('', 'lab') + cell('CY', 'hd') + cell('16¹', 'hd') + cell('16⁰', 'hd');
+        hxg += cell('carry', 'lab car') + cell(done && cy ? '1' : '', 'car') + cell(done && car[4] ? '1' : '', 'car') + cell('', 'car');
+        hxg += cell('A', 'lab') + cell('') + cell(hexd(a, 1), aCls) + cell(hexd(a, 0), aCls);
+        hxg += cell('+ M', 'lab') + cell('') + cell(hexd(b, 1)) + cell(hexd(b, 0));
+        hxg += cell('sum', 'lab') + cell(done ? String(cy) : '?', 'sr cy' + (done && cy ? ' lit' : '')) + cell(q(hexd(r, 1)), 'sr') + cell(q(hexd(r, 0)), 'sr');
+        const bits = (f) => { let t = ''; for (let i = 7; i >= 0; i--) { if (i === 3) t += f(-1); t += f(i); } return t; };
+        let bn = cell('', 'lab') + cell('CY', 'hd') + bits(i => (i < 0 ? cell('') : cell('D' + i, 'hd')));
+        bn += cell('carry', 'lab car') + cell(done && car[8] ? '1' : '', 'car') + bits(i => (i < 0 ? cell('', 'car') : cell(done && i > 0 && car[i] ? '1' : '', 'car')));
+        bn += cell('A', 'lab') + cell('') + bits(i => (i < 0 ? cell('') : cell((a >> i) & 1, aCls)));
+        bn += cell('+ M', 'lab') + cell('') + bits(i => (i < 0 ? cell('') : cell((b >> i) & 1)));
+        bn += cell('sum', 'lab') + cell(done ? String(cy) : '?', 'sr cy' + (done && cy ? ' lit' : '')) + bits(i => (i < 0 ? cell('', 'sr') : cell(q((r >> i) & 1), 'sr')));
+        return '<div class="cs-wrap"><div class="cs-block"><div class="cs-title">Hexadecimal</div><div class="cs hex">' + hxg + '</div></div>' +
+            '<div class="cs-block"><div class="cs-title">Binary (what the ALU really adds)</div><div class="cs bin">' + bn + '</div></div></div>';
+    }
+    function colSay(o) {
+        const a = o.a & 0xFF, b = o.b & 0xFF, s = a + b, r = s & 0xFF, cy = s > 0xFF;
+        if (!o.done) {
+            if (mode === 'two') return o.aReady
+                ? 'A now holds the first number <span class="mono">' + h2(a) + 'H</span>. Next, <b>ADD M</b> adds the second number <span class="mono">' + h2(b) + 'H</span> from 4201H.'
+                : '<b>MOV A,M</b> will copy the first number (4200H) into A; then <b>ADD M</b> adds the second number (4201H). Press ⏭ Step.';
+            return o.aReady
+                ? 'Next addition: A (<span class="mono">' + h2(a) + 'H</span>) + M (<span class="mono">' + h2(b) + 'H</span>). Press ⏭ Step to watch ADD M.'
+                : 'XRA A clears the sum to 00H, then the loop adds the numbers one by one. Press ⏭ Step.';
+        }
+        let t = '<span class="mono">' + h2(a) + 'H + ' + h2(b) + 'H = ' + (cy ? '1' : '') + h2(r) + 'H</span> &nbsp;(' + a + ' + ' + b + ' = ' + s + ').';
+        t += cy ? ' The answer needs <b>9 bits</b>: A keeps the lower 8 bits (' + h2(r) + 'H) and the ninth bit goes into the <b>carry flag, CY = 1</b>. JNC does not jump, so <b>INR C</b> counts the carry.'
+            : ' It fits in 8 bits, so <b>CY = 0</b> and JNC jumps over INR C.';
+        if (((a & 15) + (b & 15)) > 15) t += ' The carry from the lower hex digit into the upper one sets the auxiliary carry flag (AC = 1).';
+        return t;
+    }
+    function tickerHTML() {
+        const dash = (d) => (d ? '—' : '');
+        const rows = vis.rows.map((r, i) => {
+            const d = r.after !== null;
+            return '<tr class="' + (i === vis.cur ? 'hl' : d ? 'done' : '') + '"><td>' + r.op + '</td><td class="mono">' + h4(r.addr) + '</td><td class="mono">' + h2(r.data) +
+                '</td><td class="mono">' + (d ? (r.before === null ? '→ ' : h2(r.before) + ' → ') + h2(r.after) : '') +
+                '</td><td class="mono' + (r.cy ? ' cy1' : '') + '">' + (r.cy === null ? dash(d) : r.cy) + '</td><td class="mono">' + (r.c === null ? dash(d) : h2(r.c)) + '</td></tr>';
+        }).join('');
+        return '<div class="table-wrap"><table class="obs"><thead><tr><th>Step</th><th>Address</th><th>Data</th><th>Sum in A</th><th>CY</th><th>C</th></tr></thead><tbody>' +
+            (rows || '<tr><td colspan="6" class="empty">N = 0: nothing to add</td></tr>') + '</tbody></table></div>';
+    }
+    function tickSay(m) {
+        const inp = vis.rows.map(r => r.data);
+        const total = inp.reduce((s, v) => s + v, 0);
+        const check = inp.map(h2).join(' + ') + ' = ' + hx(total) + 'H (' + inp.join(' + ') + ' = ' + total + ')';
+        if (m.error) return '<b style="color:var(--bad)">The program did not finish.</b>';
+        if (m.halted) {
+            const sa = mode === 'two' ? 0x4202 : 0x4300, ca = sa + 1, sum = m.mem[sa], car = m.mem[ca];
+            return 'Result: sum <span class="mono">' + h2(sum) + 'H</span> at ' + h4(sa) + 'H and carry <span class="mono">' + h2(car) + 'H</span> at ' + h4(ca) +
+                'H, so the full answer is <b class="mono">' + h2(car) + h2(sum) + 'H</b> = ' + (car * 256 + sum) + '.<br>Check by hand: <span class="mono">' + check + '</span> ' +
+                ((car * 256 + sum) === total ? '✓' : '✗');
+        }
+        return mode === 'two'
+            ? 'Only one addition happens here, so the carry count C can be at most 01H.'
+            : 'Every <b>ADD M</b> adds one more number. Each time the running sum passes FFH, CY = 1 and <b>INR C</b> adds one to the carry count; <b>DCR B / JNZ</b> repeats until all ' + vis.rows.length + ' numbers are added.';
+    }
+    function pulse(el) { el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse'); }
+    function render() {
+        if (!W) return;
+        const m = W.machine;
+        $('colsum').innerHTML = colSumHTML(vis.add);
+        $('cs-say').innerHTML = colSay(vis.add);
+        $('ticker').innerHTML = tickerHTML();
+        $('tick-say').innerHTML = tickSay(m);
+        $('c-a').textContent = h2(m.A);
+        $('c-c').textContent = h2(m.C);
+        $('c-b').textContent = m.steps ? h2(m.B) : '--';
+        $('c-hl').textContent = h4((m.H << 8) | m.L);
+        if (vis.flashC) { pulse($('chip-c')); vis.flashC = false; }
+    }
+
+    // ------------------------------------------------------------------ controls
+    function sampleLabel(s) {
+        if (mode === 'two') return s.name + ' (' + h2(s.inputs[0x4200]) + ' + ' + h2(s.inputs[0x4201]) + ')';
+        const n = s.inputs[0x4200], v = [];
+        for (let i = 1; i <= n; i++) v.push(h2(s.inputs[0x4200 + i]));
+        return s.name + ' (' + v.join(' + ') + ')';
+    }
+    function renderSamples() {
+        $('samples').innerHTML = prog().samples.map((s, i) => '<button class="btn btn-sm" data-sample="' + i + '">' + sampleLabel(s) + '</button>').join('');
+        $('n-ctl').hidden = mode !== 'n';
+        $('chip-b').hidden = mode !== 'n';
+        $('memmap').innerHTML = mode === 'two'
+            ? 'Memory: <b>4200H</b> = first number, <b>4201H</b> = second number &rarr; <b>4202H</b> = sum, <b>4203H</b> = carry. Type your own numbers into the memory table of the kit below.'
+            : 'Memory: <b>4200H</b> = N (how many numbers), <b>4201H</b> onwards = the data &rarr; <b>4300H</b> = sum (lower byte), <b>4301H</b> = carry count (upper byte).';
+        $('nsel').value = String(dataN.length);
+    }
+    $('samples').addEventListener('click', e => {
+        const b = e.target.closest('[data-sample]');
+        if (!b) return;
+        const s = prog().samples[Number(b.dataset.sample)];
+        if (mode === 'two') { dataTwo = [s.inputs[0x4200], s.inputs[0x4201]]; W.setInputs(s.inputs); }
+        else {
+            const n = s.inputs[0x4200];
+            dataN = Array.from({ length: n }, (_, i) => s.inputs[0x4201 + i]);
+            W.setCells(cellsFor('n')); $('nsel').value = String(n);
+        }
+        $('input-hint').innerHTML = '';
+        updateRecord();
+    });
+    $('nsel').addEventListener('change', e => {
+        const n = Number(e.target.value);
+        dataN = Array.from({ length: n }, (_, i) => (dataN[i] !== undefined ? dataN[i] : ((0x11 * (i + 1)) & 0xFF)));
+        W.setCells(cellsFor('n')); updateRecord();
+    });
+    $('random').addEventListener('click', () => {
+        dataN = dataN.map(() => 1 + Math.floor(Math.random() * 0xFF));
+        W.setCells(cellsFor('n')); updateRecord();
+    });
+    // keep the page's data in sync when the student types into the kit's memory table
+    $('cpu').addEventListener('change', e => {
+        if (!e.target.closest('input[data-cell]')) return;
+        const get = (a) => { const c = W.cells.find(x => x.addr === a); return c ? c.initial & 0xFF : 0; };
+        $('input-hint').innerHTML = '';
+        if (mode === 'two') dataTwo = [get(0x4200), get(0x4201)];
+        else {
+            const n = get(0x4200);
+            const cur = W.cells.filter(c => c.addr > 0x4200 && c.addr < 0x4300).map(c => c.initial & 0xFF);
+            if (n < 1 || n > 10) {
+                $('input-hint').innerHTML = '<div class="note warn"><span class="note-tag">Check N</span>On this page N can be 01H to 0AH (1 to 10 numbers). N = ' + h2(n) +
+                    'H was changed back to ' + h2(cur.length) + 'H. (On the kit, N = 00H would make DCR B wrap round to FFH and add 256 bytes!)</div>';
+                dataN = cur; W.setInputs({ 0x4200: cur.length });
+            } else if (n !== cur.length) {
+                dataN = Array.from({ length: n }, (_, i) => (cur[i] !== undefined ? cur[i] : 0));
+                W.setCells(cellsFor('n')); $('nsel').value = String(n);
+            } else dataN = cur;
+        }
+        updateRecord();
+    });
+
+    const PAGE_NOTES = {
+        two: [
+            'The manual’s comment for <b>LXI H,4200</b> says “Initialize HL reg. to 4500” — the program and the observation table use <b>4200H</b>.',
+            'The comment for <b>ADD M</b> says “Add first number to acc.” The first number is already in A; ADD M adds the <b>second</b> number (at 4201H) to it.',
+            'The manual leaves the opcode column empty. The opcodes are: ' + CPU8085.assemble(P.sumTwo.source).code.map(L => L.bytes.map(h2).join(' ')).join(', ') + '.',
+        ],
+        n: ['This loop version is not printed in the manual. If you are asked for a set of N numbers, keep the count N at 4200H, the data from 4201H, and store the sum at 4300H and the carry at 4301H — as in the program table.'],
+    };
+    function setMode(t) {
+        mode = t;
+        W.setCells(cellsFor(t));
+        W.setSource(prog().source);
+        renderSamples();
+        $('input-hint').innerHTML = '';
+        $('prog-notes').innerHTML = (prog().notes || []).concat(t === 'two' ? PAGE_NOTES.two : []).map(x => '<div class="note warn"><span class="note-tag">Check your record</span>' + x + '</div>').join('') +
+            (t === 'n' ? PAGE_NOTES.n.map(x => '<div class="note"><span class="note-tag">Note</span>' + x + '</div>').join('') : '');
+    }
+    MSC.onTab('prog', t => { if (t !== mode || !$('samples').innerHTML) setMode(t); });
+
+    // ------------------------------------------------------------------ record
+    function ioTable(inputs, outs, m) {
+        const ins = Object.keys(inputs).map(Number).sort((a, b) => a - b);
+        const rows = [];
+        for (let i = 0; i < Math.max(ins.length, outs.length); i++) {
+            rows.push([ins[i] !== undefined ? h4(ins[i]) : '', ins[i] !== undefined ? h2(inputs[ins[i]]) : '',
+                outs[i] !== undefined ? h4(outs[i]) : '', outs[i] !== undefined ? (m.halted && !m.error ? h2(m.mem[outs[i]]) : '??') : '']);
+        }
+        return MSC.table([[{ t: 'Input', colspan: 2 }, { t: 'Output', colspan: 2 }], ['Address', 'Data', 'Address', 'Data']], rows.map(r => r.map(t => ({ t, cls: 'mono' }))));
+    }
+    function updateRecord() {
+        $('alg-two').innerHTML = P.sumTwo.algorithm.map(s => '<li>' + s + '</li>').join('');
+        $('alg-n').innerHTML = P.sumN.algorithm.map(s => '<li>' + s + '</li>').join('');
+        $('prog-two').innerHTML = CPU8085.listingHTML(CPU8085.assemble(P.sumTwo.source));
+        $('prog-n').innerHTML = CPU8085.listingHTML(CPU8085.assemble(P.sumN.source));
+        const inTwo = { 0x4200: dataTwo[0], 0x4201: dataTwo[1] };
+        const inN = { 0x4200: dataN.length };
+        dataN.forEach((v, i) => { inN[0x4201 + i] = v; });
+        const mT = CPU8085.run(P.sumTwo.source, inTwo), mN = CPU8085.run(P.sumN.source, inN);
+        $('io-two').innerHTML = ioTable(inTwo, [0x4202, 0x4203], mT);
+        $('io-n').innerHTML = ioTable(inN, [0x4300, 0x4301], mN);
+        const tT = dataTwo[0] + dataTwo[1], tN = dataN.reduce((s, v) => s + v, 0);
+        $('ver-two').innerHTML = 'Verification: ' + h2(dataTwo[0]) + 'H + ' + h2(dataTwo[1]) + 'H = ' + hx(tT) + 'H &nbsp;(' + dataTwo[0] + ' + ' + dataTwo[1] + ' = ' + tT + ') → sum ' + h2(tT) + 'H, carry ' + h2(tT >> 8) + 'H.';
+        $('ver-n').innerHTML = 'Verification: ' + dataN.map(h2).join(' + ') + ' = ' + hx(tN) + 'H &nbsp;(' + dataN.join(' + ') + ' = ' + tN + ') → sum ' + h2(tN) + 'H, carry ' + h2(tN >> 8) + 'H.';
+        $('rec-result').innerHTML = 'Thus the two 8-bit numbers stored at 4200H &amp; 4201H (' + h2(dataTwo[0]) + 'H and ' + h2(dataTwo[1]) + 'H) are added and the result is stored at 4202H &amp; 4203H (sum ' +
+            h2(mT.mem[0x4202]) + 'H, carry ' + h2(mT.mem[0x4203]) + 'H); the result is verified. Also, the set of N = ' + dataN.length + ' numbers stored from 4201H was added: sum ' +
+            h2(mN.mem[0x4300]) + 'H at 4300H and carry ' + h2(mN.mem[0x4301]) + 'H at 4301H.';
+    }
+
+    // ------------------------------------------------------------------ diagrams
+    const f1 = MSC.flowchart(Object.assign({ cx: 300 }, P.sumTwo.flowchart));
+    MSC.diagram('#draw-ftwo', { name: 'ftwo', title: 'Flowchart — addition of two 8-bit numbers', viewBox: f1.viewBox, steps: f1.steps, maxHeight: 900 });
+    const f2 = MSC.flowchart(Object.assign({ cx: 300 }, P.sumN.flowchart));
+    MSC.diagram('#draw-fn', { name: 'fn', title: 'Flowchart — sum of a set of N 8-bit numbers', viewBox: f2.viewBox, steps: f2.steps, maxHeight: 900 });
+
+    (function handDiagram() {
+        const S = MSC.sym, a = 0x9A, b = 0x8C, s = a + b, r = s & 0xFF;
+        const car = [0];
+        for (let i = 0; i < 8; i++) car.push((((a >> i) & 1) + ((b >> i) & 1) + car[i]) >> 1);
+        const X = (i) => 230 + (7 - i) * 38 + (i < 4 ? 18 : 0), XC = 184;
+        const yH = 34, yC = 70, yA = 104, yB = 140, yL = 163, yS = 190;
+        const idx = [7, 6, 5, 4, 3, 2, 1, 0];
+        const row = (v, y) => idx.map(i => S.text(X(i), y, String((v >> i) & 1), { size: 19, cls: 'mono' })).join('');
+        MSC.diagram('#draw-hand', {
+            name: 'hand', title: 'Verify by hand — 9AH + 8CH in binary', viewBox: '0 0 640 250',
+            steps: [
+                {
+                    c: 'Write the two numbers in binary, one below the other. Change each hex digit into 4 bits: 9AH = 1001 1010 and 8CH = 1000 1100.',
+                    s: idx.map(i => S.text(X(i), yH, 'D' + i, { size: 11, cls: 'soft' })).join('') + S.text(XC, yH, 'CY', { size: 11, cls: 'soft' }) +
+                        S.text(130, yA, '9AH', { size: 16, anchor: 'end' }) + row(a, yA) + S.text(130, yB, '+ 8CH', { size: 16, anchor: 'end' }) + row(b, yB),
+                },
+                {
+                    c: 'Add column by column from D0 (right). 1 + 1 = 10 in binary: write 0 and carry 1 to the next column. Write the carries small, above the columns.',
+                    s: idx.filter(i => i > 0 && car[i]).map(i => S.text(X(i), yC, '1', { size: 14, cls: 'mono accent' })).join('') + S.text(XC, yC, car[8] ? '1' : '', { size: 14, cls: 'mono accent' }) +
+                        S.text(130, yC, 'carry', { size: 12, anchor: 'end', cls: 'soft' }),
+                },
+                {
+                    c: 'Draw the line and write the sum bits. The carry out of D7 is the ninth bit — it goes into the carry flag, CY = 1.',
+                    s: S.line(XC - 22, yL, X(0) + 18, yL) + row(r, yS) + S.rect(XC - 14, yS - 16, 28, 32, { rx: 6, cls: 'accent' }) + S.text(XC, yS, String(s >> 8), { size: 19, cls: 'mono accent' }),
+                },
+                {
+                    c: 'Read the answer: 0010 0110 = 26H with CY = 1, so 9AH + 8CH = 126H (154 + 140 = 294). The program stores 26H at 4202H (sum) and 01H at 4203H (carry).',
+                    s: S.text(572, yA, '= 9AH', { size: 14, anchor: 'start' }) + S.text(572, yB, '= 8CH', { size: 14, anchor: 'start' }) + S.text(572, yS, '= 126H', { size: 14, anchor: 'start', cls: 'accent' }) +
+                        S.text(330, 232, 'Sum 26H → 4202H,   carry 01H → 4203H', { size: 14 }),
+                },
+            ],
+        });
+    })();
+
+    // ------------------------------------------------------------------ viva
+    MSC.viva('#viva-list', [
+        { q: 'What does the instruction ADD M do?', a: 'It adds the byte in the memory location whose address is in HL to the accumulator: A ← A + M. The sum stays in A and all the flags (S, Z, AC, P, CY) are affected.' },
+        { q: 'When is the carry flag set after an addition?', a: 'When the true sum is more than FFH (255) and needs a ninth bit. That bit goes into CY and A keeps only the lower 8 bits — e.g. FFH + 01H gives A = 00H with CY = 1.' },
+        { q: 'Why is the C register cleared at the start?', a: 'C holds the carry (the upper part of the answer). It must start at 00H so that INR C gives 01H when a carry occurs.' },
+        { q: 'Why is JNC used before INR C?', a: 'JNC jumps when CY = 0 (no carry), skipping INR C. Only when a carry is produced does the program fall through and increment C.' },
+        { q: 'What is the largest sum of two 8-bit numbers?', a: 'FFH + FFH = 1FEH (255 + 255 = 510): sum FEH with carry 01H. So the result always fits in 9 bits.' },
+        { q: 'What addressing modes are used in this program?', a: 'MVI C,00 — immediate; LXI H,4200 — immediate (16-bit); MOV A,M, ADD M, MOV M,A — register indirect (address in HL); INX H, INR C — register; STA 4300 (N program) — direct.' },
+        { q: 'What is the difference between INX H and INR L?', a: 'INX H increments the 16-bit pair HL (so FFH in L carries into H) and affects no flags. INR L increments only the 8-bit register L and affects all flags except CY.' },
+        { q: 'In the N-number program, how is the loop controlled?', a: 'B holds the count N. After each addition DCR B decrements it; DCR sets Z = 1 when B reaches 00H, so JNZ LOOP repeats until all N numbers are added.' },
+        { q: 'Why is XRA A used in the N-number program?', a: 'XRA A (A XOR A) clears the accumulator to 00H in one byte, and also resets CY. MVI A,00 would take two bytes.' },
+        { q: 'How big can the sum of N numbers get in this program?', a: 'The sum is stored as two bytes: C (carries) and A. Up to 255 numbers of FFH gives FE01H, which still fits in 16 bits.' },
+        { q: 'What is the auxiliary carry (AC) flag?', a: 'The carry from bit D3 to bit D4 (from the lower hex digit to the upper one). It is used by DAA for BCD addition; it is not tested by any jump instruction.' },
+    ]);
+
+    setMode('two');
+    updateRecord();
+    render();
+    </script>
+</body>
+</html>

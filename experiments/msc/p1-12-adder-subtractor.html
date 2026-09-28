@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4-bit Binary Adder &amp; Subtractor (IC 7483) - M.Sc. Practicals - Science Lab</title>
+    <meta name="description" content="Interactive IC 7483 4-bit binary adder, 1's and 2's complement subtractor, XOR adder/subtractor and BCD adder: flip the switches, watch the carry ripple, see the paper working and get the record sheet.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/msc.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x2795;</text></svg>">
+    <style>
+        :root { --accent: #5C6BC0; --accent-soft: rgba(92, 107, 192, 0.12); --accent-border: rgba(92, 107, 192, 0.5); }
+        /* live logic levels */
+        svg.pen .w1 { stroke: var(--logic1); }
+        svg.pen .w0 { stroke: var(--logic0); }
+        svg.pen .solid.w1 { fill: var(--logic1); }
+        svg.pen .solid.w0 { fill: var(--logic0); }
+        svg.pen text.v1 { fill: var(--logic1); font-weight: 800; }
+        svg.pen text.v0 { fill: #78909C; font-weight: 800; }
+        svg.pen text.dim { fill: #9AA3B5; }
+        svg.pen .led { stroke: #37474F; stroke-width: 1.5; }
+        svg.pen .led.on { fill: var(--logic1); filter: drop-shadow(0 0 5px rgba(229, 57, 53, 0.85)); }
+        svg.pen .led.off { fill: #ECEFF1; }
+        svg.pen text.led-t { font-family: var(--font-mono); font-weight: 800; }
+        svg.pen text.led-t.on { fill: #fff; }
+        svg.pen text.led-t.off { fill: #90A4AE; }
+        svg.pen .rulebox { fill: #FBFAFF; stroke: var(--accent-border); stroke-width: 1.2; }
+        svg.pen text.rule-on { fill: var(--accent); font-weight: 800; }
+        #ic .hit { fill: transparent; stroke: none; cursor: pointer; }
+        #ic .hit:hover { fill: rgba(92, 107, 192, 0.1); }
+        /* ripple view */
+        svg.pen .fa-box { fill: #fff; }
+        svg.pen .fa-box.active { fill: #FFF4D6; stroke: var(--warn); stroke-width: 2.6; }
+        svg.pen .fa-box.done { fill: #F3F4FC; }
+        svg.pen .fa-box.old { stroke-dasharray: 5 4; stroke: var(--pen-soft); }
+        svg.pen .band { fill: #FBFAFF; stroke: #E0E3F0; stroke-width: 1.2; }
+        svg.pen .band.active { fill: #FFF4D6; stroke: var(--warn); stroke-width: 2; }
+        svg.pen .token { fill: var(--warn); stroke: #fff; stroke-width: 2; }
+        svg.pen .token.c1 { fill: var(--logic1); }
+        svg.pen .token.c0 { fill: var(--logic0); }
+        /* layout */
+        .sim-grid { margin-top: 0.8rem; }
+        .rip-bar { display: flex; gap: 0.45rem; align-items: center; flex-wrap: wrap; margin-bottom: 0.55rem; }
+        .rip-bar .spacer { flex: 1; }
+        .ripple-cap {
+            margin-top: 0.55rem; font-weight: 700; font-size: 0.9rem; min-height: 2.7em; background: #FFF8E6;
+            border: 1px solid rgba(230, 119, 0, 0.35); border-radius: 10px; padding: 0.45rem 0.75rem;
+        }
+        .card h3 .h3-note { font-family: var(--font-body); font-size: 0.8rem; color: var(--ink-soft); font-weight: 700; }
+        .sw-row { display: flex; align-items: center; justify-content: center; gap: 0.45rem; margin: 0.35rem 0; flex-wrap: wrap; }
+        .sw-lab { font-family: var(--font-heading); color: var(--accent); font-size: 1.1rem; width: 1.7rem; text-align: center; }
+        .sw-dec { font-family: var(--font-mono); font-weight: 800; min-width: 4.4rem; font-size: 0.95rem; }
+        .sw-dec.bad { color: var(--bad); }
+        .sw-fixed { font-size: 0.84rem; color: var(--ink-soft); font-weight: 700; text-align: center; margin-top: 0.3rem; }
+        .rd-val .ok { color: var(--good); }
+        /* paper working */
+        .paper { font-size: 0.9rem; }
+        .paper p { margin: 0.3rem 0; }
+        .pstep { margin-top: 0.7rem; font-weight: 700; }
+        .pstep:first-child { margin-top: 0.1rem; }
+        .step-tag {
+            display: inline-block; font-size: 0.66rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px;
+            background: var(--accent); color: #fff; border-radius: 50px; padding: 0.05rem 0.55rem; margin-right: 0.4rem; vertical-align: 1px;
+        }
+        .pline { font-family: var(--font-mono); font-weight: 800; margin: 0.25rem 0 0.1rem 0.4rem; font-size: 0.95rem; }
+        .cadd {
+            display: inline-grid; grid-template-columns: auto repeat(5, 1.5em) auto; row-gap: 0.08rem; align-items: center;
+            font-family: var(--font-mono); font-weight: 800; font-size: 1.05rem; background: #FBFAFF;
+            border: 1px dashed var(--accent-border); border-radius: 10px; padding: 0.45rem 0.8rem; margin: 0.3rem 0 0.2rem 0.4rem;
+        }
+        .cadd > div { text-align: center; min-height: 1em; }
+        .cadd .lab { text-align: right; padding-right: 0.6rem; font-family: var(--font-body); font-size: 0.76rem; color: var(--ink-soft); }
+        .cadd .cy { font-size: 0.72rem; color: #B7C0CF; }
+        .cadd .cy.one { color: var(--logic1); }
+        .cadd .sg { color: var(--ink-soft); }
+        .cadd .dec { text-align: left; padding-left: 0.7rem; font-family: var(--font-body); font-size: 0.8rem; color: var(--ink-soft); }
+        .cadd .rule { grid-column: 2 / 7; border-top: 2px solid var(--ink); min-height: 0; height: 0; margin: 0.1rem 0; }
+        .cadd .res { color: var(--accent); }
+        .cadd .cout { color: var(--logic1); }
+        .cadd s { color: #9AA3B5; }
+        .paper-result {
+            margin-top: 0.55rem; padding: 0.45rem 0.75rem; border-radius: 10px; background: var(--good-soft);
+            border: 1px solid rgba(46, 125, 50, 0.4); font-weight: 800;
+        }
+        .paper-result .mono, .pline .mono { font-family: var(--font-mono); }
+        .chk { font-weight: 800; color: var(--good); margin-top: 0.35rem !important; }
+        .chk.bad { color: var(--bad); }
+        .kit-note { font-size: 0.8rem; color: var(--ink-soft); margin-top: 0.4rem !important; }
+        .obs-empty { font-size: 0.85rem; color: var(--ink-soft); padding: 0.5rem 0; }
+        .rec-note { font-size: 0.8rem !important; color: #555; margin-top: 0.3rem; }
+        @media (max-width: 900px) {
+            .sim-grid { display: flex; flex-direction: column; gap: 0.8rem; }
+            .sim-grid > .stack { display: contents; }
+            .sim-grid > .stack > * { margin-top: 0 !important; }
+            #ic-stage { order: 1; } #inputs-card { order: 2; } #readout-card { order: 3; } #ripple-card { order: 4; } #paper-card { order: 5; }
+        }
+        @media (max-width: 600px) {
+            .cadd { font-size: 0.95rem; padding: 0.4rem 0.55rem; margin-left: 0; }
+            .rip-bar .spacer { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <header class="top-bar">
+        <a href="index.html" class="back-btn">&larr; Practicals</a>
+        <div class="exp-heading">
+            <span class="exp-chip">Practical I &middot; Exp 12</span>
+            <h1 class="exp-title">&#x2795; 4-bit Binary Adder &amp; Subtractor (IC 7483)</h1>
+        </div>
+        <a href="../../index.html" class="back-btn">&#x1F3E0; Lab</a>
+    </header>
+    <p class="big-idea">IC 7483 is four <strong>full adders</strong> in a chain: each stage adds two bits and a carry and passes its carry on to the next.
+        To <strong>subtract</strong>, the same adder adds the complement of B (1's complement with an end-around carry, or 2's complement with C<sub>in</sub> = 1),
+        and a <strong>BCD adder</strong> adds 0110 whenever the binary sum goes past 9.</p>
+    <nav class="section-nav">
+        <a href="#simulate">&#x1F52C; Simulate</a><a href="#draw">&#x270F;&#xFE0F; Draw it</a><a href="#record">&#x1F4DD; Record</a><a href="#viva">&#x1F3A4; Viva</a>
+    </nav>
+
+    <main>
+        <!-- ================= SIMULATE ================= -->
+        <section id="simulate" class="block">
+            <h2 class="block-title">&#x1F52C; Simulate <span class="hint-inline">Pick a circuit, then flip the A and B switches (or click a label in the circuit). Red = logic 1, grey = logic 0.</span></h2>
+            <div class="tabs" data-tabs="sim">
+                <button class="tab-btn active" data-tab="add">4-bit adder</button>
+                <button class="tab-btn" data-tab="sub1">Subtractor &middot; 1's complement</button>
+                <button class="tab-btn" data-tab="sub2">Subtractor &middot; 2's complement</button>
+                <button class="tab-btn" data-tab="addsub">Adder / subtractor (M)</button>
+                <button class="tab-btn" data-tab="bcd">BCD adder</button>
+            </div>
+            <div class="tab-panel" data-group="sim" data-panel="add"><div class="note" style="margin-top:0"><span class="note-tag">Circuit</span>A and B go straight into the 7483. C<sub>in</sub> (pin 13) is normally grounded (0); the answer is the 5-bit number C<sub>4</sub> S<sub>3</sub>S<sub>2</sub>S<sub>1</sub>S<sub>0</sub>.</div></div>
+            <div class="tab-panel" data-group="sim" data-panel="sub1"><div class="note" style="margin-top:0"><span class="note-tag">Circuit</span>Four NOT gates (IC 7404) give B&#x305; — the 1's complement of B. The carry out (pin 14) is wired back to the carry in (pin 13): the <b>end-around carry</b>. C<sub>4</sub> = 1 means the answer is positive.</div></div>
+            <div class="tab-panel" data-group="sim" data-panel="sub2"><div class="note" style="margin-top:0"><span class="note-tag">Circuit</span>NOT gates give B&#x305; and C<sub>in</sub> is tied to V<sub>CC</sub> (1), so the 7483 adds A + B&#x305; + 1 = A + (2's complement of B). The carry is ignored; C<sub>4</sub> = 0 means the answer is negative.</div></div>
+            <div class="tab-panel" data-group="sim" data-panel="addsub"><div class="note" style="margin-top:0"><span class="note-tag">Circuit</span>Each B bit passes through an XOR gate (IC 7486) whose other input is the mode line M, and M also drives C<sub>in</sub>. <b>M = 0 → adds</b> (B &oplus; 0 = B); <b>M = 1 → subtracts</b> (B &oplus; 1 = B&#x305;, plus 1).</div></div>
+            <div class="tab-panel" data-group="sim" data-panel="bcd"><div class="note" style="margin-top:0"><span class="note-tag">Circuit</span>The upper 7483 adds the two BCD digits in binary. If the sum is more than 9 (or gives a carry), the correction logic makes <b>Y = C<sub>4</sub> + S<sub>3</sub>(S<sub>2</sub> + S<sub>1</sub>) = 1</b> and the lower 7483 adds 0110. Use digits 0–9 only.</div></div>
+
+            <div class="grid-2 sim-grid">
+                <div class="stack">
+                    <div class="stage" id="ic-stage"><svg id="ic" class="pen" viewBox="0 0 700 460" role="img" aria-label="IC 7483 circuit with live logic levels"></svg></div>
+                    <div class="card" id="ripple-card">
+                        <h3>Inside the 7483 — four full adders <span class="h3-note">the carry ripples from the LSB (right) to the MSB (left)</span></h3>
+                        <div class="rip-bar">
+                            <button class="btn btn-sm btn-primary" id="rip-play">&#x27F2; Replay ripple</button>
+                            <button class="btn btn-sm" id="rip-skip">Skip to end &#x23ED;</button>
+                            <span class="spacer"></span>
+                            <select class="field" id="rip-speed" title="Ripple speed"><option value="0.5">Slow</option><option value="1" selected>Normal</option><option value="2">Fast</option></select>
+                        </div>
+                        <div class="stage"><svg id="ripple" class="pen" viewBox="0 0 700 236" role="img" aria-label="Ripple-carry view of four full adders"></svg></div>
+                        <div class="ripple-cap" id="ripple-cap"></div>
+                    </div>
+                </div>
+                <div class="stack">
+                    <div class="card" id="inputs-card">
+                        <h3>Inputs <span class="h3-note" id="in-note"></span></h3>
+                        <div id="switches"></div>
+                        <div class="btn-row" style="justify-content:center;margin-top:0.6rem">
+                            <button class="btn btn-sm" id="rand">&#x1F3B2; Random</button>
+                            <button class="btn btn-sm btn-primary" id="addrow">&#x2795; Add row to table</button>
+                        </div>
+                    </div>
+                    <div class="card" id="readout-card">
+                        <h3>Output LEDs</h3>
+                        <div class="readout" id="readout"></div>
+                    </div>
+                    <div class="card" id="paper-card">
+                        <h3>&#x270D;&#xFE0F; Paper working <span class="h3-note">— write it like this in your record</span></h3>
+                        <div class="paper" id="paper"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:1rem">
+                <h3 id="obs-title">Observation table</h3>
+                <div class="btn-row" style="margin-bottom:0.6rem">
+                    <button class="btn btn-sm btn-primary" id="addrow2">&#x2795; Add current inputs</button>
+                    <button class="btn btn-sm" id="examples">Add example rows</button>
+                    <button class="btn btn-sm" id="clearrows">Clear table</button>
+                </div>
+                <div id="obs-sim"></div>
+            </div>
+        </section>
+
+        <!-- ================= DRAW ================= -->
+        <section id="draw" class="block">
+            <h2 class="block-title">&#x270F;&#xFE0F; Draw it <span class="hint-inline">Press ▶ Draw and copy each step into your record.</span></h2>
+            <div class="tabs" data-tabs="draw">
+                <button class="tab-btn active" data-tab="adder">Adder (7483)</button>
+                <button class="tab-btn" data-tab="sub1">1's complement subtractor</button>
+                <button class="tab-btn" data-tab="sub2">2's complement subtractor</button>
+                <button class="tab-btn" data-tab="addsub">Adder / subtractor</button>
+                <button class="tab-btn" data-tab="bcd">BCD adder</button>
+                <button class="tab-btn" data-tab="kmap">K-map (BCD correction)</button>
+                <button class="tab-btn" data-tab="pins">IC 7483 pin diagram</button>
+                <button class="tab-btn" data-tab="fa">Full adder</button>
+            </div>
+            <div class="tab-panel" data-group="draw" data-panel="adder" id="draw-adder"></div>
+            <div class="tab-panel" data-group="draw" data-panel="sub1" id="draw-sub1"></div>
+            <div class="tab-panel" data-group="draw" data-panel="sub2" id="draw-sub2"></div>
+            <div class="tab-panel" data-group="draw" data-panel="addsub" id="draw-addsub"></div>
+            <div class="tab-panel" data-group="draw" data-panel="bcd" id="draw-bcd"></div>
+            <div class="tab-panel" data-group="draw" data-panel="kmap" id="draw-kmap"></div>
+            <div class="tab-panel" data-group="draw" data-panel="pins" id="draw-pins"></div>
+            <div class="tab-panel" data-group="draw" data-panel="fa" id="draw-fa"></div>
+        </section>
+
+        <!-- ================= RECORD ================= -->
+        <section id="record" class="block">
+            <h2 class="block-title">&#x1F4DD; Record sheet</h2>
+            <div class="rec-actions no-print">
+                <button class="btn btn-sm" data-print-record>&#x1F5A8;&#xFE0F; Print record</button>
+            </div>
+            <article class="record">
+                <div class="rec-head"><div class="rec-box">Expt. No. ______<br>Date ______</div><div class="rec-box">Page No. ______</div></div>
+                <h2 class="rec-title">4-BIT BINARY ADDER AND SUBTRACTOR USING IC 7483</h2>
+
+                <h3>Aim</h3>
+                <p>To design and implement a 4-bit binary adder and subtractor using IC 7483.</p>
+
+                <h3>Apparatus required</h3>
+                <div class="table-wrap"><table class="obs">
+                    <thead><tr><th>S. No.</th><th class="l">Component</th><th>Specification</th><th>Qty.</th></tr></thead>
+                    <tbody>
+                        <tr><td>1</td><td class="l">4-bit binary adder</td><td>IC 7483</td><td>1 (2 for the BCD adder)</td></tr>
+                        <tr><td>2</td><td class="l">EX-OR gate</td><td>IC 7486</td><td>1</td></tr>
+                        <tr><td>3</td><td class="l">NOT gate</td><td>IC 7404</td><td>1</td></tr>
+                        <tr><td>4</td><td class="l">AND / OR gates (BCD correction)</td><td>IC 7408, IC 7432</td><td>1 each</td></tr>
+                        <tr><td>5</td><td class="l">IC trainer kit (+5 V, logic switches, LEDs)</td><td>—</td><td>1</td></tr>
+                        <tr><td>6</td><td class="l">Patch cords</td><td>—</td><td>40</td></tr>
+                    </tbody>
+                </table></div>
+
+                <h3>Theory</h3>
+                <p><b>4-bit binary adder.</b> A binary adder produces the arithmetic sum of two binary numbers. It is built from full adders connected in cascade:
+                    the output carry of each full adder is connected to the input carry of the next. The augend bits A and the addend bits B are numbered from right
+                    to left, subscript 0 being the LSB. The input carry C<sub>0</sub> enters the LSB stage and ripples through to the output carry C<sub>4</sub>.
+                    IC 7483 is a 4-bit binary full adder: it adds A<sub>3</sub>A<sub>2</sub>A<sub>1</sub>A<sub>0</sub>, B<sub>3</sub>B<sub>2</sub>B<sub>1</sub>B<sub>0</sub> and C<sub>0</sub> (pin 13) and gives the sum
+                    S<sub>3</sub>S<sub>2</sub>S<sub>1</sub>S<sub>0</sub> and the carry C<sub>4</sub> (pin 14). For every stage:</p>
+                <div class="formula">S<sub>i</sub> = A<sub>i</sub> &oplus; B<sub>i</sub> &oplus; C<sub>i</sub></div>
+                <div class="formula" style="margin-left:0.5rem">C<sub>i+1</sub> = A<sub>i</sub>B<sub>i</sub> + C<sub>i</sub>(A<sub>i</sub> &oplus; B<sub>i</sub>)</div>
+                <p><b>4-bit binary subtractor.</b> A − B is found by adding the complement of B to A, so inverters (IC 7404) are placed between each B input and the adder.
+                    (i) <i>1's complement method</i>: the adder forms A + B&#x305;; the output carry is added back to the LSB (end-around carry — pin 14 joined to pin 13).
+                    If C<sub>4</sub> = 1 the result S is positive; if C<sub>4</sub> = 0 the result is negative and its magnitude is the 1's complement of S.
+                    (ii) <i>2's complement method</i>: the input carry C<sub>0</sub> is made 1, so the adder forms A + B&#x305; + 1 = A + (2's complement of B). If C<sub>4</sub> = 1 the carry is
+                    ignored and S is the positive result; if C<sub>4</sub> = 0 the result is negative and its magnitude is the 2's complement of S.</p>
+                <p><b>4-bit adder/subtractor.</b> Addition and subtraction are combined in one circuit with one 7483 and four XOR gates (IC 7486). The mode input M goes to
+                    one input of every XOR gate and to C<sub>0</sub>. When M = 0, B &oplus; 0 = B and C<sub>0</sub> = 0: the circuit adds. When M = 1, B &oplus; 1 = B&#x305; and C<sub>0</sub> = 1: it subtracts (2's complement).</p>
+                <p><b>BCD adder.</b> Two BCD digits (each ≤ 9) and an input carry give a sum of at most 19. The digits are first added in the upper 4-bit adder to give the binary sum.
+                    A binary sum from 1010 to 1111, or one that produces a carry, is not a valid BCD digit, so 6 (0110) must be added to it. From the K-map the correction signal is</p>
+                <div class="formula">Y = C<sub>4</sub> + S<sub>3</sub>(S<sub>2</sub> + S<sub>1</sub>)</div>
+                <p>Y drives the B<sub>2</sub> and B<sub>1</sub> inputs of the lower 7483 (B<sub>3</sub> = B<sub>0</sub> = 0), which therefore adds 0110 when Y = 1; its own carry is ignored. Y is also the
+                    output carry (tens digit) of the BCD adder.</p>
+                <p class="rec-note">Notation: the bits are numbered A<sub>3</sub>…A<sub>0</sub>, B<sub>3</sub>…B<sub>0</sub>, S<sub>3</sub>…S<sub>0</sub> (subscript 0 = LSB) as in the 7483 connection diagram. The manual numbers the same bits
+                    A<sub>4</sub>…A<sub>1</sub>, B<sub>4</sub>…B<sub>1</sub>, S<sub>4</sub>…S<sub>1</sub>, so its correction term Y = S<sub>4</sub>(S<sub>3</sub> + S<sub>2</sub>) is the same as S<sub>3</sub>(S<sub>2</sub> + S<sub>1</sub>) here.</p>
+
+                <h3>Pin diagram</h3>
+                <div class="rec-diagram" data-diagram="pins"></div>
+
+                <h3>Logic diagrams</h3>
+                <div class="rec-diagram" data-diagram="fa"></div>
+                <div class="rec-diagram" data-diagram="adder"></div>
+                <div class="rec-diagram" data-diagram="sub1"></div>
+                <div class="rec-diagram" data-diagram="sub2"></div>
+                <div class="rec-diagram" data-diagram="addsub"></div>
+                <div class="rec-diagram" data-diagram="bcd"></div>
+
+                <h3>Procedure</h3>
+                <ol>
+                    <li>Check the ICs and fix IC 7483 (and IC 7404 / IC 7486 when needed) on the trainer kit.</li>
+                    <li>Connect V<sub>CC</sub> (+5 V) to pin 5 and ground to pin 12 of IC 7483 (pin 14 and pin 7 for IC 7404, IC 7486, IC 7408 and IC 7432).</li>
+                    <li><b>Adder:</b> connect A<sub>3</sub>–A<sub>0</sub> to pins 1, 3, 8, 10 and B<sub>3</sub>–B<sub>0</sub> to pins 16, 4, 7, 11 through the logic switches; ground C<sub>0</sub> (pin 13);
+                        connect S<sub>3</sub>–S<sub>0</sub> (pins 15, 2, 6, 9) and C<sub>4</sub> (pin 14) to LEDs.</li>
+                    <li><b>Subtractor (1's complement):</b> pass B<sub>3</sub>–B<sub>0</sub> through four NOT gates of IC 7404 and join pin 14 (C<sub>4</sub>) to pin 13 (C<sub>0</sub>).</li>
+                    <li><b>Subtractor (2's complement):</b> pass B through the NOT gates and connect pin 13 to V<sub>CC</sub> (C<sub>0</sub> = 1); C<sub>4</sub> shows the sign (0 = negative).</li>
+                    <li><b>Adder/subtractor:</b> pass each B bit through an XOR gate of IC 7486 whose other input is the mode line M; connect M also to pin 13. M = 0 adds, M = 1 subtracts.</li>
+                    <li><b>BCD adder:</b> wire the two 7483s and the correction logic (IC 7408, IC 7432) as in the diagram; apply only BCD digits (0000–1001).</li>
+                    <li>Apply the inputs listed in the observation tables, note the LED outputs and verify them with the truth tables.</li>
+                </ol>
+
+                <h3>Observation</h3>
+                <p><b>Table 1 — 4-bit binary adder and subtractor</b></p>
+                <div id="rec-obs1"></div>
+                <p class="rec-note">Addition with C<sub>0</sub> = 0. Borrow = 1 means A &lt; B (the answer is negative) and D<sub>3</sub>…D<sub>0</sub> = |A − B|. On the kit Borrow = C&#x305;<sub>4</sub>; for a negative answer the LEDs
+                    show the 2's complement of D (2's complement circuit) or the 1's complement of D (1's complement circuit).</p>
+                <p style="margin-top:0.8rem"><b>Table 2 — BCD adder</b></p>
+                <div id="rec-obs2"></div>
+                <p style="margin-top:0.8rem"><b>Table 3 — Truth table of the correction logic</b> (binary sum without carry, C<sub>4</sub> = 0)</p>
+                <div id="rec-obs3"></div>
+                <p class="rec-note">When the upper adder gives C<sub>4</sub> = 1 (sums 16–19), Y = 1 whatever S is.</p>
+
+                <h3>K-map for the correction logic</h3>
+                <div class="rec-diagram" data-diagram="kmap"></div>
+
+                <h3>Result</h3>
+                <div class="result-box" id="rec-result"></div>
+
+                <h3>Precautions</h3>
+                <ol>
+                    <li>V<sub>CC</sub> and GND of IC 7483 are pins 5 and 12 — not the corner pins as in most ICs.</li>
+                    <li>Switch off the supply while making or changing connections.</li>
+                    <li>Do not leave unused inputs floating: a floating TTL input behaves as logic 1.</li>
+                    <li>Apply only valid BCD digits (0–9) to the BCD adder.</li>
+                    <li>Check the patch cords and LEDs for continuity before starting.</li>
+                </ol>
+            </article>
+        </section>
+
+        <!-- ================= VIVA ================= -->
+        <section id="viva" class="block">
+            <h2 class="block-title">&#x1F3A4; Viva voce</h2>
+            <div id="viva-list"></div>
+        </section>
+    </main>
+
+    <footer class="page-footer">Practical I &middot; Exp 12 &bull; Simplified model for learning &mdash; values are illustrative</footer>
+
+    <script src="assets/msc-common.js"></script>
+    <script>
+    'use strict';
+    /* Work-around (page-local): msc.css sets `svg.pen text { font-size: 14px; font-weight: 700 }`, which overrides the
+       font-size / font-weight *attributes* that MSC.sym.text writes. Re-emit them as inline styles so sizes take effect. */
+    (function () {
+        const base = MSC.sym.text;
+        MSC.sym.text = function (x, y, str, o) {
+            const s = base(x, y, str, o), st = [];
+            if (o && o.size) st.push('font-size:' + o.size + 'px');
+            if (o && o.weight) st.push('font-weight:' + o.weight);
+            return st.length ? s.replace('<text ', '<text style="' + st.join(';') + '" ') : s;
+        };
+    })();
+    const S = MSC.sym;
+    const H = MSC.fmtHTML;
+    const $ = (id) => document.getElementById(id);
+
+    // ================================================================== logic (pure)
+    const inv4 = (n) => (~n) & 15;
+    const bitsOf = (n) => [3, 2, 1, 0].map(k => (n >> k) & 1);   // MSB first
+    const b4 = (n) => MSC.bin(n, 4);
+    function fullAdder(a, b, c) { return { s: a ^ b ^ c, c: (a & b) | (c & (a ^ b)) }; }
+    /* Ripple-carry model of the 7483. c[0] = C_in … c[4] = C_out, s[] LSB first. */
+    function ripple(A, B, cin) {
+        const c = [cin & 1], s = [];
+        for (let i = 0; i < 4; i++) { const f = fullAdder((A >> i) & 1, (B >> i) & 1, c[i]); s.push(f.s); c.push(f.c); }
+        return { S: s.reduce((acc, v, i) => acc | (v << i), 0), C4: c[4], c, s };
+    }
+    function logicAdd(A, B, cin) { const r = ripple(A, B, cin || 0); return Object.assign(r, { value: r.C4 * 16 + r.S }); }
+    /* 1's complement: A + B̄, carry out fed back to carry in (end-around carry). */
+    function logicSub1(A, B) {
+        const Bc = inv4(B), p1 = ripple(A, Bc, 0), p2 = ripple(A, Bc, p1.C4);
+        const neg = p2.C4 === 0, mag = neg ? inv4(p2.S) : p2.S;
+        return { Bc, p1, p2, S: p2.S, C4: p2.C4, neg, mag, value: neg ? -mag : mag };
+    }
+    /* 2's complement: A + B̄ + 1 (C_in = 1), carry ignored; C4 = 0 → negative. */
+    function logicSub2(A, B) {
+        const Bc = inv4(B), r = ripple(A, Bc, 1);
+        const neg = r.C4 === 0, mag = neg ? (inv4(r.S) + 1) & 15 : r.S;
+        return { Bc, r, S: r.S, C4: r.C4, neg, mag, value: neg ? -mag : mag };
+    }
+    /* XOR adder/subtractor: B ⊕ M, C_in = M. */
+    function logicAddSub(A, B, M) {
+        const Bx = M ? inv4(B) : B, r = ripple(A, Bx, M ? 1 : 0);
+        if (!M) return { Bx, r, S: r.S, C4: r.C4, neg: false, mag: r.C4 * 16 + r.S, value: r.C4 * 16 + r.S };
+        const neg = r.C4 === 0, mag = neg ? (inv4(r.S) + 1) & 15 : r.S;
+        return { Bx, r, S: r.S, C4: r.C4, neg, mag, value: neg ? -mag : mag };
+    }
+    /* BCD adder: upper 7483 = binary sum, Y = C4 + S3(S2 + S1), lower 7483 adds 0YY0, its carry ignored. */
+    function logicBCD(A, B, cin) {
+        const r1 = ripple(A, B, cin || 0), z = r1.s;
+        const Y = r1.C4 | (z[3] & (z[2] | z[1]));
+        const r2 = ripple(r1.S, Y ? 6 : 0, 0);
+        return { r1, Y, r2, digit: r2.S, value: Y * 10 + r2.S, valid: A <= 9 && B <= 9 };
+    }
+
+    // ================================================================== state
+    const state = { mode: 'add', A: 11, B: 6, cin: 0, M: 1, bcd: { A: 7, B: 5, cin: 0 }, rows: [], bcdRows: [] };
+    const cur = () => (state.mode === 'bcd' ? state.bcd : state);
+    const EX_ROWS = [[8, 2], [8, 8], [2, 8], [1, 7], [10, 11], [14, 15], [10, 13]];   // the manual's input pairs
+    const EX_BCD = [[7, 5], [9, 9], [4, 3], [8, 8], [6, 4], [2, 7]];
+
+    // ================================================================== SVG helpers
+    const lv = (b) => (b === null || b === undefined ? '' : (b ? 'w1' : 'w0'));
+    const tv = (b) => (b === null || b === undefined ? '' : (b ? 'v1' : 'v0'));
+    const pinNo = (x, y, n, anchor) => S.text(x, y, String(n), { size: 11, cls: 'soft', anchor: anchor || 'middle' });
+    const tiny = (x, y, n, anchor) => S.text(x, y, String(n), { size: 9, cls: 'soft', anchor: anchor || 'middle' });
+    function led(x, y, b, id) {
+        return '<circle cx="' + x + '" cy="' + y + '" r="10" class="led ' + (b ? 'on' : 'off') + '" data-led="' + id + '" data-v="' + b + '"/>' +
+            S.text(x, y + 1, String(b), { size: 11, cls: 'led-t ' + (b ? 'on' : 'off') });
+    }
+    function hitRect(x, y, w, h, k, bit, title) {
+        return '<rect class="hit" data-k="' + k + '"' + (bit !== undefined ? ' data-bit="' + bit + '"' : '') + ' x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="6"><title>' + title + '</title></rect>';
+    }
+    /* Gate pointing down: body starts at y0, centred on cx. Input 0 is on the right, input 1 on the left. */
+    function vgate(type, cx, y0, o) {
+        const P = S.gatePins(type, cx, y0 - o.h / 2, o);
+        const rot = (p) => [cx - (p[1] - y0), y0 + (p[0] - cx)];
+        return { s: '<g transform="rotate(90 ' + cx + ' ' + y0 + ')">' + S.gate(type, cx, y0 - o.h / 2, o) + '</g>', ins: P.in.map(rot), out: rot(P.out) };
+    }
+    /* Mirrored gate (inputs on the right, output on the left). gx = mirror line = back of the body. */
+    function mgate(type, gx, y, o) {
+        const P = S.gatePins(type, gx, y, o);
+        const m = (p) => [2 * gx - p[0], p[1]];
+        return { s: '<g transform="matrix(-1 0 0 1 ' + (2 * gx) + ' 0)">' + S.gate(type, gx, y, o) + '</g>', ins: P.in.map(m), out: m(P.out) };
+    }
+
+    // ================================================================== single-7483 circuits (adder / subtractors)
+    const GI = {
+        x0: 170, y0: 200, w: 340, h: 110, bx: [196, 240, 284, 328], ax: [378, 414, 450, 486], sx: [265, 315, 365, 415],
+        bPins: [16, 4, 7, 11], aPins: [1, 3, 8, 10], sPins: [15, 2, 6, 9], yHi: 230, yLo: 280, loopY: 440, ledY: 368,
+    };
+    const NOTP = [[1, 2], [3, 4], [5, 6], [9, 8]];                       // 7404 gate pins used for B3..B0
+    const XORP = [[1, 2, 3], [4, 5, 6], [9, 10, 8], [12, 13, 11]];        // 7486: B input, M input, output
+    const RULES = {
+        add: [['Result = C_4 S_3 S_2 S_1 S_0', 'x'], ['(C_4 is the 5th bit)', null]],
+        sub1: [['C_4 = 1 → A − B = +S', 1], ['C_4 = 0 → A − B = −!{S}', 0], ["(!{S} = 1's complement of S)", null]],
+        sub2: [['C_4 = 1 → A − B = +S', 1], ['C_4 = 0 → A − B = −(!{S} + 1)', 0], ['(the carry itself is ignored)', null]],
+        addsub: [['M = 0 → S = A + B', 0], ['M = 1 → S = A − B', 1], ['(C_{in} = M)', null]],
+    };
+
+    /* Returns the parts of the circuit. v = live values ({A,B,cin,M,S,C4}) or null for the exam drawing. */
+    function icParts(kind, v) {
+        const live = !!v, G = GI, P = {};
+        const bit = (n, i) => (live ? (n >> i) & 1 : null);
+        const top = live ? 44 : 30;
+        const cx = G.x0 + G.w / 2;
+        const label = (x, name, b) => S.text(x, 16, name, { size: 14 }) + (b === null ? '' : S.text(x, 33, String(b), { size: 12, cls: 'mono ' + tv(b) }));
+        let hits = '';
+
+        P.ic = S.rect(G.x0, G.y0, G.w, G.h, { rx: 4 }) + S.text(cx, G.y0 + 50, 'IC 7483', { size: 17, weight: 800 }) +
+            S.text(cx, G.y0 + 70, '4-bit binary adder', { size: 12, cls: 'soft' });
+
+        // B inputs (straight, through NOT gates, or through XOR gates)
+        P.bIn = G.bx.map((x, k) => {
+            const i = 3 - k, b = bit(live ? v.B : 0, i);
+            let s = label(x, 'B_' + i, b);
+            if (live) hits += hitRect(x - 19, 0, 38, 44, 'B', i, 'Toggle B' + i);
+            if (kind === 'add') {
+                s += S.arrow(x, top, x, G.y0, { size: 8, cls: lv(b) }) + pinNo(x, G.y0 + 13, G.bPins[k]);
+            } else if (kind === 'sub1' || kind === 'sub2') {
+                const nb = b === null ? null : 1 - b;
+                const g = vgate('NOT', x, 98, { w: 30, h: 22, lead: 12, outCls: lv(nb) });
+                s += g.s + S.line(x, top, x, 98, lv(b)) + S.arrow(x, g.out[1] - 12, x, G.y0, { size: 8, cls: lv(nb) }) + pinNo(x, G.y0 + 13, G.bPins[k]);
+                s += tiny(x - 6, 90, NOTP[k][0], 'end') + tiny(x - 6, 158, NOTP[k][1], 'end') + S.text(x + 5, 178, '!{B}_' + i, { size: 11, anchor: 'start' });
+            } else {
+                const m = live ? v.M : null, ob = b === null ? null : b ^ m, gx = x + 6;
+                const g = vgate('XOR', gx, 98, { w: 32, h: 36, lead: 12, outCls: lv(ob) });
+                s += g.s + S.line(x, top, x, 110, lv(b)) + S.line(x + 12, 70, x + 12, 110, lv(m)) + S.arrow(gx, g.out[1] - 12, gx, G.y0, { size: 8, cls: lv(ob) }) + pinNo(gx, G.y0 + 13, G.bPins[k]);
+                s += tiny(x - 4, 90, XORP[k][0], 'end') + tiny(x + 16, 62, XORP[k][1], 'start') + tiny(gx + 5, 162, XORP[k][2], 'start');
+                if (k < 3) s += S.dot(x + 12, 70);
+            }
+            return s;
+        }).join('');
+        if (kind === 'sub1' || kind === 'sub2') P.bIn += S.text(G.bx[0] - 22, 114, 'IC 7404', { size: 11, cls: 'soft', anchor: 'end' });
+        if (kind === 'addsub') {
+            const m = live ? v.M : null;
+            P.bIn = S.text(40, 16, 'M', { size: 14 }) + (live ? S.text(40, 33, String(m), { size: 12, cls: 'mono ' + tv(m) }) : '') +
+                S.line(40, top, 40, 70, lv(m)) + S.wire([[40, 70], [G.bx[3] + 12, 70]], lv(m)) + S.dot(40, 70) +
+                P.bIn + S.text(G.bx[0] - 20, 120, 'IC 7486', { size: 11, cls: 'soft', anchor: 'end' });
+            if (live) hits += hitRect(21, 0, 38, 44, 'M', undefined, 'Toggle M');
+        }
+
+        // A inputs
+        P.aIn = G.ax.map((x, k) => {
+            const i = 3 - k, b = bit(live ? v.A : 0, i);
+            if (live) hits += hitRect(x - 17, 0, 34, 44, 'A', i, 'Toggle A' + i);
+            return label(x, 'A_' + i, b) + S.arrow(x, top, x, G.y0, { size: 8, cls: lv(b) }) + pinNo(x, G.y0 + 13, G.aPins[k]);
+        }).join('');
+
+        // power
+        P.power = S.line(152, G.yHi, G.x0, G.yHi) + pinNo(176, G.yHi, 5, 'start') + S.text(146, G.yHi, 'V_{CC} (+5 V)', { anchor: 'end', size: 13 }) +
+            S.line(G.x0 + G.w, G.yLo, 528, G.yLo) + pinNo(504, G.yLo, 12, 'end') + S.wire([[528, G.yLo], [556, G.yLo]]) + S.ground(556, G.yLo, { lead: 8 }) +
+            S.text(574, G.yLo + 13, 'GND', { anchor: 'start', size: 12 });
+
+        // carry in (pin 13)
+        const cin = live ? v.cin : null;
+        P.cin = S.line(G.x0 + G.w, G.yHi, 528, G.yHi, lv(cin)) + pinNo(504, G.yHi, 13, 'end');
+        if (kind === 'add' || kind === 'sub2') {
+            const val = kind === 'sub2' ? 1 : (live ? cin : 0);
+            P.cin += S.arrow(596, G.yHi, 529, G.yHi, { size: 8, cls: lv(live ? val : null) }) +
+                S.text(602, G.yHi - 1, 'C_{in} = ' + val, { anchor: 'start', size: 13, cls: live ? tv(val) : '' }) +
+                S.text(602, G.yHi + 16, val ? '(to V_{CC})' : '(to GND)', { anchor: 'start', size: 11, cls: 'soft' });
+            if (live && kind === 'add') hits += hitRect(592, G.yHi - 16, 100, 42, 'cin', undefined, 'Toggle C_in');
+        } else {
+            P.cin += S.text(560, G.yHi - 11, 'C_{in}', { size: 12 });
+        }
+
+        // carry out (pin 14)
+        const c4 = live ? v.C4 : null;
+        P.cout = S.line(152, G.yLo, G.x0, G.yLo, lv(c4)) + pinNo(176, G.yLo, 14, 'start') + S.wire([[152, G.yLo], [118, G.yLo]], lv(c4));
+        P.cout += live ? S.line(118, G.yLo, 118, G.ledY - 10, lv(c4)) + led(118, G.ledY, c4, 'C4') + S.text(118, G.ledY + 24, 'C_4', { size: 13 })
+            : S.arrow(118, G.yLo, 118, 346, { size: 8 }) + S.text(118, 362, kind === 'sub2' || kind === 'addsub' ? 'C_{out} (sign)' : 'C_{out} (C_4)', { size: 13 });
+
+        // sum outputs
+        P.sums = G.sx.map((x, k) => {
+            const i = 3 - k, b = live ? (v.S >> i) & 1 : null;
+            let s = pinNo(x, G.y0 + G.h - 13, G.sPins[k]);
+            s += live ? S.line(x, G.y0 + G.h, x, G.ledY - 10, lv(b)) + led(x, G.ledY, b, 'S' + i) + S.text(x, G.ledY + 24, 'S_' + i, { size: 13 })
+                : S.arrow(x, G.y0 + G.h, x, 346, { size: 8 }) + S.text(x, 362, 'S_' + i, { size: 13 });
+            return s;
+        }).join('');
+
+        // feedback / mode wiring
+        if (kind === 'sub1') {
+            P.loop = S.wire([[118, 300], [80, 300], [80, G.loopY], [600, G.loopY], [600, G.yHi], [534, G.yHi]], lv(c4)) + S.arrowHead(529, G.yHi, Math.PI, 8, lv(c4)) +
+                S.dot(118, 300) + S.text(340, G.loopY - 12, 'End-around carry: C_{out} (pin 14) → C_{in} (pin 13)', { size: 12, cls: 'soft' });
+        }
+        if (kind === 'addsub') {
+            const m = live ? v.M : null;
+            P.mroute = S.wire([[40, 70], [40, G.loopY], [600, G.loopY], [600, G.yHi], [534, G.yHi]], lv(m)) + S.arrowHead(529, G.yHi, Math.PI, 8, lv(m)) +
+                S.text(340, G.loopY - 12, 'Mode line M also drives C_{in} (pin 13)', { size: 12, cls: 'soft' });
+        }
+
+        // rule box
+        const rules = RULES[kind];
+        const sel = !live ? null : (kind === 'addsub' ? v.M : v.C4);
+        P.rule = S.rect(530, 58, 160, 22 + rules.length * 20, { rx: 8, cls: 'rulebox' }) + rules.map((r, j) =>
+            S.text(610, 78 + j * 20, r[0], { size: r[1] === null ? 11 : 12, cls: r[1] === null ? 'soft' : (live && r[1] === sel ? 'rule-on' : '') })).join('');
+        P.hits = hits;
+        return P;
+    }
+
+    // ================================================================== BCD adder circuit
+    const GB = { x0: 190, w: 340, h: 80, y1: 90, y2: 470, bx: [215, 255, 295, 335], ax: [385, 425, 465, 505], so: [265, 305, 345, 385], ledY: 600 };
+    function bcdParts(v) {
+        const live = !!v, G = GB, P = {};
+        const L = live ? logicBCD(v.A, v.B, v.cin) : null;
+        const r1 = L ? L.r1 : null, Y = L ? L.Y : null;
+        const sb = (i) => (live ? r1.s[i] : null);
+        const top = live ? 44 : 30, cx = G.x0 + G.w / 2;
+        let hits = '';
+        const icBody = (y, t1, t2) => S.rect(G.x0, y, G.w, G.h, { rx: 4 }) + S.text(cx, y + 31, t1, { size: 15, weight: 800 }) + S.text(cx, y + 47, t2, { size: 11, cls: 'soft' });
+        const power = (y) => S.line(172, y + 25, G.x0, y + 25) + pinNo(196, y + 25, 5, 'start') + S.text(166, y + 25, 'V_{CC}', { anchor: 'end', size: 12 }) +
+            S.line(G.x0 + G.w, y + 60, 548, y + 60) + pinNo(524, y + 60, 12, 'end') + S.wire([[548, y + 60], [572, y + 60]]) + S.ground(572, y + 60, { lead: 6 }) +
+            S.text(590, y + 72, 'GND', { anchor: 'start', size: 11 });
+
+        P.ic1 = icBody(G.y1, 'IC 7483 (1)', 'binary adder') + power(G.y1);
+        // inputs of IC 1
+        P.in1 = G.bx.map((x, k) => {
+            const i = 3 - k, b = live ? (v.B >> i) & 1 : null;
+            if (live) hits += hitRect(x - 18, 0, 36, 44, 'B', i, 'Toggle B' + i);
+            return S.text(x, 16, 'B_' + i, { size: 14 }) + (live ? S.text(x, 33, String(b), { size: 12, cls: 'mono ' + tv(b) }) : '') +
+                S.arrow(x, top, x, G.y1, { size: 8, cls: lv(b) }) + pinNo(x, G.y1 + 13, GI.bPins[k]);
+        }).join('') + G.ax.map((x, k) => {
+            const i = 3 - k, b = live ? (v.A >> i) & 1 : null;
+            if (live) hits += hitRect(x - 18, 0, 36, 44, 'A', i, 'Toggle A' + i);
+            return S.text(x, 16, 'A_' + i, { size: 14 }) + (live ? S.text(x, 33, String(b), { size: 12, cls: 'mono ' + tv(b) }) : '') +
+                S.arrow(x, top, x, G.y1, { size: 8, cls: lv(b) }) + pinNo(x, G.y1 + 13, GI.aPins[k]);
+        }).join('');
+        const c0 = live ? v.cin : 0;
+        P.in1 += S.line(G.x0 + G.w, G.y1 + 25, 548, G.y1 + 25, lv(live ? c0 : null)) + pinNo(524, G.y1 + 25, 13, 'end') +
+            S.arrow(596, G.y1 + 25, 549, G.y1 + 25, { size: 8, cls: lv(live ? c0 : null) }) + S.text(602, G.y1 + 25, 'C_{in} = ' + c0, { anchor: 'start', size: 12, cls: live ? tv(c0) : '' });
+        if (live) hits += hitRect(592, G.y1 + 10, 100, 30, 'cin', undefined, 'Toggle C_in');
+
+        P.ic2 = icBody(G.y2, 'IC 7483 (2)', 'correction adder') + power(G.y2);
+
+        // binary sum lines S3..S0: IC1 pins 15 2 6 9 → IC2 A inputs pins 1 3 8 10
+        P.sums = G.ax.map((x, k) => {
+            const i = 3 - k, b = sb(i);
+            return pinNo(x, G.y1 + G.h - 13, GI.sPins[k]) + S.arrow(x, G.y1 + G.h, x, G.y2, { size: 8, cls: lv(b) }) + pinNo(x, G.y2 + 13, GI.aPins[k]) +
+                S.text(x + 4, G.y1 + G.h + 16, 'S_' + i, { anchor: 'start', size: 11 }) + (live ? S.text(x + 9, 382, String(b), { size: 12, cls: 'mono ' + tv(b), anchor: 'start' }) : '');
+        }).join('');
+
+        // AND gates (IC 7408) with taps from the sum lines
+        const a1 = mgate('AND', 326, 200, { w: 50, h: 36, lead: 14, outCls: lv(live ? r1.s[3] & r1.s[2] : null) });
+        const a2 = mgate('AND', 326, 262, { w: 50, h: 36, lead: 14, outCls: lv(live ? r1.s[3] & r1.s[1] : null) });
+        const tap = (xs, y, b) => S.line(xs, y, 326, y, lv(b)) + S.dot(xs, y);
+        P.and = a1.s + a2.s + tap(G.ax[0], 212, sb(3)) + tap(G.ax[1], 224, sb(2)) + tap(G.ax[0], 274, sb(3)) + tap(G.ax[2], 286, sb(1)) +
+            S.text(301, 316, 'IC 7408', { size: 10, cls: 'soft' });
+
+        // OR gates (IC 7432): (S3S2 + S3S1), then + C4 → Y
+        const t1 = live ? (r1.s[3] & r1.s[2]) | (r1.s[3] & r1.s[1]) : null;
+        const o1 = mgate('OR', 230, 230, { w: 52, h: 40, lead: 14, outCls: lv(t1) });
+        const o2 = mgate('OR', 110, 262, { w: 52, h: 40, lead: 14, outCls: lv(Y) });
+        const c4 = live ? r1.C4 : null;
+        P.or = o1.s + o2.s +
+            S.wire([[a1.out[0], a1.out[1]], [253, a1.out[1]], [253, o1.ins[0][1]], [226, o1.ins[0][1]]], lv(live ? r1.s[3] & r1.s[2] : null)) +
+            S.wire([[a2.out[0], a2.out[1]], [253, a2.out[1]], [253, o1.ins[1][1]], [226, o1.ins[1][1]]], lv(live ? r1.s[3] & r1.s[1] : null)) +
+            S.wire([[o1.out[0], o1.out[1]], [144, o1.out[1]], [144, o2.ins[1][1]], [106, o2.ins[1][1]]], lv(t1)) +
+            S.line(172, G.y1 + 60, G.x0, G.y1 + 60, lv(c4)) + pinNo(196, G.y1 + 60, 14, 'start') +
+            S.wire([[172, G.y1 + 60], [132, G.y1 + 60], [132, o2.ins[0][1]], [106, o2.ins[0][1]]], lv(c4)) + S.text(152, G.y1 + 50, 'C_4', { size: 12 }) +
+            S.text(204, 222, 'IC 7432', { size: 10, cls: 'soft' });
+
+        // Y → B2, B1 of IC 2 (B3 = B0 = 0), IC 2 carry in = 0
+        P.yb = S.wire([[o2.out[0], o2.out[1]], [30, o2.out[1]], [30, 410], [G.bx[2], 410]], lv(Y)) + S.dot(30, 410) + S.dot(G.bx[1], 410) +
+            S.text(40, o2.out[1] - 12, 'Y', { size: 14, weight: 800 }) +
+            S.arrow(G.bx[1], 410, G.bx[1], G.y2, { size: 8, cls: lv(Y) }) + S.arrow(G.bx[2], 410, G.bx[2], G.y2, { size: 8, cls: lv(Y) }) +
+            S.line(G.bx[0], 446, G.bx[0], G.y2, lv(live ? 0 : null)) + S.text(G.bx[0], 437, '0', { size: 12 }) +
+            S.line(G.bx[3], 446, G.bx[3], G.y2, lv(live ? 0 : null)) + S.text(G.bx[3], 437, '0', { size: 12 }) +
+            G.bx.map((x, k) => pinNo(x, G.y2 + 13, GI.bPins[k])).join('') +
+            S.line(G.x0 + G.w, G.y2 + 25, 548, G.y2 + 25) + pinNo(524, G.y2 + 25, 13, 'end') + S.arrow(596, G.y2 + 25, 549, G.y2 + 25, { size: 8 }) +
+            S.text(602, G.y2 + 25, 'C_{in} = 0', { anchor: 'start', size: 12 });
+
+        // outputs of IC 2 and the BCD carry Y
+        P.out = G.so.map((x, k) => {
+            const i = 3 - k, b = live ? (L.digit >> i) & 1 : null;
+            return pinNo(x, G.y2 + G.h - 13, GI.sPins[k]) + (live ? S.line(x, G.y2 + G.h, x, G.ledY - 10, lv(b)) + led(x, G.ledY, b, 'D' + i) + S.text(x, G.ledY + 24, 'S′_' + i, { size: 13 })
+                : S.arrow(x, G.y2 + G.h, x, 584, { size: 8 }) + S.text(x, 598, 'S′_' + i, { size: 13 }));
+        }).join('') + S.line(172, G.y2 + 60, G.x0, G.y2 + 60) + pinNo(196, G.y2 + 60, 14, 'start') + S.text(166, G.y2 + 60, 'C_4 ignored', { anchor: 'end', size: 11, cls: 'soft' }) +
+            (live ? S.wire([[30, 410], [30, G.ledY], [189, G.ledY]], lv(Y)) + led(200, G.ledY, Y, 'Y') + S.text(200, G.ledY + 24, 'Y', { size: 13 })
+                : S.wire([[30, 410], [30, 580], [196, 580]]) + S.arrowHead(204, 580, 0, 8) + S.text(118, 596, 'C_{out} = Y', { size: 12 })) +
+            S.text(325, live ? G.ledY + 38 : 614, 'BCD sum', { size: 11, cls: 'soft' });
+
+        P.eq = S.text(130, 352, 'Y = C_4 + S_3(S_2 + S_1)', { size: 13, weight: 800, cls: 'accent' });
+        if (live) {
+            const bs = r1.C4 * 16 + r1.S;
+            P.info = S.rect(560, 290, 132, 94, { rx: 8, cls: 'rulebox' }) +
+                S.text(626, 308, 'binary sum', { size: 11, cls: 'soft' }) +
+                S.text(626, 326, r1.C4 + ' ' + b4(r1.S) + ' = ' + bs, { size: 13, cls: 'mono' }) +
+                S.text(626, 346, bs > 9 ? '> 9 → Y = 1' : '≤ 9 → Y = 0', { size: 12, cls: Y ? 'rule-on' : '' }) +
+                S.text(626, 366, Y ? 'add 0110' : 'add 0000', { size: 12, cls: Y ? 'rule-on' : 'soft' });
+        }
+        P.hits = hits;
+        return P;
+    }
+
+    // ================================================================== live circuit
+    function liveSingle() {
+        const { A, B } = state, m = state.mode;
+        if (m === 'add') { const r = ripple(A, B, state.cin); return { A, B, cin: state.cin, S: r.S, C4: r.C4 }; }
+        if (m === 'sub1') { const L = logicSub1(A, B); return { A, B, cin: L.C4, S: L.S, C4: L.C4 }; }
+        if (m === 'sub2') { const L = logicSub2(A, B); return { A, B, cin: 1, S: L.S, C4: L.C4 }; }
+        const L = logicAddSub(A, B, state.M); return { A, B, M: state.M, cin: state.M, S: L.S, C4: L.C4 };
+    }
+    function renderIC() {
+        const svg = $('ic');
+        if (state.mode === 'bcd') {
+            svg.setAttribute('viewBox', '0 0 700 652');
+            const P = bcdParts(state.bcd);
+            svg.innerHTML = ['ic1', 'ic2', 'sums', 'and', 'or', 'yb', 'out', 'eq', 'info', 'in1', 'hits'].map(k => P[k] || '').join('');
+        } else {
+            svg.setAttribute('viewBox', '0 0 700 460');
+            const P = icParts(state.mode, liveSingle());
+            svg.innerHTML = ['ic', 'power', 'loop', 'mroute', 'cin', 'cout', 'sums', 'bIn', 'aIn', 'rule', 'hits'].map(k => P[k] || '').join('');
+        }
+    }
+
+    // ================================================================== inputs & readout
+    function sw(k, i, b, name) {
+        return '<div class="bit-switch' + (b ? ' on' : '') + '" data-k="' + k + '"' + (i === null ? '' : ' data-bit="' + i + '"') + ' role="switch" aria-checked="' + !!b + '" tabindex="0">' +
+            '<span class="bit-name">' + name + '</span><span class="knob"></span><span class="bit-val">' + b + '</span></div>';
+    }
+    function renderSwitches() {
+        const src = cur(), bcd = state.mode === 'bcd';
+        const row = (k, val) => '<div class="sw-row"><span class="sw-lab">' + k + '</span>' + [3, 2, 1, 0].map(i => sw(k, i, (val >> i) & 1, k + '<sub>' + i + '</sub>')).join('') +
+            '<span class="sw-dec' + (bcd && val > 9 ? ' bad' : '') + '">= ' + val + (bcd && val > 9 ? ' ✗' : '') + '</span></div>';
+        let h = row('A', src.A) + row('B', src.B);
+        const m = state.mode;
+        if (m === 'add' || m === 'bcd') h += '<div class="sw-row">' + sw('cin', null, src.cin, 'C<sub>in</sub> (pin 13)') + '</div>';
+        else if (m === 'addsub') h += '<div class="sw-row">' + sw('M', null, state.M, 'M (mode)') + '<span class="sw-dec">' + (state.M ? 'subtract' : 'add') + '</span></div>';
+        else if (m === 'sub1') h += '<p class="sw-fixed">C<sub>in</sub> is wired to C<sub>out</sub> (end-around carry)</p>';
+        else h += '<p class="sw-fixed">C<sub>in</sub> = 1 (pin 13 tied to V<sub>CC</sub>)</p>';
+        if (bcd && (src.A > 9 || src.B > 9)) h += '<div class="note warn"><span class="note-tag">Not BCD</span>A BCD digit must be 0000–1001 (0–9). 1010–1111 are not allowed.</div>';
+        $('switches').innerHTML = h;
+        $('in-note').textContent = bcd ? '(two BCD digits, 0–9)' : '(4-bit numbers, 0–15)';
+    }
+    const rd = (label, val, mono) => '<div class="rd"><div class="rd-label">' + label + '</div><div class="rd-val' + (mono ? ' mono' : '') + '">' + val + '</div></div>';
+    const signed = (v, mag) => (v < 0 || Object.is(v, -0) ? '−' : '+') + b4(mag) + ' = ' + (v < 0 ? '−' + mag : (Object.is(v, -0) ? '0' : '+' + mag));
+    function renderReadout() {
+        const m = state.mode;
+        let h = '';
+        if (m === 'bcd') {
+            const { A, B, cin } = state.bcd, L = logicBCD(A, B, cin);
+            h = rd('Binary sum C<sub>4</sub> S', L.r1.C4 + ' ' + b4(L.r1.S), true) + rd('Y (correction)', L.Y + (L.Y ? ' → add 0110' : ' → add 0000')) +
+                rd('BCD output Y S′', L.Y + ' ' + b4(L.digit), true) + rd('Decimal', A + ' + ' + B + (cin ? ' + 1' : '') + ' = ' + L.value + (L.valid ? ' <span class="ok">✓</span>' : ' (not BCD)'));
+        } else {
+            const v = liveSingle(), { A, B } = state;
+            h = rd('LEDs C<sub>4</sub> S<sub>3</sub>S<sub>2</sub>S<sub>1</sub>S<sub>0</sub>', v.C4 + ' ' + b4(v.S), true);
+            if (m === 'add' || (m === 'addsub' && !state.M)) {
+                const cin = m === 'add' ? state.cin : 0, val = v.C4 * 16 + v.S;
+                h += rd('Sum', v.C4 + ' ' + b4(v.S) + '₂ = ' + val) + rd('Check', A + ' + ' + B + (cin ? ' + 1' : '') + ' = ' + (A + B + cin) + ' <span class="ok">✓</span>');
+            } else {
+                const L = m === 'sub1' ? logicSub1(A, B) : m === 'sub2' ? logicSub2(A, B) : logicAddSub(A, B, 1);
+                h += rd('Sign', L.C4 ? 'C<sub>4</sub> = 1 → positive' : 'C<sub>4</sub> = 0 → negative') + rd('A − B', signed(L.value, L.mag)) +
+                    rd('Check', A + ' − ' + B + ' = ' + (A - B) + ' <span class="ok">✓</span>');
+            }
+        }
+        $('readout').innerHTML = h;
+    }
+
+    // ================================================================== paper working
+    function cadd(rows, carries, result, o) {
+        o = o || {};
+        const cell = (v, c) => '<div' + (c ? ' class="' + c + '"' : '') + '>' + (v === null || v === undefined ? '' : v) + '</div>';
+        let h = '<div class="cadd">';
+        if (carries) h += cell(o.carryLab || 'carry', 'lab') + carries.map(v => (v === null || v === undefined ? cell('') : cell(v, 'cy' + (v ? ' one' : '')))).join('') + cell(o.carryNote ? H(o.carryNote) : '', 'dec');
+        rows.forEach(r => { h += cell(H(r.lab), 'lab') + cell(r.sign || '', 'sg') + r.bits.map(b => cell(b)).join('') + cell(r.dec ? H(r.dec) : '', 'dec'); });
+        h += '<div></div><div class="rule"></div><div></div>';
+        h += cell(H(result.lab || ''), 'lab') + cell(result.c4 === null || result.c4 === undefined ? '' : result.c4, 'cout') + result.bits.map(b => cell(b, 'res')).join('') + cell(result.dec ? H(result.dec) : '', 'dec');
+        return h + '</div>';
+    }
+    const carriesOf = (r, showC0) => [r.c[4], r.c[3], r.c[2], r.c[1], showC0 ? r.c[0] : null];
+    const step = (n, txt) => '<div class="pstep"><span class="step-tag">Step ' + n + '</span>' + H(txt) + '</div>';
+    const pline = (txt) => '<div class="pline">' + H(txt) + '</div>';
+    const pres = (txt, value) => '<div class="paper-result" data-value="' + value + '">' + H(txt) + '</div>';
+    const pcheck = (txt, ok) => '<p class="chk' + (ok ? '' : ' bad') + '">' + H('Check: ' + txt) + (ok ? ' ✓' : ' ✗') + '</p>';
+    const kitNote = (txt) => '<p class="kit-note">' + H(txt) + '</p>';
+
+    function paperAddCore(A, B, cin) {
+        const r = ripple(A, B, cin), val = r.C4 * 16 + r.S;
+        let h = cadd([{ lab: 'A', bits: bitsOf(A), dec: '= ' + A }, { lab: 'B', sign: '+', bits: bitsOf(B), dec: '= ' + B }], carriesOf(r, cin),
+            { lab: 'sum', c4: r.C4, bits: bitsOf(r.S), dec: '= ' + val }, { carryNote: cin ? '← C_{in} = 1' : '' });
+        h += pres('A + B' + (cin ? ' + C_{in}' : '') + ' = ' + r.C4 + ' ' + b4(r.S) + '_2 = ' + val + '  (C_4 = ' + r.C4 + ', S = ' + b4(r.S) + ')', val);
+        h += pcheck(A + ' + ' + B + (cin ? ' + 1' : '') + ' = ' + (A + B + cin), val === A + B + cin);
+        return h;
+    }
+    function paperAdd() {
+        const { A, B, cin } = state;
+        return '<p>' + H('Add column by column from the right (LSB). 1 + 1 = 10_2: write 0 and carry 1 into the next column' + (cin ? '; C_{in} = 1 is the carry into the first column.' : '.')) + '</p>' + paperAddCore(A, B, cin);
+    }
+    function paperSub1() {
+        const { A, B } = state, L = logicSub1(A, B), p1 = L.p1;
+        let h = step(1, "1's complement of B — change every 0 to 1 and every 1 to 0:") + pline('B = ' + b4(B) + '   →   !{B} = ' + b4(L.Bc));
+        h += step(2, 'Add A and !{B}:') + cadd([{ lab: 'A', bits: bitsOf(A), dec: '= ' + A }, { lab: '!{B}', sign: '+', bits: bitsOf(L.Bc), dec: '= ' + L.Bc }],
+            carriesOf(p1), { lab: 'sum', c4: p1.C4, bits: bitsOf(p1.S) });
+        if (p1.C4) {
+            const e = ripple(p1.S, 1, 0);
+            h += step(3, 'A carry is produced (C_4 = 1) → end-around carry: take it round and add it to the LSB:') +
+                cadd([{ lab: 'sum', bits: bitsOf(p1.S) }, { lab: 'carry', sign: '+', bits: ['', '', '', '1'] }], [null, e.c[3], e.c[2], e.c[1], null], { lab: 'result', bits: bitsOf(e.S) });
+            h += pres('Carry was 1 → the answer is positive:  A − B = +' + b4(L.mag) + ' = +' + L.mag, L.value);
+        } else {
+            h += step(3, "No carry (C_4 = 0) → the answer is negative and is in 1's complement form. Take the 1's complement of the sum and put a minus sign:") +
+                pline("1's complement of " + b4(p1.S) + ' = ' + b4(L.mag));
+            h += A === B ? pres('A − B = −0000 = 0   (1111 is the "negative zero" of 1\'s complement)', 0)
+                : pres('A − B = −' + b4(L.mag) + ' = −' + L.mag, L.value);
+        }
+        h += pcheck(A + ' − ' + B + ' = ' + (A - B), L.value === A - B);
+        h += kitNote('On the kit the wire from pin 14 to pin 13 does Step 3 by itself: the LEDs show C_4 = ' + L.C4 + ', S = ' + b4(L.S) + '.');
+        return h;
+    }
+    function paperTwosTail(A, B, L, n) {
+        let h = '';
+        if (L.C4) h += step(n, 'Carry C_4 = 1 → ignore (discard) it. The answer is positive:') + pres('A − B = +' + b4(L.mag) + ' = +' + L.mag, L.value);
+        else h += step(n, "No carry (C_4 = 0) → the answer is negative and is in 2's complement form. Take the 2's complement of the sum and put a minus sign:") +
+            pline('invert ' + b4(L.S) + ' → ' + b4(inv4(L.S)) + ',  add 1 → ' + b4(L.mag)) + pres('A − B = −' + b4(L.mag) + ' = −' + L.mag, L.value);
+        h += pcheck(A + ' − ' + B + ' = ' + (A - B), L.value === A - B);
+        return h;
+    }
+    function paperSub2() {
+        const { A, B } = state, L = logicSub2(A, B), Bc = L.Bc;
+        const tw = (Bc + 1) & 15, e = ripple(Bc, 1, 0);
+        let h = step(1, "1's complement of B:") + pline('B = ' + b4(B) + '   →   !{B} = ' + b4(Bc));
+        h += step(2, "2's complement of B = !{B} + 1:") + cadd([{ lab: '!{B}', bits: bitsOf(Bc) }, { lab: '+1', sign: '+', bits: ['', '', '', '1'] }],
+            [e.C4 ? 1 : null, e.c[3], e.c[2], e.c[1], null], { lab: "2's c.", c4: e.C4 ? 1 : null, bits: bitsOf(tw) });
+        if (B !== 0) {
+            const r = ripple(A, tw, 0);
+            h += step(3, "Add A and the 2's complement of B:") + cadd([{ lab: 'A', bits: bitsOf(A), dec: '= ' + A }, { lab: "2's c. of B", sign: '+', bits: bitsOf(tw) }],
+                carriesOf(r), { lab: 'sum', c4: r.C4, bits: bitsOf(r.S) });
+        } else {
+            const r = ripple(A, Bc, 1);
+            h += step(3, "B = 0000, so its 2's complement is 1 0000 — that extra 1 is the carry. The 7483 adds A + !{B} + 1 (C_{in} = 1):") +
+                cadd([{ lab: 'A', bits: bitsOf(A), dec: '= ' + A }, { lab: '!{B}', sign: '+', bits: bitsOf(Bc) }], carriesOf(r, true), { lab: 'sum', c4: r.C4, bits: bitsOf(r.S) }, { carryNote: '← C_{in} = 1' });
+        }
+        h += paperTwosTail(A, B, L, 4);
+        h += kitNote('On the kit the NOT gates make !{B} and C_{in} = 1 adds the 1, so the 7483 does A + !{B} + 1 in one go: the LEDs show C_4 = ' + L.C4 + ', S = ' + b4(L.S) + '.');
+        return h;
+    }
+    function paperAddSub() {
+        const { A, B, M } = state;
+        if (!M) return step(1, 'M = 0: every XOR passes B unchanged (B ⊕ 0 = B) and C_{in} = M = 0, so the circuit adds:') + paperAddCore(A, B, 0);
+        const L = logicAddSub(A, B, 1), r = L.r;
+        let h = step(1, 'M = 1: every XOR inverts its B bit (B ⊕ 1 = !{B}):') + pline('B = ' + b4(B) + '   →   B ⊕ M = ' + b4(L.Bx));
+        h += step(2, "C_{in} = M = 1, so the 7483 adds A + !{B} + 1 = A + (2's complement of B):") +
+            cadd([{ lab: 'A', bits: bitsOf(A), dec: '= ' + A }, { lab: '!{B}', sign: '+', bits: bitsOf(L.Bx) }], carriesOf(r, true), { lab: 'sum', c4: r.C4, bits: bitsOf(r.S) }, { carryNote: '← C_{in} = M = 1' });
+        return h + paperTwosTail(A, B, L, 3);
+    }
+    function paperBCD() {
+        const { A, B, cin } = state.bcd, L = logicBCD(A, B, cin), r1 = L.r1, z = r1.s, bs = r1.C4 * 16 + r1.S;
+        let h = L.valid ? '' : '<div class="note warn" style="margin-top:0"><span class="note-tag">Not BCD</span>' + H('A and B must each be 0–9. The circuit still gives an output, but it is not a valid BCD sum.') + '</div>';
+        h += step(1, 'The upper 7483 adds the two digits in binary:') + cadd([{ lab: 'A', bits: bitsOf(A), dec: '= ' + A }, { lab: 'B', sign: '+', bits: bitsOf(B), dec: '= ' + B }],
+            carriesOf(r1, cin), { lab: 'sum', c4: r1.C4, bits: bitsOf(r1.S), dec: '= ' + bs }, { carryNote: cin ? '← C_{in} = 1' : '' });
+        h += step(2, 'Is the sum more than 9 (or is there a carry)?') + pline('Y = C_4 + S_3(S_2 + S_1) = ' + r1.C4 + ' + ' + z[3] + '·(' + z[2] + ' + ' + z[1] + ') = ' + L.Y) +
+            '<p>' + H(L.Y ? '→ correction needed: add 0110 (6).' : '→ already a valid BCD digit: add 0000 (no correction).') + '</p>';
+        h += step(3, 'The lower 7483 adds 0 Y Y 0 = ' + b4(L.Y ? 6 : 0) + ':') + cadd([{ lab: 'sum', bits: bitsOf(r1.S) }, { lab: '0YY0', sign: '+', bits: bitsOf(L.Y ? 6 : 0) }],
+            carriesOf(L.r2), { lab: 'BCD', c4: L.r2.C4 ? '<s>1</s>' : null, bits: bitsOf(L.digit) }) + (L.r2.C4 ? '<p class="kit-note">' + H('The carry of the lower 7483 is ignored — Y already is the tens carry.') + '</p>' : '');
+        h += pres('BCD output: Y = ' + L.Y + ', S′ = ' + b4(L.digit) + '  →  ' + L.Y + ' ' + b4(L.digit) + ' = ' + L.value, L.value);
+        h += pcheck(A + ' + ' + B + (cin ? ' + 1' : '') + ' = ' + (A + B + cin) + (L.valid ? '' : ' (inputs not BCD)'), L.value === A + B + cin);
+        return h;
+    }
+    function renderPaper() {
+        const f = { add: paperAdd, sub1: paperSub1, sub2: paperSub2, addsub: paperAddSub, bcd: paperBCD }[state.mode];
+        $('paper').innerHTML = f();
+    }
+
+    // ================================================================== ripple-carry view
+    const RG = { x: [60, 210, 360, 510], w: 110, h: 74, boxY: 72, rowH: 236, band: 64, cinX: 668, coutX: 18 };
+    const rowOY = (r) => (r === 0 ? 0 : RG.rowH + RG.band);
+    let speed = 1, sch = null, tau = 0, playing = false, lastKey = '';
+
+    function makeSchedule() {
+        const m = state.mode, T = 0.8 / speed, ev = [];
+        let t = 0.35;
+        const pass = (row, a, b, cin, label) => {
+            const res = ripple(a, b, cin);
+            ev.push({ type: 'pass', row, a, b, cin, res, label, t0: t, dur: 4.5 * T, idx: ev.length });
+            t += 4.5 * T;
+            return res;
+        };
+        const gap = (type, dur, info) => { ev.push({ type, t0: t, dur, info, idx: ev.length }); t += dur; };
+        let rows;
+        const { A, B } = state;
+        if (m === 'add') {
+            rows = [{ title: 'A + B + C_{in}', aN: 'A', bN: () => 'B' }];
+            pass(0, A, B, state.cin, 'C_0 = C_{in} = ' + state.cin);
+        } else if (m === 'sub1') {
+            rows = [{ title: "A + !{B}, then the end-around carry", aN: 'A', bN: () => '!{B}', loop: true }];
+            const r1 = pass(0, A, inv4(B), 0, 'Pass 1: C_0 = 0');
+            if (r1.C4) { gap('loop', 3 * T); pass(0, A, inv4(B), 1, 'Pass 2: C_0 = C_4 = 1'); }
+        } else if (m === 'sub2') {
+            rows = [{ title: 'A + !{B} + 1  (C_{in} = 1)', aN: 'A', bN: () => '!{B}' }];
+            pass(0, A, inv4(B), 1, 'C_0 = 1 (V_{CC})');
+        } else if (m === 'addsub') {
+            const M = state.M;
+            rows = [{ title: 'A + (B ⊕ M) + M', aN: 'A', bN: () => (M ? '!{B}' : 'B') }];
+            pass(0, A, M ? inv4(B) : B, M, 'C_0 = M = ' + M);
+        } else {
+            const { A: a, B: b, cin } = state.bcd;
+            rows = [{ title: 'Upper 7483: A + B (binary sum)', aN: 'A', bN: () => 'B' },
+                { title: 'Lower 7483: S + 0YY0 (its carry is ignored)', aN: 'S', bN: (i) => (i === 1 || i === 2 ? 'Y' : '0'), second: true }];
+            const r1 = pass(0, a, b, cin, 'C_0 = ' + cin);
+            const Y = r1.C4 | (r1.s[3] & (r1.s[2] | r1.s[1]));
+            gap('corr', 2.4 * T, { Y, r1 });
+            pass(1, r1.S, Y ? 6 : 0, 0, 'C_0 = 0');
+        }
+        return { rows, events: ev, total: t + 0.05, T, mode: m };
+    }
+
+    function snapAt(t) {
+        const T = sch.T;
+        const rows = sch.rows.map(() => ({ pass: null, prev: null, done: -1, active: -1 }));
+        let token = null, event = null, inEvent = false;
+        for (const ev of sch.events) {
+            if (t < ev.t0) break;
+            event = ev;
+            const lt = t - ev.t0;
+            inEvent = lt < ev.dur;
+            if (ev.type === 'pass') {
+                const r = rows[ev.row];
+                if (r.pass) r.prev = r.pass;
+                r.pass = ev;
+                const k = Math.floor(lt / T);
+                r.done = Math.min(k, 4);
+                r.active = k < 4 ? k : -1;
+                const oy = rowOY(ev.row), cy = oy + RG.boxY + 37;
+                if (k < 4) {
+                    const f = (lt - k * T) / T;
+                    if (f < 0.45) {
+                        const xs = k === 0 ? RG.cinX : RG.x[4 - k], xe = RG.x[3 - k] + RG.w;
+                        token = { x: xs + (xe - xs) * (f / 0.45), y: cy, v: ev.res.c[k] };
+                    }
+                } else if (lt < 4.5 * T) {
+                    const f = (lt - 4 * T) / (0.5 * T);
+                    token = { x: RG.x[0] + (RG.coutX - RG.x[0]) * f, y: cy, v: ev.res.c[4] };
+                }
+            } else if (ev.type === 'loop' && inEvent) {
+                const cy = RG.boxY + 37;
+                token = Object.assign(polyAt([[RG.coutX, cy], [RG.coutX, 210], [684, 210], [684, cy], [RG.x[3] + RG.w, cy]], lt / ev.dur), { v: 1 });
+            }
+        }
+        return { rows, token, event, inEvent, finished: t >= sch.total };
+    }
+    function polyAt(pts, f) {
+        const seg = [];
+        let L = 0;
+        for (let i = 1; i < pts.length; i++) { const d = Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]); seg.push(d); L += d; }
+        let target = MSC.clamp(f, 0, 1) * L;
+        for (let i = 0; i < seg.length; i++) {
+            if (target <= seg[i]) { const u = target / seg[i]; return { x: pts[i][0] + (pts[i + 1][0] - pts[i][0]) * u, y: pts[i][1] + (pts[i + 1][1] - pts[i][1]) * u }; }
+            target -= seg[i];
+        }
+        const e = pts[pts.length - 1];
+        return { x: e[0], y: e[1] };
+    }
+
+    function rippleMarkup(snap) {
+        let s = '';
+        const firstPass = (r) => sch.events.find(e => e.type === 'pass' && e.row === r);
+        sch.rows.forEach((row, r) => {
+            const oy = rowOY(r), cy = oy + RG.boxY + 37, st = snap.rows[r], pass = st.pass, prev = st.prev;
+            const src = pass || (r === 0 ? firstPass(0) : null);
+            s += S.text(12, oy + 16, row.title, { anchor: 'start', size: 13, weight: 800 });
+            if (pass) s += S.text(688, oy + 16, pass.label, { anchor: 'end', size: 12, cls: 'accent' });
+            for (let i = 0; i < 4; i++) {
+                const x = RG.x[3 - i];
+                const a = src ? (src.a >> i) & 1 : null, b = src ? (src.b >> i) & 1 : null;
+                const bName = row.bN(i), bLab = row.second ? 'B_' + i + ' = ' + bName : bName + '_' + i;
+                // inputs
+                s += S.text(x + 30, oy + 30, row.aN + '_' + i, { size: 12 }) + S.text(x + 30, oy + 46, a === null ? '?' : String(a), { size: 12, cls: 'mono ' + (a === null ? 'dim' : tv(a)) }) +
+                    S.arrow(x + 30, oy + 54, x + 30, oy + RG.boxY, { size: 7, cls: lv(a) });
+                s += S.text(x + 80, oy + 30, bLab, { size: 12 }) + S.text(x + 80, oy + 46, b === null ? '?' : String(b), { size: 12, cls: 'mono ' + (b === null ? 'dim' : tv(b)) }) +
+                    S.arrow(x + 80, oy + 54, x + 80, oy + RG.boxY, { size: 7, cls: lv(b) });
+                // status
+                let status = 'idle', res = null;
+                if (pass && i < st.done) { status = 'done'; res = pass.res; }
+                else if (pass && i === st.active) status = 'active';
+                else if (prev) { status = 'old'; res = prev.res; }
+                let ci = null, ciState = 'none';
+                if (pass && (i === 0 || i <= st.done)) { ci = pass.res.c[i]; ciState = 'cur'; }
+                else if (prev) { ci = prev.res.c[i]; ciState = 'old'; }
+                else if (i === 0 && src) { ci = src.cin; ciState = 'cur'; }
+                s += S.rect(x, oy + RG.boxY, RG.w, RG.h, { rx: 8, cls: 'fa-box ' + status });
+                s += S.text(x + 55, oy + RG.boxY + 15, 'FA_' + i, { size: 12, weight: 800 });
+                if (status === 'done' || status === 'old' || status === 'active') {
+                    const cc = status === 'active' ? pass.res.c[i] : res.c[i];
+                    s += S.text(x + 55, oy + RG.boxY + 36, a + ' + ' + b + ' + ' + cc, { size: 13, cls: 'mono' + (status === 'old' ? ' dim' : '') });
+                    s += status === 'active' ? S.text(x + 55, oy + RG.boxY + 56, 'adding…', { size: 11, cls: 'soft' })
+                        : S.text(x + 55, oy + RG.boxY + 56, (status === 'old' ? 'old: ' : '') + 'S=' + res.s[i] + ', C=' + res.c[i + 1], { size: 11, cls: status === 'old' ? 'dim' : '' });
+                }
+                // carry into this stage
+                const xs = i === 0 ? RG.cinX : RG.x[4 - i], xe = x + RG.w;
+                s += S.line(xs, cy, xe, cy, ciState === 'cur' ? lv(ci) : '');
+                s += S.text((xs + xe) / 2, cy - 11, 'C_' + i, { size: 11 }) +
+                    S.text((xs + xe) / 2, cy + 14, ci === null ? '?' : String(ci), { size: 12, cls: 'mono ' + (ciState === 'cur' ? tv(ci) : 'dim') });
+                // sum output
+                const sv = status === 'done' || status === 'old' ? res.s[i] : null;
+                s += S.arrow(x + 55, oy + RG.boxY + RG.h, x + 55, oy + 172, { size: 7, cls: lv(status === 'done' ? sv : null) }) +
+                    S.text(x + 55, oy + 186, (row.second ? 'S′_' : 'S_') + i + ' = ' + (sv === null ? '?' : sv), { size: 12, cls: sv === null ? 'dim' : (status === 'old' ? 'dim' : tv(sv)) });
+            }
+            // carry out
+            const c4 = pass && st.done === 4 ? pass.res.c[4] : (prev ? prev.res.c[4] : null);
+            const c4old = !(pass && st.done === 4);
+            s += S.arrow(RG.x[0], cy, RG.coutX + 4, cy, { size: 7, cls: lv(c4old ? null : c4) }) + S.text(38, cy - 11, 'C_4', { size: 11 }) +
+                S.text(38, cy + 14, c4 === null ? '?' : String(c4), { size: 12, cls: 'mono ' + (c4 === null || c4old ? 'dim' : tv(c4)) });
+            if (row.second) s += S.text(38, cy + 30, 'ignored', { size: 10, cls: 'soft' });
+            if (row.loop) {
+                const lc = snap.event && snap.event.type === 'loop' ? 'w1' : '';
+                s += S.wire([[RG.coutX, cy], [RG.coutX, oy + 210], [684, oy + 210], [684, cy], [RG.cinX, cy]], 'dash ' + lc) +
+                    S.text(350, oy + 226, 'end-around carry: C_4 goes back to C_0 (pin 14 → pin 13)', { size: 11, cls: 'soft' });
+            }
+        });
+        if (sch.mode === 'bcd') {
+            const corr = sch.events.find(e => e.type === 'corr');
+            const started = snap.event && snap.event.idx >= corr.idx;
+            const Y = corr.info.Y, z = corr.info.r1.s;
+            s += S.rect(8, RG.rowH - 6, 684, RG.band, { rx: 10, cls: 'band' + (snap.event === corr && snap.inEvent ? ' active' : '') });
+            s += S.text(350, RG.rowH + 16, started ? 'Correction logic: Y = C_4 + S_3(S_2 + S_1) = ' + corr.info.r1.C4 + ' + ' + z[3] + '·(' + z[2] + ' + ' + z[1] + ') = ' + Y
+                : 'Correction logic: Y = C_4 + S_3(S_2 + S_1) = ?', { size: 13, weight: 800 });
+            s += S.text(350, RG.rowH + 38, started ? (Y ? 'Y = 1 → the lower 7483 adds 0110 (6)' : 'Y = 0 → the lower 7483 adds 0000') : 'waiting for the upper adder…', { size: 12, cls: started && Y ? 'rule-on' : 'soft' });
+        }
+        return s;
+    }
+    function rippleCaption(snap) {
+        const m = sch.mode;
+        if (snap.finished) {
+            if (m === 'bcd') { const L = logicBCD(state.bcd.A, state.bcd.B, state.bcd.cin); return H('Done. BCD output Y S′ = ' + L.Y + ' ' + b4(L.digit) + ' = ' + L.value + '.'); }
+            const v = liveSingle();
+            if (m === 'add' || (m === 'addsub' && !state.M)) return H('Done. C_4 S = ' + v.C4 + ' ' + b4(v.S) + ' = ' + (v.C4 * 16 + v.S) + '. The slowest path is the carry rippling through all four stages.');
+            const L = m === 'sub1' ? logicSub1(state.A, state.B) : m === 'sub2' ? logicSub2(state.A, state.B) : logicAddSub(state.A, state.B, 1);
+            return H('Done. C_4 = ' + L.C4 + (L.C4 ? ' → positive' : ' → negative') + ': A − B = ' + signed(L.value, L.mag) + '.' +
+                (m === 'sub1' && !L.p1.C4 ? ' (C_4 = 0 was fed back, so there was no second pass.)' : ''));
+        }
+        const ev = snap.event;
+        if (!ev) return H('Watch the carry travel from FA_0 (LSB) to FA_3 (MSB)…');
+        if (ev.type === 'loop') return H('End-around carry: C_4 = 1 goes back into C_0 (pin 14 → pin 13), so every stage adds again with one more 1.');
+        if (ev.type === 'corr') return H('Correction logic: Y = C_4 + S_3(S_2 + S_1) = ' + ev.info.Y + (ev.info.Y ? ' → the binary sum is more than 9, so 0110 is added.' : ' → the sum is 9 or less, nothing to add.'));
+        const row = sch.rows[ev.row], k = snap.rows[ev.row].active;
+        if (k >= 0) {
+            const a = (ev.a >> k) & 1, b = (ev.b >> k) & 1, c = ev.res.c[k], sm = a + b + c;
+            const bName = row.bN(k), bl = bName === '0' ? '0' : bName + '_' + k;
+            return H('FA_' + k + ': ' + row.aN + '_' + k + ' + ' + bl + ' + C_' + k + ' = ' + a + ' + ' + b + ' + ' + c + ' = ' + sm + ' = ' + (sm >> 1) + (sm & 1) + '_2 → ' +
+                (row.second ? 'S′_' : 'S_') + k + ' = ' + (sm & 1) + ', carry C_' + (k + 1) + ' = ' + (sm >> 1) + (sm >> 1 ? ' goes to the next stage.' : '.'));
+        }
+        return H('Carry out C_4 = ' + ev.res.c[4] + (row.second ? ' (ignored).' : (m === 'sub1' ? (ev.res.c[4] ? ' → it is fed back to C_0.' : ' → nothing to feed back: the answer is negative.') : '.')));
+    }
+    function restartRipple() {
+        sch = makeSchedule();
+        tau = 0; playing = true; lastKey = '';
+        $('ripple').setAttribute('viewBox', '0 0 700 ' + (sch.mode === 'bcd' ? RG.rowH * 2 + RG.band : RG.rowH));
+        tickRipple();
+    }
+    function tickRipple() {
+        const snap = snapAt(tau);
+        const key = snap.rows.map(r => (r.pass ? r.pass.idx : 'n') + ':' + r.done + ':' + r.active).join('|') + '#' + (snap.event ? snap.event.idx : -1) + (snap.inEvent ? 'a' : 'b') + (snap.finished ? 'F' : '');
+        const svg = $('ripple');
+        if (key !== lastKey) {
+            lastKey = key;
+            svg.innerHTML = rippleMarkup(snap) + '<circle id="rip-token" r="7" class="token" style="display:none"/>';
+            $('ripple-cap').innerHTML = rippleCaption(snap);
+        }
+        const tok = $('rip-token');
+        if (snap.token) {
+            tok.style.display = '';
+            tok.setAttribute('cx', snap.token.x.toFixed(1)); tok.setAttribute('cy', snap.token.y.toFixed(1));
+            tok.setAttribute('class', 'token ' + (snap.token.v ? 'c1' : 'c0'));
+        } else tok.style.display = 'none';
+    }
+    MSC.loop(dt => {
+        if (!playing || !sch) return;
+        tau += dt;
+        if (tau >= sch.total) { tau = sch.total; playing = false; }
+        tickRipple();
+    });
+    $('rip-play').addEventListener('click', restartRipple);
+    $('rip-skip').addEventListener('click', () => { if (!sch) return; tau = sch.total; playing = false; tickRipple(); });
+    $('rip-speed').addEventListener('change', e => { speed = Number(e.target.value); restartRipple(); });
+
+    // ================================================================== observation tables
+    const cellM = (t) => ({ t: String(t), cls: 'mono' });
+    function binRowsOrDefault() { return state.rows.length ? state.rows : EX_ROWS.map(([A, B]) => ({ A, B })); }
+    function bcdRowsOrDefault() { return state.bcdRows.length ? state.bcdRows : EX_BCD.map(([A, B]) => ({ A, B, cin: 0 })); }
+    function simTable() {
+        if (state.mode === 'bcd') {
+            $('obs-title').innerHTML = 'Observation table — BCD adder';
+            if (!state.bcdRows.length) { $('obs-sim').innerHTML = '<p class="obs-empty">No rows yet. Set two BCD digits and press “Add current inputs” (the record sheet uses example rows until you add your own).</p>'; return; }
+            const cb = state.bcd;
+            const rows = state.bcdRows.map((r, i) => {
+                const L = logicBCD(r.A, r.B, r.cin);
+                return [i + 1, cellM(b4(r.A)), cellM(b4(r.B)), r.cin, cellM(L.r1.C4 + ' ' + b4(L.r1.S)), L.Y, cellM(L.Y + ' ' + b4(L.digit)), r.A + ' + ' + r.B + (r.cin ? ' + 1' : '') + ' = ' + L.value];
+            });
+            const hl = state.bcdRows.findIndex(r => r.A === cb.A && r.B === cb.B && r.cin === cb.cin);
+            $('obs-sim').innerHTML = MSC.table([['#', 'A', 'B', 'C_{in}', 'Binary sum C_4 S', 'Y', 'BCD sum Y S′', 'Decimal check']], rows, { highlight: hl });
+            return;
+        }
+        $('obs-title').innerHTML = 'Observation table — adder &amp; subtractor';
+        if (!state.rows.length) { $('obs-sim').innerHTML = '<p class="obs-empty">No rows yet. Set A and B and press “Add current inputs” (the record sheet uses the manual’s input pairs until you add your own).</p>'; return; }
+        const rows = state.rows.map((r, i) => {
+            const ad = logicAdd(r.A, r.B, 0), sb = logicSub2(r.A, r.B);
+            return [i + 1, cellM(b4(r.A)), cellM(b4(r.B)), cellM(ad.C4 + ' ' + b4(ad.S)), cellM((sb.neg ? 1 : 0) + ' ' + b4(sb.mag)),
+                r.A + ' + ' + r.B + ' = ' + ad.value + ';  ' + r.A + ' − ' + r.B + ' = ' + (r.A - r.B)];
+        });
+        const hl = state.rows.findIndex(r => r.A === state.A && r.B === state.B);
+        $('obs-sim').innerHTML = MSC.table([['#', 'A', 'B', 'A + B  (C_4 S)', 'A − B  (Borrow D)', 'Decimal check']], rows, { highlight: hl }) +
+            '<p class="kit-note">Values are computed, so they are always right. If a printed table disagrees, trust these.</p>';
+    }
+    function recordTables() {
+        const br = binRowsOrDefault();
+        $('rec-obs1').innerHTML = MSC.table([
+            [{ t: 'Input A', colspan: 4 }, { t: 'Input B', colspan: 4 }, { t: 'Addition (A + B)', colspan: 5 }, { t: 'Subtraction (A − B)', colspan: 5 }, { t: 'Decimal check', rowspan: 2 }],
+            ['A_3', 'A_2', 'A_1', 'A_0', 'B_3', 'B_2', 'B_1', 'B_0', 'C_4', 'S_3', 'S_2', 'S_1', 'S_0', 'Borrow', 'D_3', 'D_2', 'D_1', 'D_0'],
+        ], br.map(r => {
+            const ad = logicAdd(r.A, r.B, 0), sb = logicSub2(r.A, r.B);
+            return bitsOf(r.A).concat(bitsOf(r.B), [ad.C4], bitsOf(ad.S), [sb.neg ? 1 : 0], bitsOf(sb.mag),
+                [r.A + ' + ' + r.B + ' = ' + ad.value + ', ' + r.A + ' − ' + r.B + ' = ' + (r.A - r.B)]);
+        }));
+        const cr = bcdRowsOrDefault();
+        $('rec-obs2').innerHTML = MSC.table([
+            [{ t: 'BCD digit A', colspan: 4 }, { t: 'BCD digit B', colspan: 4 }, { t: 'Binary sum (upper 7483)', colspan: 5 }, { t: 'BCD sum (output)', colspan: 5 }, { t: 'Decimal', rowspan: 2 }],
+            ['A_3', 'A_2', 'A_1', 'A_0', 'B_3', 'B_2', 'B_1', 'B_0', 'C_4', 'S_3', 'S_2', 'S_1', 'S_0', 'Y', 'S′_3', 'S′_2', 'S′_1', 'S′_0'],
+        ], cr.map(r => {
+            const L = logicBCD(r.A, r.B, r.cin);
+            return bitsOf(r.A).concat(bitsOf(r.B), [L.r1.C4], bitsOf(L.r1.S), [L.Y], bitsOf(L.digit), [r.A + ' + ' + r.B + (r.cin ? ' + 1' : '') + ' = ' + L.value]);
+        }));
+        const tt = [];
+        for (let n = 0; n < 16; n++) { const z = bitsOf(n); tt.push(z.concat([n, z[0] & (z[1] | z[2])])); }
+        $('rec-obs3').innerHTML = MSC.table([['S_3', 'S_2', 'S_1', 'S_0', 'Decimal', 'Y = S_3(S_2 + S_1)']], tt, { cls: 'narrow' });
+        const r0 = br[0], a0 = logicAdd(r0.A, r0.B, 0), s0 = logicSub2(r0.A, r0.B), c0 = cr[0], d0 = logicBCD(c0.A, c0.B, c0.cin);
+        $('rec-result').innerHTML = 'The 4-bit binary adder, the 4-bit binary subtractor (1\'s and 2\'s complement methods), the 4-bit adder/subtractor and the BCD adder were designed and implemented using IC 7483, and their truth tables were verified. ' +
+            'For example, A = ' + b4(r0.A) + ', B = ' + b4(r0.B) + ': A + B = ' + a0.C4 + ' ' + b4(a0.S) + ' (' + a0.value + '), A − B = ' + (s0.neg ? '−' : '+') + b4(s0.mag) + ' (' + (r0.A - r0.B) + '); BCD ' +
+            c0.A + ' + ' + c0.B + ' = ' + d0.Y + ' ' + b4(d0.digit) + ' (' + d0.value + ').';
+    }
+    function addRow() {
+        if (state.mode === 'bcd') {
+            const { A, B, cin } = state.bcd;
+            if (A > 9 || B > 9) { flashNote('Only BCD digits 0–9 can be recorded.'); return; }
+            if (!state.bcdRows.some(r => r.A === A && r.B === B && r.cin === cin)) state.bcdRows.push({ A, B, cin });
+        } else if (!state.rows.some(r => r.A === state.A && r.B === state.B)) state.rows.push({ A: state.A, B: state.B });
+        simTable(); recordTables();
+    }
+    function flashNote(msg) { const n = MSC.el('div', { class: 'note warn' }, '<span class="note-tag">Note</span>' + msg); $('switches').appendChild(n); setTimeout(() => n.remove(), 2600); }
+    $('addrow').addEventListener('click', addRow);
+    $('addrow2').addEventListener('click', addRow);
+    $('clearrows').addEventListener('click', () => { if (state.mode === 'bcd') state.bcdRows = []; else state.rows = []; simTable(); recordTables(); });
+    $('examples').addEventListener('click', () => {
+        if (state.mode === 'bcd') EX_BCD.forEach(([A, B]) => { if (!state.bcdRows.some(r => r.A === A && r.B === B && r.cin === 0)) state.bcdRows.push({ A, B, cin: 0 }); });
+        else EX_ROWS.forEach(([A, B]) => { if (!state.rows.some(r => r.A === A && r.B === B)) state.rows.push({ A, B }); });
+        simTable(); recordTables();
+    });
+
+    // ================================================================== update & events
+    function update() {
+        renderIC();
+        renderSwitches();
+        renderReadout();
+        renderPaper();
+        simTable();
+        restartRipple();
+    }
+    function toggle(k, bit) {
+        const src = cur();
+        if (k === 'A' || k === 'B') src[k] ^= (1 << bit);
+        else if (k === 'cin') src.cin ^= 1;
+        else if (k === 'M') state.M ^= 1;
+        update();
+    }
+    const onToggle = (e) => { const h = e.target.closest('[data-k]'); if (h) toggle(h.dataset.k, h.dataset.bit === undefined ? null : Number(h.dataset.bit)); };
+    $('switches').addEventListener('click', onToggle);
+    $('switches').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle(e); } });
+    $('ic').addEventListener('click', onToggle);
+    $('rand').addEventListener('click', () => {
+        const src = cur(), max = state.mode === 'bcd' ? 10 : 16;
+        src.A = Math.floor(Math.random() * max); src.B = Math.floor(Math.random() * max);
+        update();
+    });
+    MSC.onTab('sim', tab => { state.mode = tab; update(); });
+
+    // ================================================================== draw-along diagrams
+    (function buildDiagrams() {
+        const P = (k) => icParts(k, null);
+        const a = P('add');
+        MSC.diagram('#draw-adder', {
+            name: 'adder', title: 'Fig. 2 4-bit binary adder using IC 7483', viewBox: '0 0 700 380',
+            steps: [
+                { c: 'Draw a rectangle for IC 7483 and write "4-bit binary adder" inside it.', s: a.ic },
+                { c: 'Bring the addend bits B_3 B_2 B_1 B_0 in from the top to pins 16, 4, 7 and 11.', s: a.bIn },
+                { c: 'Bring the augend bits A_3 A_2 A_1 A_0 to pins 1, 3, 8 and 10.', s: a.aIn },
+                { c: 'Power: V_{CC} (+5 V) to pin 5 and ground to pin 12.', s: a.power },
+                { c: 'Carry input pin 13: C_{in} = 0 (grounded) for plain addition.', s: a.cin },
+                { c: 'Take the sum outputs S_3 S_2 S_1 S_0 from pins 15, 2, 6 and 9 to LEDs.', s: a.sums },
+                { c: 'Take the carry output C_4 from pin 14 to an LED — it is the 5th (MSB) bit of the sum.', s: a.cout + a.rule },
+            ],
+        });
+        const s1 = P('sub1');
+        MSC.diagram('#draw-sub1', {
+            name: 'sub1', title: "Fig. 3 4-bit binary subtractor — 1's complement method (end-around carry)", viewBox: '0 0 700 460',
+            steps: [
+                { c: 'Draw the IC 7483 rectangle (4-bit binary adder).', s: s1.ic },
+                { c: 'Connect A_3 A_2 A_1 A_0 to pins 1, 3, 8 and 10.', s: s1.aIn },
+                { c: 'Pass B_3 B_2 B_1 B_0 through four NOT gates (IC 7404) into pins 16, 4, 7 and 11 — the adder now receives !{B}, the 1\'s complement of B.', s: s1.bIn },
+                { c: 'Power: V_{CC} to pin 5, GND to pin 12.', s: s1.power },
+                { c: 'Sum outputs S_3 S_2 S_1 S_0 from pins 15, 2, 6, 9.', s: s1.sums },
+                { c: 'Carry output C_4 from pin 14 to an LED.', s: s1.cout + s1.cin },
+                { c: 'End-around carry: join pin 14 (C_{out}) back to pin 13 (C_{in}).', s: s1.loop },
+                { c: 'Write the rule: C_4 = 1 → result +S; C_4 = 0 → result is −(1\'s complement of S).', s: s1.rule },
+            ],
+        });
+        const s2 = P('sub2');
+        MSC.diagram('#draw-sub2', {
+            name: 'sub2', title: "Fig. 4 4-bit binary subtractor — 2's complement method (C_{in} = 1)", viewBox: '0 0 700 380',
+            steps: [
+                { c: 'Draw the IC 7483 rectangle (4-bit binary adder).', s: s2.ic },
+                { c: 'Connect A_3 A_2 A_1 A_0 to pins 1, 3, 8 and 10.', s: s2.aIn },
+                { c: 'Pass B_3 B_2 B_1 B_0 through NOT gates (IC 7404) into pins 16, 4, 7 and 11.', s: s2.bIn },
+                { c: 'Power: V_{CC} to pin 5, GND to pin 12.', s: s2.power },
+                { c: 'Connect pin 13 to V_{CC}: C_{in} = 1 adds the "+1" of the 2\'s complement.', s: s2.cin },
+                { c: 'Sum outputs S_3 S_2 S_1 S_0 from pins 15, 2, 6, 9.', s: s2.sums },
+                { c: 'C_{out} (pin 14) is not added back — it only shows the sign (1 = positive, 0 = negative).', s: s2.cout },
+                { c: 'Write the rule: C_4 = 1 → +S (carry ignored); C_4 = 0 → −(2\'s complement of S).', s: s2.rule },
+            ],
+        });
+        const as = P('addsub');
+        MSC.diagram('#draw-addsub', {
+            name: 'addsub', title: 'Fig. 5 4-bit binary adder/subtractor using IC 7483 and IC 7486', viewBox: '0 0 700 460',
+            steps: [
+                { c: 'Draw the IC 7483 rectangle (4-bit binary adder).', s: as.ic },
+                { c: 'Connect A_3 A_2 A_1 A_0 to pins 1, 3, 8 and 10.', s: as.aIn },
+                { c: 'Put an XOR gate (IC 7486) in every B line: one input B_i, the other the mode line M; outputs to pins 16, 4, 7, 11.', s: as.bIn },
+                { c: 'Power: V_{CC} to pin 5, GND to pin 12.', s: as.power },
+                { c: 'Take the mode line M round to pin 13, so C_{in} = M.', s: as.mroute + as.cin },
+                { c: 'Sum outputs S_3 S_2 S_1 S_0 from pins 15, 2, 6, 9.', s: as.sums },
+                { c: 'Carry output C_4 from pin 14 (carry when adding, sign when subtracting).', s: as.cout },
+                { c: 'Write the rule: M = 0 → A + B; M = 1 → A − B (B ⊕ 1 = !{B} and C_{in} = 1).', s: as.rule },
+            ],
+        });
+        const bc = bcdParts(null);
+        MSC.diagram('#draw-bcd', {
+            name: 'bcd', title: 'Fig. 6 BCD adder using two IC 7483 and correction logic', viewBox: '0 0 700 624',
+            steps: [
+                { c: 'Draw the upper IC 7483 with its power pins (V_{CC} pin 5, GND pin 12). It adds the two digits in binary.', s: bc.ic1 },
+                { c: 'Inputs: BCD digit B to pins 16, 4, 7, 11, digit A to pins 1, 3, 8, 10, and C_{in} (pin 13) = 0.', s: bc.in1 },
+                { c: 'Draw the lower IC 7483 (with its power pins) below it.', s: bc.ic2 },
+                { c: 'Take the binary sum S_3 S_2 S_1 S_0 (pins 15, 2, 6, 9) down to the A inputs (pins 1, 3, 8, 10) of the lower IC.', s: bc.sums },
+                { c: 'Two AND gates (IC 7408): S_3·S_2 and S_3·S_1 — tap them from the sum lines.', s: bc.and },
+                { c: 'OR gates (IC 7432): S_3S_2 + S_3S_1, then OR with C_4 (pin 14 of the upper IC) to get Y.', s: bc.or },
+                { c: 'Y goes to B_2 and B_1 of the lower IC; B_3 = B_0 = 0 — so the lower IC adds 0110 when Y = 1. Its C_{in} = 0.', s: bc.yb },
+                { c: 'Outputs: S′_3 S′_2 S′_1 S′_0 = BCD sum digit; Y = output carry (tens). The carry of the lower IC is ignored.', s: bc.out },
+                { c: 'Write the correction equation Y = C_4 + S_3(S_2 + S_1).', s: bc.eq },
+            ],
+        });
+
+        // K-map
+        const gx = 200, gy = 92, cw = 72, ch = 54, gray = [0, 1, 3, 2], gl = ['00', '01', '11', '10'];
+        let grid = S.rect(gx, gy, cw * 4, ch * 4) + S.line(gx - 52, gy - 52, gx, gy);
+        for (let j = 1; j < 4; j++) grid += S.line(gx + cw * j, gy, gx + cw * j, gy + ch * 4, 'thin') + S.line(gx, gy + ch * j, gx + cw * 4, gy + ch * j, 'thin');
+        grid += S.text(gx - 36, gy - 14, 'S_3S_2', { size: 13, anchor: 'end' }) + S.text(gx - 18, gy - 58, 'S_1S_0', { size: 13, anchor: 'start' });
+        grid += gl.map((l, j) => S.text(gx + cw * (j + 0.5), gy - 12, l, { size: 13, cls: 'mono' })).join('') + gl.map((l, i) => S.text(gx - 14, gy + ch * (i + 0.5), l, { size: 13, cls: 'mono', anchor: 'end' })).join('');
+        let vals = '';
+        for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) {
+            const mnt = gray[i] * 4 + gray[j];
+            vals += S.text(gx + cw * (j + 0.5), gy + ch * (i + 0.55), mnt >= 10 ? '1' : '0', { size: 17, cls: mnt >= 10 ? 'hot' : 'soft', weight: 800 }) +
+                S.text(gx + cw * j + 6, gy + ch * i + 10, String(mnt), { size: 9, cls: 'soft', anchor: 'start' });
+        }
+        MSC.diagram('#draw-kmap', {
+            name: 'kmap', title: 'Fig. 7 K-map for the BCD correction term (sum > 9)', viewBox: '0 0 620 400',
+            steps: [
+                { c: 'Draw a 4 × 4 K-map. Rows S_3S_2 and columns S_1S_0 in Gray-code order 00, 01, 11, 10.', s: grid },
+                { c: 'Write 1 in the cells for binary sums 10–15 (not valid BCD) and 0 for 0–9.', s: vals },
+                { c: 'Group the four 1s of the row S_3S_2 = 11 → term S_3S_2.', s: S.rect(gx + 5, gy + ch * 2 + 6, cw * 4 - 10, ch - 12, { rx: 18, cls: 'accent thick' }) + S.text(gx + cw * 4 + 14, gy + ch * 2.5, 'S_3S_2', { size: 13, anchor: 'start', cls: 'accent' }) },
+                { c: 'Group the square of four 1s where S_3 = 1 and S_1 = 1 (columns 11, 10) → term S_3S_1.', s: S.rect(gx + cw * 2 + 9, gy + ch * 2 + 11, cw * 2 - 18, ch * 2 - 22, { rx: 16, cls: 'hot thick dash' }) + S.text(gx + cw * 4 + 14, gy + ch * 3.5, 'S_3S_1', { size: 13, anchor: 'start', cls: 'hot' }) },
+                { c: 'Write Y = S_3S_2 + S_3S_1 = S_3(S_2 + S_1); with the carry, correction C = C_4 + S_3(S_2 + S_1). (Manual: Y = S_4(S_3 + S_2).)', s: S.text(310, 342, 'Y = S_3S_2 + S_3S_1 = S_3(S_2 + S_1)', { size: 15, weight: 800 }) +
+                    S.text(310, 368, 'Correction:  C_4 + S_3(S_2 + S_1)   [manual: S_4(S_3 + S_2)]', { size: 13, cls: 'accent' }) },
+            ],
+        });
+
+        // IC 7483 pins
+        const dx = 290, dy = 40, dopt = { n: 16, w: 120, pitch: 26, title: 'IC 7483' };
+        const names = ['A_3', 'S_2', 'A_2', 'B_2', 'V_{CC}', 'S_1', 'B_1', 'A_1', 'S_0', 'A_0', 'B_0', 'GND', 'C_0 (C_{in})', 'C_4 (C_{out})', 'S_3', 'B_3'];
+        const py5 = dy + 8 + 26 * 4.5;
+        MSC.diagram('#draw-pins', {
+            name: 'pins', title: 'Fig. 1 Pin diagram of IC 7483 (4-bit binary full adder)', viewBox: '0 0 700 316',
+            steps: [
+                { c: 'Draw the 16-pin DIP body with the notch at the top.', s: S.dip(dx, dy, Object.assign({ only: 'body' }, dopt)) },
+                { c: 'Number the pins: 1–8 down the left side and 9–16 up the right side (anticlockwise from the notch).', s: S.dip(dx, dy, Object.assign({ only: 'pins' }, dopt)) },
+                { c: 'Write the pin names: A_3 1, A_2 3, A_1 8, A_0 10; B_3 16, B_2 4, B_1 7, B_0 11; S_3 15, S_2 2, S_1 6, S_0 9; C_{in} 13, C_{out} 14. (The manual calls them A_4…A_1, B_4…B_1, S_4…S_1.)',
+                    s: S.dip(dx, dy, Object.assign({ only: 'labels', labels: names, labelSize: 13 }, dopt)) },
+                { c: 'Mark the supply pins: V_{CC} is pin 5 and GND is pin 12 — not the corner pins!', s: S.rect(dx - 72, py5 - 11, 52, 22, { rx: 6, cls: 'hot' }) + S.rect(dx + 138, py5 - 11, 44, 22, { rx: 6, cls: 'hot' }) +
+                    S.text(350, 296, 'Supply: V_{CC} = pin 5,  GND = pin 12', { size: 13, cls: 'hot', weight: 800 }) },
+            ],
+        });
+
+        // Full adder
+        const x1 = S.gatePins('XOR', 200, 62, { w: 60, h: 46 }), x2 = S.gatePins('XOR', 380, 92, { w: 60, h: 46 });
+        const n2 = S.gatePins('AND', 380, 170, { w: 56, h: 44 }), n1 = S.gatePins('AND', 380, 245, { w: 56, h: 44 }), og = S.gatePins('OR', 500, 205, { w: 60, h: 50 });
+        MSC.diagram('#draw-fa', {
+            name: 'fa', title: 'Fig. 8 Full adder (one stage of the 7483)', viewBox: '0 0 660 340',
+            steps: [
+                { c: 'Draw the inputs A, B and C_{in}. The first XOR gate gives A ⊕ B.', s: S.text(38, x1.in[0][1], 'A', { anchor: 'end' }) + S.text(38, x1.in[1][1], 'B', { anchor: 'end' }) + S.text(38, 40, 'C_{in}', { anchor: 'end' }) +
+                    S.line(44, x1.in[0][1], x1.in[0][0], x1.in[0][1]) + S.line(44, x1.in[1][1], x1.in[1][0], x1.in[1][1]) + S.gate('XOR', 200, 62, { w: 60, h: 46 }) + S.text(292, 70, 'A ⊕ B', { size: 12, anchor: 'start' }) },
+                { c: 'Second XOR gate: (A ⊕ B) ⊕ C_{in} = Sum S.', s: S.gate('XOR', 380, 92, { w: 60, h: 46 }) + S.wire([[x1.out[0], x1.out[1]], [300, x1.out[1]], [300, x2.in[0][1]], [x2.in[0][0], x2.in[0][1]]]) +
+                    S.wire([[44, 40], [330, 40], [330, x2.in[1][1]], [x2.in[1][0], x2.in[1][1]]]) + S.dot(300, x2.in[0][1]) + S.arrow(x2.out[0], x2.out[1], 600, x2.out[1], { size: 8 }) + S.text(610, x2.out[1], 'S', { anchor: 'start', size: 15, weight: 800 }) },
+                { c: 'AND gate: C_{in}·(A ⊕ B).', s: S.gate('AND', 380, 170, { w: 56, h: 44 }) + S.wire([[330, x2.in[1][1]], [330, n2.in[0][1]], [n2.in[0][0], n2.in[0][1]]]) + S.dot(330, x2.in[1][1]) +
+                    S.wire([[300, x2.in[0][1]], [300, n2.in[1][1]], [n2.in[1][0], n2.in[1][1]]]) },
+                { c: 'AND gate: A·B (branch A and B down to it).', s: S.gate('AND', 380, 245, { w: 56, h: 44 }) + S.dot(110, x1.in[0][1]) + S.dot(140, x1.in[1][1]) +
+                    S.wire([[110, x1.in[0][1]], [110, n1.in[0][1]], [n1.in[0][0], n1.in[0][1]]]) + S.wire([[140, x1.in[1][1]], [140, n1.in[1][1]], [n1.in[1][0], n1.in[1][1]]]) },
+                { c: 'OR the two AND outputs: C_{out} = AB + C_{in}(A ⊕ B).', s: S.gate('OR', 500, 205, { w: 60, h: 50 }) + S.wire([[n2.out[0], n2.out[1]], [470, n2.out[1]], [470, og.in[0][1]], [og.in[0][0], og.in[0][1]]]) +
+                    S.wire([[n1.out[0], n1.out[1]], [470, n1.out[1]], [470, og.in[1][1]], [og.in[1][0], og.in[1][1]]]) + S.arrow(og.out[0], og.out[1], 600, og.out[1], { size: 8 }) + S.text(610, og.out[1], 'C_{out}', { anchor: 'start', size: 15, weight: 800 }) },
+                { c: 'Write the equations of the full adder.', s: S.text(330, 316, 'S = A ⊕ B ⊕ C_{in}          C_{out} = AB + C_{in}(A ⊕ B)', { size: 14, weight: 800, cls: 'accent' }) },
+            ],
+        });
+    })();
+
+    // ================================================================== viva
+    MSC.viva('#viva-list', [
+        { q: 'What is a half adder and a full adder?', a: 'A half adder adds two bits: S = A &oplus; B, C = AB. A full adder adds three bits (A, B and an input carry): S = A &oplus; B &oplus; C<sub>in</sub>, C<sub>out</sub> = AB + C<sub>in</sub>(A &oplus; B). Two half adders and an OR gate make a full adder.' },
+        { q: 'What is IC 7483?', a: 'A TTL 4-bit binary full adder in a 16-pin DIP. It adds two 4-bit numbers and an input carry C<sub>0</sub> (pin 13) and gives a 4-bit sum S<sub>3</sub>–S<sub>0</sub> and the output carry C<sub>4</sub> (pin 14).' },
+        { q: 'Why is it called a parallel adder? What is ripple carry?', a: 'All bits of both numbers are applied at the same time. In the ripple-carry model the carry of each stage feeds the next, so the final sum is ready only after the carry has passed through all stages. (The 7483A actually has internal fast/look-ahead carry to cut this delay.)' },
+        { q: 'Which pins of the 7483 are V<sub>CC</sub> and GND?', a: 'Pin 5 is V<sub>CC</sub> (+5 V) and pin 12 is ground — unlike most 16-pin ICs, which use pins 16 and 8.' },
+        { q: 'How can an adder be used to subtract?', a: 'A − B = A + (complement of B). NOT gates (or XOR gates with M = 1) complement B and the adder adds it to A; C<sub>in</sub> = 1 supplies the extra 1 for the 2\'s complement.' },
+        { q: 'What is the end-around carry?', a: 'In 1\'s complement subtraction the carry produced by A + B&#x305; is added back to the LSB of the sum. On the kit pin 14 (C<sub>out</sub>) is wired to pin 13 (C<sub>in</sub>).' },
+        { q: 'How do you know that the result of a subtraction is negative?', a: 'In both methods there is no final carry (C<sub>4</sub> = 0). The sum is then the 1\'s (or 2\'s) complement of the answer, so complement it again and put a minus sign.' },
+        { q: 'Why is 2\'s complement preferred to 1\'s complement?', a: 'It has only one zero (no “negative zero” 1111), needs no end-around carry (a single addition), so the hardware is simpler and faster. Computers use 2\'s complement.' },
+        { q: 'What is the role of the XOR gates and of M in the adder/subtractor?', a: 'An XOR gate is a controlled inverter: B &oplus; 0 = B and B &oplus; 1 = B&#x305;. M is also connected to C<sub>in</sub>, so M = 0 gives A + B and M = 1 gives A + B&#x305; + 1 = A − B.' },
+        { q: 'What is BCD? Why is 0110 added in a BCD adder?', a: 'Binary Coded Decimal codes each decimal digit 0–9 in 4 bits. The six codes 1010–1111 are not used; when the sum passes 9, adding 6 skips them and produces the carry into the next decimal digit.' },
+        { q: 'When is the correction needed? Give its expression.', a: 'When the binary sum is more than 9 or produces a carry: Y = C<sub>4</sub> + S<sub>3</sub>S<sub>2</sub> + S<sub>3</sub>S<sub>1</sub> = C<sub>4</sub> + S<sub>3</sub>(S<sub>2</sub> + S<sub>1</sub>). (Manual numbering: C<sub>4</sub> + S<sub>4</sub>(S<sub>3</sub> + S<sub>2</sub>).)' },
+        { q: 'What is the largest output of a one-digit BCD adder?', a: '9 + 9 + 1 (input carry) = 19: binary sum 1 0011, Y = 1, 0011 + 0110 = 1001, so the output is 1 1001 = 19.' },
+    ]);
+
+    recordTables();
+    update();
+
+    // exposed for self-checks
+    window.P12 = { ripple, logicAdd, logicSub1, logicSub2, logicAddSub, logicBCD, state, update, liveSingle, schedule: () => sch };
+    </script>
+</body>
+</html>

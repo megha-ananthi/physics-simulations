@@ -9,6 +9,8 @@ This file provides comprehensive context for AI agents (Claude Code, Copilot, Cu
 An interactive physics simulations suite demonstrating the **Magnetic**, **Heating**, and **Chemical** effects of electric current, plus a **Types of Forces** module. This is the **personal portfolio site of Megha Ananthi B** — she presents and explains the experiments herself.
 
 **Branding rule (owner request):** do NOT put school names, "CBSE", class/grade levels, curriculum chapter references, or "For Teachers" sections on any user-facing page. Credit lines say only "Megha Ananthi B".
+The M.Sc. practicals module is the one exception to "curriculum references": it shows "Practical I / II · Exp N"
+(the owner asked for it so the student can match the exam list) — but never a university name or course code.
 
 - **Live URL**: https://megha-ananthi.github.io/physics-simulations/
 - **Repo**: https://github.com/megha-ananthi/physics-simulations
@@ -44,12 +46,31 @@ physics-simulations/
 │   ├── heating.html                # Exp 3: Nichrome Wire Heating (Heating Effect)
 │   ├── lemon-battery.html          # Exp 4: Lemon Battery (Chemical Effect)
 │   ├── voltaic-cell.html           # Exp 5: Voltaic Cell (Chemical Effect)
-│   └── forces/                     # "Types of Forces" module (Canvas 2D, no Three.js)
-│       ├── index.html              # Module hub + "Sort the Force" contact/non-contact game
-│       ├── friction.html           # Tabs: pull-block, rolling race, parachute drop, zoom-in
-│       ├── gravity.html            # Tabs: drop race, two-mass attraction, orbit view
-│       ├── magnetic.html           # Tabs: magnet playground, two magnets
-│       └── electrostatic.html      # Single scene: balloon + 4 selectable targets
+│   ├── forces/                     # "Types of Forces" module (Canvas 2D, no Three.js)
+│   │   ├── index.html              # Module hub + "Sort the Force" contact/non-contact game
+│   │   ├── friction.html           # Tabs: pull-block, rolling race, parachute drop, zoom-in
+│   │   ├── gravity.html            # Tabs: drop race, two-mass attraction, orbit view
+│   │   ├── magnetic.html           # Tabs: magnet playground, two magnets
+│   │   └── electrostatic.html      # Single scene: balloon + 4 selectable targets
+│   └── msc/                        # "M.Sc. Physics Practicals" module (exam prep, light theme)
+│       ├── index.html              # Practicals hub: Practical I and Practical II cards
+│       ├── tests.html              # Browser runner for the 8085 engine tests
+│       ├── assets/                 # Shared by every page in this module only
+│       │   ├── msc.css             # Theme, page skeleton, record sheet, 8085 widget, print styles
+│       │   ├── msc-common.js       # window.MSC: tabs, canvas, SVG symbols, draw-along, flowchart, viva
+│       │   ├── cpu8085.js          # window.CPU8085: assembler, emulator, trainer-kit widget
+│       │   ├── programs8085.js     # window.PROGRAMS8085: every 8085 program + samples + flowcharts
+│       │   └── cpu8085.test.js     # Headless tests (JavaScriptCore) for the two files above
+│       ├── p1-03-polarimeter.html  # Practical I Exp 3   (optics)
+│       ├── p1-11-flip-flops.html   # Practical I Exp 11  (digital)
+│       ├── p1-12-adder-subtractor.html  # Practical I Exp 12 (digital, IC 7483)
+│       ├── p1-13-r2r-dac.html      # Practical I Exp 13  (op-amp) — reference analog page
+│       ├── p1-16-sum-of-n-data.html     # Practical I Exp 16 (8085)
+│       ├── p1-18-code-conversion.html   # Practical I Exp 18 (8085)
+│       ├── p2-03-air-wedge.html    # Practical II Exp 3  (optics)
+│       ├── p2-13-shift-register-counters.html # Practical II Exp 13 (digital)
+│       ├── p2-18-sorting.html      # Practical II Exp 18 (8085) — reference 8085 page
+│       └── p2-20-8085-arithmetic.html   # Practical II Exp 20 (8085, record version)
 ├── CLAUDE.md                       # This file — AI agent context
 ├── README.md                       # Human-readable project docs
 └── .claude/
@@ -268,6 +289,39 @@ the canonical template):
 - Each page targets a documented misconception (friction acts only when moving; heavier falls faster;
   no gravity in space; magnets attract all metals; electric = magnetic attraction). If you add a sim,
   pick its misconception first and design the reveal around it.
+
+## "M.Sc. Physics Practicals" Module (`experiments/msc/`)
+
+Exam-preparation simulations for ten M.Sc. Physics practicals (Practical I: Exp 3, 11, 12, 13, 16, 18 —
+numbered as in the manual's page-5 "List of Experiments", not its chapter headings; Practical II: Exp 3, 13, 18, 20).
+The student must understand the experiment and then draw and write it in the exam, so every page has the
+same four sections, reachable from a sticky `.section-nav`:
+
+1. **Simulate** (`#simulate`) — the interactive experiment with live readouts.
+2. **Draw it** (`#draw`) — exam diagrams drawn stroke by stroke with a moving pen and a caption per step.
+3. **Record** (`#record`) — `article.record` styled like a record notebook: Aim, Apparatus, Formula,
+   diagrams (`.rec-diagram[data-diagram=name]` slots are filled automatically with a static copy of the
+   named draw-along diagram), Procedure, Observation tables filled from the student's own simulation
+   readings, Calculation, Result, Precautions. The print button prints only this section (A4).
+4. **Viva** (`#viva`) — tap-to-reveal questions via `MSC.viva`.
+
+Conventions:
+- **Shared assets are deliberate here** (unlike the rest of the site): pages load `assets/msc.css`,
+  `assets/msc-common.js` and, for 8085 pages, `assets/cpu8085.js` + `assets/programs8085.js`.
+  Reference pages to copy: `p1-13-r2r-dac.html` (circuit/analog pattern) and `p2-18-sorting.html` (8085).
+- **Accent per type** via `--accent`: optics `#00897B`, digital `#5C6BC0`, op-amp/analog `#EF6C00`, 8085 `#8E24AA`.
+- **Draw-along diagrams**: `MSC.diagram(target, {name, title, viewBox, steps: [{c: caption, s: svgMarkup}]})`,
+  built with the `MSC.sym` symbol library (resistor, opamp, gate, chip, dff, dip, axes, arrow …; label
+  markup `_{sub}`, `^{sup}`, `!{overline}`). Flowcharts come from `MSC.flowchart(spec)`.
+- **8085 programs live only in `programs8085.js`**, written as mnemonic source. The assembler generates
+  addresses and opcodes, so listings are always byte-accurate; never hand-type opcodes into a page.
+  The manual and record contain typos (e.g. `JC NEXTBYT` printed `DA 14 80`, `MOV A,C` written `77`);
+  pages show these as "Check your record" notes, taken from each program's `notes`.
+- **Tests**: after changing `cpu8085.js` or `programs8085.js`, run
+  `/System/Library/Frameworks/JavaScriptCore.framework/Versions/Current/Helpers/jsc experiments/msc/assets/cpu8085.js experiments/msc/assets/programs8085.js experiments/msc/assets/cpu8085.test.js`
+  (Node isn't installed on this machine) or open `experiments/msc/tests.html`.
+- **Widget gotcha**: `CPU8085.mount()` callbacks receive the widget `api` as a parameter — use it rather
+  than the variable returned by `mount()`, and declare any `let` the callbacks use before calling `mount()`.
 
 ## How to Add a New Experiment
 

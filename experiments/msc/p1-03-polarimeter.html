@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polarimeter - Specific Rotation of Cane Sugar - M.Sc. Practicals - Science Lab</title>
+    <meta name="description" content="Interactive half-shade polarimeter: match the two halves of the field with a Laurent plate (sodium light) or a biquartz (white light), read the vernier, plot rotation against concentration and find the specific rotation of cane sugar.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/msc.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F36C;</text></svg>">
+    <style>
+        :root { --accent: #00897B; --accent-soft: rgba(0, 137, 123, 0.12); --accent-border: rgba(0, 137, 123, 0.5); }
+        .bench-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .stage > .bench-scroll > svg { display: block; width: 100%; height: auto; }
+        .stage canvas.static { touch-action: auto; }
+        .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
+        .cap-under { font-size: 0.74rem; font-weight: 800; color: var(--ink-soft); text-align: center; margin-top: 0.25rem; }
+        .fine-row { display: flex; flex-wrap: wrap; gap: 0.35rem; justify-content: center; margin-top: 0.65rem; }
+        .fine-row .btn { min-width: 3.2rem; justify-content: center; }
+        .rec-row { display: flex; flex-wrap: wrap; gap: 0.45rem; justify-content: center; margin-top: 0.6rem; }
+        .msg { font-size: 0.86rem; min-height: 1.35em; margin-top: 0.45rem; font-weight: 700; text-align: center; }
+        .msg.warn { color: var(--warn); }
+        .msg.good { color: var(--good); }
+        .reading {
+            display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; justify-content: center; align-items: baseline;
+            background: #F4FBFA; border: 1px solid var(--accent-border); border-radius: 12px; padding: 0.45rem 0.8rem; margin-top: 0.6rem;
+            font-size: 0.9rem;
+        }
+        .reading b { font-family: var(--font-mono); color: var(--accent); font-size: 1.02rem; }
+        .chk { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.84rem; font-weight: 700; cursor: pointer; user-select: none; }
+        .chk input { width: 17px; height: 17px; accent-color: var(--accent); }
+        .photo { margin-top: 0.5rem; font-size: 0.82rem; }
+        .photo-row { display: grid; grid-template-columns: 5.4rem 1fr 4rem; gap: 0.45rem; align-items: center; margin-top: 0.25rem; }
+        .photo-bar { height: 12px; border-radius: 6px; background: #ECEFF1; overflow: hidden; }
+        .photo-bar i { display: block; height: 100%; border-radius: 6px; background: var(--accent); }
+        .photo-row .mono { font-family: var(--font-mono); text-align: right; font-weight: 800; }
+        .tbl-cap { font-size: 0.82rem; font-weight: 800; color: var(--ink-soft); margin: 0.7rem 0 0.3rem; }
+        .tbl-cap:first-of-type { margin-top: 0.2rem; }
+        .small-note { font-size: 0.78rem; color: var(--ink-soft); margin-top: 0.35rem; }
+        .calc p { font-size: 0.9rem; }
+        .calc .calc-line { font-size: 0.98rem; }
+        #obs-sim table.obs, #obs-rec table.obs { font-size: 0.8rem; }
+        #obs-sim table.obs th, #obs-rec table.obs th { padding: 0.25rem 0.3rem; }
+        @media (max-width: 600px) {
+            .stage > .bench-scroll > svg { min-width: 640px; }
+            .fine-row .btn { min-width: 2.9rem; padding: 0.4rem 0.55rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="top-bar">
+        <a href="index.html" class="back-btn">&larr; Practicals</a>
+        <div class="exp-heading">
+            <span class="exp-chip">Practical I &middot; Exp 3</span>
+            <h1 class="exp-title">&#x1F36C; Polarimeter — Specific Rotation of Cane Sugar</h1>
+        </div>
+        <a href="../../index.html" class="back-btn">&#x1F3E0; Lab</a>
+    </header>
+    <p class="big-idea">Sugar solution is <strong>optically active</strong>: it turns the plane of vibration of polarised light. The turn grows with the tube length and the
+        concentration, <strong>θ = S l C</strong>. A <strong>half-shade device</strong> splits the field into two halves, so the analyser can be set very precisely where both halves look alike.</p>
+    <nav class="section-nav">
+        <a href="#simulate">&#x1F52C; Simulate</a><a href="#draw">&#x270F;&#xFE0F; Draw it</a><a href="#record">&#x1F4DD; Record</a><a href="#viva">&#x1F3A4; Viva</a>
+    </nav>
+
+    <main>
+        <!-- ================= SIMULATE ================= -->
+        <section id="simulate" class="block">
+            <h2 class="block-title">&#x1F52C; Simulate <span class="hint-inline">Turn the analyser until the two halves of the field match, then record the reading. Do it for water first, then for each sugar solution.</span></h2>
+
+            <div class="stage"><div class="bench-scroll"><svg id="bench" class="pen" viewBox="0 0 900 292" role="img" aria-label="Polarimeter optical bench"></svg></div></div>
+
+            <div class="controls">
+                <div class="ctl"><span class="ctl-label">Half-shade device</span>
+                    <select id="mode"><option value="laurent" selected>Laurent plate · sodium light</option><option value="biquartz">Biquartz · white light</option></select></div>
+                <div class="ctl"><span class="ctl-label">Solution in the tube</span>
+                    <select id="conc"><option value="0" selected>Water (0 %)</option><option value="8">8 % sugar (0.08 g/cc)</option><option value="4">4 % sugar (0.04 g/cc)</option><option value="2">2 % sugar (0.02 g/cc)</option><option value="1">1 % sugar (0.01 g/cc)</option><option value="0.5">0.5 % sugar (0.005 g/cc)</option></select></div>
+                <div class="ctl"><span class="ctl-label">Tube length l</span>
+                    <select id="len"><option value="1">1 dm (10 cm)</option><option value="2" selected>2 dm (20 cm)</option></select></div>
+                <div class="btn-row">
+                    <label class="chk"><input type="checkbox" id="exag"> End-on views ×5</label>
+                    <label class="chk"><input type="checkbox" id="photo"> Photometer helper</label>
+                    <label class="chk"><input type="checkbox" id="hide"> Hide the reading (practise the vernier)</label>
+                </div>
+            </div>
+
+            <div class="grid-2-even" style="margin-top:1rem">
+                <div class="card">
+                    <h3>Through the eyepiece</h3>
+                    <div class="pair">
+                        <div><div class="stage"><canvas id="fov" aria-label="Field of view"></canvas></div><div class="cap-under">Field of view (drag sideways = fine turn)</div></div>
+                        <div><div class="stage"><canvas id="vib" class="static" aria-label="Vibration directions"></canvas></div><div class="cap-under" id="vib-cap">Vibration directions (seen by the eye)</div></div>
+                    </div>
+                    <div class="fine-row" id="fine">
+                        <button class="btn btn-sm" data-d="-10">−10°</button><button class="btn btn-sm" data-d="-1">−1°</button><button class="btn btn-sm" data-d="-0.1">−0.1°</button>
+                        <button class="btn btn-sm" data-d="0.1">+0.1°</button><button class="btn btn-sm" data-d="1">+1°</button><button class="btn btn-sm" data-d="10">+10°</button>
+                    </div>
+                    <div class="rec-row">
+                        <button class="btn btn-primary" id="rec-a">&#x1F4CC; Record first position</button>
+                        <button class="btn btn-primary" id="rec-b">&#x1F4CC; Record second position</button>
+                    </div>
+                    <div class="msg" id="msg"></div>
+                    <div class="photo" id="photo-box" hidden></div>
+                    <div class="note" id="hint-note"></div>
+                </div>
+                <div class="card">
+                    <h3>Analyser and circular scale</h3>
+                    <div class="pair">
+                        <div><div class="stage"><canvas id="dial" tabindex="0" aria-label="Analyser dial: drag to rotate, arrow keys for fine steps"></canvas></div><div class="cap-under">Drag the knob to turn the analyser N<sub>2</sub></div></div>
+                        <div class="stack">
+                            <div class="note" style="margin-top:0"><span class="note-tag">Vernier</span>Main scale: 1 MSD = 1°. Vernier: 10 VSD = 9 MSD, so<br><b>L.C. = 1 MSD − 1 VSD = 0.1°</b>.<br>Reading = M.S.R + (V.S.C × L.C.)</div>
+                            <div class="note warn" style="margin-top:0.5rem"><span class="note-tag">Two positions</span>The halves match every 180°. Take the <b>first position</b> near the start of the scale, then turn about 180° for the <b>second position</b>.</div>
+                        </div>
+                    </div>
+                    <div class="stage" style="margin-top:0.7rem"><canvas id="lens" class="static" aria-label="Reading lens view of the main scale and vernier"></canvas></div>
+                    <div class="cap-under">Reading lens: main scale (moves with the analyser) against the fixed vernier</div>
+                    <div class="reading" id="reading"></div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-top:1rem">
+                <h3>Observation tables <span style="font-family:var(--font-body);font-size:0.8rem;color:var(--ink-soft)">(fill as you record; the highlighted row is the solution now in the tube)</span></h3>
+                <div id="obs-sim"></div>
+                <div class="btn-row" style="margin-top:0.7rem;justify-content:flex-end">
+                    <button class="btn btn-sm" id="demo">Demo: fill all readings</button>
+                    <button class="btn btn-sm" id="clear">Clear readings</button>
+                </div>
+            </div>
+
+            <div class="grid-2-even" style="margin-top:1rem">
+                <div class="card">
+                    <h3>Graph: rotation θ against concentration C</h3>
+                    <div class="stage"><canvas id="graph" class="static"></canvas></div>
+                    <p class="small-note">Each dot is the mean θ of one solution. The line is the least-squares straight line through the origin (θ = S l C has no intercept).</p>
+                </div>
+                <div class="card calc">
+                    <h3>Calculation from your readings</h3>
+                    <div id="calc-sim"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= DRAW ================= -->
+        <section id="draw" class="block">
+            <h2 class="block-title">&#x270F;&#xFE0F; Draw it <span class="hint-inline">Press ▶ Draw and copy each step into your record.</span></h2>
+            <div class="tabs" data-tabs="draw">
+                <button class="tab-btn active" data-tab="setup">Experimental set-up</button>
+                <button class="tab-btn" data-tab="half">Half-shade device</button>
+                <button class="tab-btn" data-tab="fov">Field of view</button>
+                <button class="tab-btn" data-tab="graph">Model graph</button>
+            </div>
+            <div class="tab-panel" data-group="draw" data-panel="setup" id="draw-setup"></div>
+            <div class="tab-panel" data-group="draw" data-panel="half" id="draw-half"></div>
+            <div class="tab-panel" data-group="draw" data-panel="fov" id="draw-fov"></div>
+            <div class="tab-panel" data-group="draw" data-panel="graph" id="draw-graph"></div>
+        </section>
+
+        <!-- ================= RECORD ================= -->
+        <section id="record" class="block">
+            <h2 class="block-title">&#x1F4DD; Record sheet</h2>
+            <div class="rec-actions no-print">
+                <button class="btn btn-sm" data-print-record>&#x1F5A8;&#xFE0F; Print record</button>
+            </div>
+            <article class="record">
+                <div class="rec-head"><div class="rec-box">Expt. No. ______<br>Date ______</div><div class="rec-box">Page No. ______</div></div>
+                <h2 class="rec-title">POLARIMETER — SPECIFIC ROTATION OF CANE SUGAR</h2>
+
+                <h3>Aim</h3>
+                <p>To determine the specific rotation of cane sugar solution using a half-shade polarimeter.</p>
+
+                <h3>Apparatus required</h3>
+                <p>Half-shade polarimeter (Laurent's plate or biquartz), sodium vapour lamp (monochromatic) or white light source, polarimeter tube (2 dm), physical balance,
+                    measuring cylinder, beakers, reading lens, cane sugar and distilled water.</p>
+
+                <h3>Formula</h3>
+                <div class="formula">S = θ / (l C) &nbsp;<span class="up">deg dm<sup>−1</sup> (g/cc)<sup>−1</sup></span></div>
+                <p>where S = specific rotation of cane sugar, θ = rotation of the plane of vibration produced by the solution (degree), l = length of the solution column
+                    (decimetre) and C = concentration of cane sugar in the solution (g/cc). From the graph, S = (θ/C) / l.</p>
+
+                <h3>Principle</h3>
+                <p>Cane sugar solution is optically active (dextro-rotatory). When plane-polarised light passes through it, the plane of vibration is turned through an angle
+                    θ proportional to the length of the solution and its concentration (Biot's law, θ = S l C). The half-shade device divides the field of view into two halves
+                    whose brightness can be matched very precisely, so the angle through which the analyser must be turned — the rotation θ — can be measured accurately.</p>
+
+                <h3>Experimental set-up</h3>
+                <div class="rec-diagram" data-diagram="setup"></div>
+
+                <h3>Theory</h3>
+                <p>The <b>specific rotation</b> of a substance at a given temperature and wavelength is the rotation produced by a 1 dm long column of its solution
+                    containing 1 g of the substance per cc: S = θ/(l C).</p>
+                <p>Light from a monochromatic source S is made parallel by the convex lens L and falls on the polarising Nicol N<sub>1</sub>, which makes it plane polarised.
+                    It then passes through the half-shade device (Laurent's plate), through the tube T containing the active solution and through the analysing Nicol N<sub>2</sub>,
+                    and is viewed with a telescope/eyepiece. A circular scale with vernier attached to the analyser measures its rotation.</p>
+                <p><b>Laurent's half-shade plate</b> is a semicircular half-wave plate of quartz (cut with its faces parallel to the optic axis) cemented to a semicircular glass
+                    plate that transmits and absorbs the same amount of light. Light through the glass half keeps its vibration OP; in the quartz half the vibration becomes OQ,
+                    its mirror image about the optic axis (∠POQ = 2δ). When the analyser is perpendicular to the line of junction, both halves are equally dim. A tiny rotation of the
+                    analyser makes one half clearly darker than the other, so this setting is very sensitive. With sugar in the tube, OP and OQ both turn through θ and the analyser must be
+                    turned through the same θ to restore equal illumination.</p>
+                <p>With white light a <b>biquartz</b> is used: two semicircular plates of right- and left-handed quartz, each 3.75 mm thick, which turn the plane of yellow light by 90°
+                    in opposite directions. When yellow is cut off from both halves they show the same grayish-violet <b>tint of passage</b>; a small turn makes one half reddish and the other bluish.</p>
+
+                <h3>Half-shade device</h3>
+                <div class="rec-diagram" data-diagram="half"></div>
+                <div class="rec-diagram" data-diagram="fov"></div>
+
+                <h3>Procedure</h3>
+                <ol>
+                    <li>Weigh 8 g of cane sugar, dissolve it in distilled water and make it up to 100 ml; filter it. This is the 8 % (0.08 g/cc) solution. Prepare 4 %, 2 %, 1 % and 0.5 % solutions by successive dilution (50 ml of solution + 50 ml of water).</li>
+                    <li>Find the least count of the vernier attached to the analyser.</li>
+                    <li>Clean the windows of the polarimeter tube and fill it with distilled water so that no air bubble is enclosed after the end caps are tightened.</li>
+                    <li>Place the tube horizontally in the polarimeter; if a small bubble remains, bring it into the bulged portion in the middle of the tube.</li>
+                    <li>Switch on the lamp, look through the eyepiece and focus it sharply on the line dividing the two halves of the half-shade device.</li>
+                    <li>Rotate the analyser slowly clockwise until the two halves appear exactly identical (equally dim; with a biquartz, the same grayish-violet tint). Note the reading — first position a<sub>0</sub>.</li>
+                    <li>Rotate the analyser (through about 180°) until the two halves are once again identical and note the second position b<sub>0</sub>.</li>
+                    <li>Empty the tube, rinse it with the 8 % sugar solution, fill it with this solution without air bubbles, tighten the caps and place it in the polarimeter.</li>
+                    <li>Take the readings a<sub>1</sub> and b<sub>1</sub> as in steps 6 and 7. Repeat for the 4 %, 2 %, 1 % and 0.5 % solutions.</li>
+                    <li>Find the rotation for each solution by subtracting the water readings: θ<sub>1</sub> = a<sub>1</sub> − a<sub>0</sub>, θ<sub>2</sub> = b<sub>1</sub> − b<sub>0</sub>, and take the mean θ.</li>
+                    <li>Measure the length l of the tube in decimetre and calculate S = θ/(l C) for each solution.</li>
+                    <li>Plot a graph of θ against C; it is a straight line through the origin. Find θ/C from its slope and S = (θ/C)/l.</li>
+                </ol>
+
+                <h3>Observations</h3>
+                <div id="rec-conds"></div>
+                <div id="obs-rec"></div>
+
+                <h3>Graph</h3>
+                <div class="rec-diagram" id="rec-graph"></div>
+
+                <h3>Calculation</h3>
+                <div id="rec-calc" class="calc"></div>
+
+                <h3>Result</h3>
+                <div class="result-box" id="rec-result"></div>
+
+                <h3>Precautions</h3>
+                <ol>
+                    <li>Rinse the polarimeter tube with the corresponding solution (or water) before each observation.</li>
+                    <li>Screw the end caps properly after filling the solution or water — not so tight that the glass windows are strained.</li>
+                    <li>Keep the end windows clean; do not touch them with the fingers.</li>
+                    <li>The path of light through the solution must be free from air bubbles.</li>
+                    <li>Filter the solution before use.</li>
+                    <li>Set the position of equal illumination (or the sensitive tint) precisely each time.</li>
+                    <li>Rotate the analyser in one direction only while taking one set of readings (do not turn it to and fro, to avoid backlash).</li>
+                </ol>
+            </article>
+        </section>
+
+        <!-- ================= VIVA ================= -->
+        <section id="viva" class="block">
+            <h2 class="block-title">&#x1F3A4; Viva voce</h2>
+            <div id="viva-list"></div>
+        </section>
+    </main>
+
+    <footer class="page-footer">Practical I &middot; Exp 3 &bull; Simplified model for learning &mdash; values are illustrative</footer>
+
+    <script src="assets/msc-common.js"></script>
+    <script>
+    'use strict';
+    const S = MSC.sym;
+    const $ = (id) => document.getElementById(id);
+    const D2R = Math.PI / 180;
+    const f2 = (v) => Math.round(v * 100) / 100;
+
+    // ------------------------------------------------------------------ constants
+    const S_SUGAR = 66.5;           // specific rotation of cane sugar, deg dm^-1 (g/cc)^-1 (yellow light)
+    const DELTA = 6;                // half-shade angle δ of the Laurent plate (deg)
+    const ZERO = 2.7;               // instrument zero: scale reading at which the halves match with water
+    const LC = 0.1;                 // least count (deg)
+    const CONCS = [8, 4, 2, 1, 0.5];
+    const LAM0 = 560;               // biquartz: wavelength (yellow) whose plane each half turns by exactly 90°
+    const LAMS = []; for (let l = 400; l <= 720; l += 10) LAMS.push(l);
+
+    const state = {
+        mode: 'laurent', conc: 0, len: 2, R: 30,
+        water: { a: null, b: null }, rows: {},
+        exag: false, photo: false, hide: false,
+    };
+
+    // ------------------------------------------------------------------ physics
+    const gcc = (pct) => pct / 100;                                     // 8 % = 8 g per 100 ml = 0.08 g/cc
+    const thetaOf = (pct, len) => S_SUGAR * len * gcc(pct);             // θ = S l C
+    const theta = () => thetaOf(state.conc, state.len);
+    const norm360 = (a) => ((a % 360) + 360) % 360;
+    const diff180 = (a) => ((((a + 90) % 180) + 180) % 180) - 90;       // fold into [-90, 90)
+    /* Analyser principal-section angle from the vertical (clockwise, as seen by the eye) for a scale reading R.
+       Laurent: the dim match with water is with N2 perpendicular to the line of junction (90°).
+       Biquartz: the tint of passage with water is with N2 parallel to N1 (0°). */
+    const analyserAngle = (R, mode) => R - ZERO + ((mode || state.mode) === 'laurent' ? 90 : 0);
+    const matchR = (k) => ZERO + theta() + 180 * (k || 0);             // sensitive match position on the scale
+
+    // Laurent plate: left half = quartz (vibration OQ at −δ), right half = glass (OP at +δ); both turned by θ in the tube.
+    function laurent(R, th) {
+        const phi = analyserAngle(R, 'laurent');
+        if (th === undefined) th = theta();
+        return {
+            left: Math.pow(Math.cos((phi - (th - DELTA)) * D2R), 2),
+            right: Math.pow(Math.cos((phi - (th + DELTA)) * D2R), 2),
+        };
+    }
+
+    // Biquartz with white light: spectral sum with Malus' law, CIE colour matching.
+    const gp = (l, m, s1, s2) => { const s = l < m ? s1 : s2, t = (l - m) / s; return Math.exp(-0.5 * t * t); };
+    const CMF = LAMS.map(l => [
+        1.056 * gp(l, 599.8, 37.9, 31.0) + 0.362 * gp(l, 442.0, 16.0, 26.7) - 0.065 * gp(l, 501.1, 20.4, 26.2),
+        0.821 * gp(l, 568.8, 46.9, 40.5) + 0.286 * gp(l, 530.9, 16.3, 31.1),
+        1.217 * gp(l, 437.0, 11.8, 36.0) + 0.681 * gp(l, 459.0, 26.0, 13.8)]);
+    const planck = (l) => { const m = l * 1e-9; return 1 / (Math.pow(m, 5) * (Math.exp(1.4388e-2 / (m * 3000)) - 1)); };
+    const WT = CMF.map((c, i) => { const p = planck(LAMS[i]); return [c[0] * p, c[1] * p, c[2] * p]; });
+    const WHITE = WT.reduce((a, w) => [a[0] + w[0], a[1] + w[1], a[2] + w[2]], [0, 0, 0]);
+    const M = [[3.2406, -1.5372, -0.4986], [-0.9689, 1.8758, 0.0415], [0.0557, -0.2040, 1.0570]];
+    const toRGB = (v) => M.map(r => r[0] * v[0] + r[1] * v[1] + r[2] * v[2]);
+    const WRGB = toRGB(WHITE);
+    const rhoQ = (l) => 90 * Math.pow(LAM0 / l, 2);                    // rotatory dispersion of quartz ≈ 1/λ²
+    let LSUG = LAM0;                                                    // wavelength at which the sugar turns by exactly θ (calibrated below)
+    const thetaL = (th, l) => th * Math.pow(LSUG / l, 2);              // sugar also disperses ≈ 1/λ²
+    const fL = (t) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116);
+    const lab = (x) => { const fx = fL(x[0]), fy = fL(x[1]), fz = fL(x[2]); return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)]; };
+
+    /* Left half = left-handed quartz (−ρ), right half = right-handed quartz (+ρ); the sugar adds θ(λ) to both. */
+    function biquartzAt(phi, th) {
+        const sL = [0, 0, 0], sR = [0, 0, 0], TLs = [], TRs = [];
+        LAMS.forEach((l, i) => {
+            const r = rhoQ(l), t = thetaL(th, l);
+            const tl = Math.pow(Math.cos((phi - (t - r)) * D2R), 2), tr = Math.pow(Math.cos((phi - (t + r)) * D2R), 2);
+            TLs.push(tl); TRs.push(tr);
+            for (let k = 0; k < 3; k++) { sL[k] += WT[i][k] * tl; sR[k] += WT[i][k] * tr; }
+        });
+        const nL = sL.map((v, k) => v / WHITE[k]), nR = sR.map((v, k) => v / WHITE[k]);
+        const a = lab(nL), b = lab(nR);
+        return { sL, sR, TL: TLs, TR: TRs, YL: nL[1], YR: nR[1], dE: Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]) };
+    }
+    const biquartz = (R, th) => biquartzAt(analyserAngle(R, 'biquartz'), th === undefined ? theta() : th);
+
+    function goldenMin(fn, a, b, it) {
+        const g = (Math.sqrt(5) - 1) / 2;
+        let c = b - g * (b - a), d = a + g * (b - a), fc = fn(c), fd = fn(d);
+        for (let i = 0; i < (it || 60); i++) {
+            if (fc < fd) { b = d; d = c; fd = fc; c = b - g * (b - a); fc = fn(c); }
+            else { a = c; c = d; fc = fd; d = a + g * (b - a); fd = fn(d); }
+        }
+        return (a + b) / 2;
+    }
+    /* Calibrate the sugar's reference wavelength so that the white-light tint of passage (minimum colour difference
+       between the halves) sits exactly at φ = θ — the rotation of the effective (yellow) wavelength. */
+    (function calibrate() {
+        for (let pass = 0; pass < 2; pass++) {
+            const best = goldenMin(phi => biquartzAt(phi, 10).dE, 6, 16, 70);
+            LSUG = LSUG / Math.sqrt(best / 10);
+        }
+    })();
+
+    // ------------------------------------------------------------------ colours
+    const enc = (v) => (v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055);
+    const rgbStr = (c) => 'rgb(' + c.map(v => Math.round(MSC.clamp(v, 0, 255))).join(',') + ')';
+    const NA = [255, 196, 48];
+    function naRGB(I) { const v = Math.log(1 + 300 * I) / Math.log(301); return NA.map(c => c * v); }
+    /* Spectral sum → display colour: partial white adaptation (the lamp stays slightly warm), a log brightness
+       response (the eye adapts to the dim field) and reduced saturation (dim colours look greyish). */
+    function whiteRGB(sum) {
+        let rgb = toRGB(sum).map((v, k) => v / WRGB[k] * Math.pow(WRGB[k] / WRGB[1], 0.6));
+        const Y = sum[1] / WHITE[1];
+        const Yp = Math.log(1 + 15 * Y) / Math.log(16);
+        rgb = rgb.map(v => v * (Y > 1e-7 ? Yp / Y : 0));
+        const lum = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+        rgb = rgb.map(v => lum + (v - lum) * 0.3);
+        let t = 1;
+        rgb.forEach(v => { if (v < 0) t = Math.min(t, lum / (lum - v)); });
+        rgb = rgb.map(v => lum + (v - lum) * t);
+        const mx = Math.max(rgb[0], rgb[1], rgb[2]);
+        if (mx > 1) rgb = rgb.map(v => v / mx);
+        return rgb.map(v => 255 * enc(Math.max(0, v)));
+    }
+    function lamRGB(l) {
+        let r = 0, g = 0, b = 0;
+        if (l < 440) { r = (440 - l) / 60; b = 1; } else if (l < 490) { g = (l - 440) / 50; b = 1; } else if (l < 510) { g = 1; b = (510 - l) / 20; }
+        else if (l < 580) { r = (l - 510) / 70; g = 1; } else if (l < 645) { r = 1; g = (645 - l) / 65; } else r = 1;
+        const f = l > 690 ? 0.35 + 0.65 * (730 - l) / 40 : l < 420 ? 0.4 + 0.6 * (l - 380) / 40 : 1;
+        return [r, g, b].map(v => 255 * Math.pow(v * f, 0.8));
+    }
+
+    let field = null;   // current field of view
+    function computeField() {
+        if (state.mode === 'laurent') {
+            const h = laurent(state.R);
+            field = { L: naRGB(h.left), R: naRGB(h.right), IL: h.left, IR: h.right };
+        } else {
+            const h = biquartz(state.R);
+            field = { L: whiteRGB(h.sL), R: whiteRGB(h.sR), IL: h.YL, IR: h.YR, dE: h.dE, TL: h.TL, TR: h.TR };
+        }
+    }
+
+    // ------------------------------------------------------------------ scale reading
+    /* Vernier reading of the scale: nearest 0.1° (the vernier line that coincides best). */
+    function readingOf(R) {
+        let total = Math.round(norm360(R) * 10) / 10;
+        if (total >= 360) total -= 360;
+        const ms = Math.floor(total + 1e-9), vs = Math.round((total - ms) * 10);
+        return { ms, vs, total: Math.round((ms + vs * LC) * 10) / 10 };
+    }
+    const fmtR = (rd) => rd.total.toFixed(1);
+
+    // ------------------------------------------------------------------ bench (SVG)
+    const Y = 196;
+    const tubeSpan = () => { const L = 150 * state.len; return [440 - L / 2, 440 + L / 2]; };
+    function dbl(cx, cy, len, ang, col, w, o) {
+        o = o || {};
+        const a = ang * D2R, ux = Math.sin(a), uy = -Math.cos(a);
+        const x1 = cx - ux * len, y1 = cy - uy * len, x2 = cx + ux * len, y2 = cy + uy * len;
+        let s = '<line x1="' + f2(x1) + '" y1="' + f2(y1) + '" x2="' + f2(x2) + '" y2="' + f2(y2) + '" stroke="' + col + '" stroke-width="' + (w || 2) + '"' +
+            (o.dash ? ' stroke-dasharray="' + o.dash + '"' : '') + (o.op ? ' opacity="' + o.op + '"' : '') + '/>';
+        if (!o.noHead) {
+            const head = (x, y, dx, dy) => {
+                const h = o.h || 6, hw = (o.h || 6) * 0.55, bx = x - dx * h, by = y - dy * h;
+                return '<polygon points="' + f2(x) + ',' + f2(y) + ' ' + f2(bx - dy * hw) + ',' + f2(by + dx * hw) + ' ' + f2(bx + dy * hw) + ',' + f2(by - dx * hw) + '" fill="' + col + '" stroke="none"' + (o.op ? ' opacity="' + o.op + '"' : '') + '/>';
+            };
+            s += head(x2, y2, ux, uy) + head(x1, y1, -ux, -uy);
+        }
+        return s;
+    }
+    const COL = { P: '#00897B', Q: '#E67700', A: '#1F2A44', Y: '#D4A000', W: '#5A6478' };
+    function planesMarkup(cx, cy, len, rot, opts) {
+        opts = opts || {};
+        if (state.mode === 'laurent') return dbl(cx, cy, len, DELTA + rot, COL.P, 2, opts) + dbl(cx, cy, len, -DELTA + rot, COL.Q, 2, opts);
+        return dbl(cx, cy, len, 90 + rot, COL.Y, 2.4, opts);
+    }
+    function insetFrame(cx, cy, label) {
+        return '<circle cx="' + cx + '" cy="' + cy + '" r="27" fill="#fff" stroke="#9AA3B8" stroke-width="1.2"/>' +
+            '<line x1="' + cx + '" y1="' + (cy - 27) + '" x2="' + cx + '" y2="' + (cy + 27) + '" stroke="#D5D9E6" stroke-width="1" stroke-dasharray="3 3"/>' +
+            S.text(cx, cy - 38, label, { size: 11, cls: 'soft' });
+    }
+    function leader(x1, y1, x2, y2) { return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" stroke="#B8BED0" stroke-width="1" stroke-dasharray="2 4"/>'; }
+
+    function benchMarkup() {
+        const bq = state.mode === 'biquartz', ex = state.exag ? 5 : 1, th = theta() * ex;
+        const [tx0, tx1] = tubeSpan(), tl = tx1 - tx0, mid = (tx0 + tx1) / 2;
+        const conc = state.conc / 8;
+        const tint = 'rgb(' + Math.round(220 + 26 * conc) + ',' + Math.round(238 - 10 * conc) + ',' + Math.round(250 - 80 * conc) + ')';
+        const phiRel = (state.R - ZERO) * ex;                          // analyser angle relative to its water-match setting
+        const aAng = (bq ? 0 : 90) + phiRel;
+        let s = '';
+        s += S.text(8, 50, 'end-on', { size: 11, anchor: 'start', cls: 'soft' }) + S.text(8, 64, 'views ' + (ex > 1 ? '(×5)' : ''), { size: 11, anchor: 'start', cls: 'soft' });
+        // beam
+        s += '<line x1="58" y1="' + Y + '" x2="812" y2="' + Y + '" stroke="' + (bq ? '#B39DDB' : '#F2B300') + '" stroke-width="5" stroke-linecap="round" opacity="0.5"/>';
+        s += '<line id="beam-flow" x1="58" y1="' + Y + '" x2="812" y2="' + Y + '" stroke="#fff" stroke-width="2.4" stroke-dasharray="3 15" stroke-linecap="round"/>';
+        // lamp
+        if (bq) {
+            s += '<circle cx="42" cy="' + (Y - 4) + '" r="22" fill="rgba(255,248,225,0.9)" stroke="none"/><circle cx="42" cy="' + (Y - 4) + '" r="14" fill="#FFFDF5" stroke="#8D8D8D" stroke-width="1.5"/>' +
+                '<path d="M36,' + (Y - 2) + ' l3,-7 l3,7 l3,-7 l3,7" stroke="#E65100" stroke-width="1.3" fill="none"/>' +
+                '<rect x="35" y="' + (Y + 10) + '" width="14" height="12" rx="2" fill="#9E9E9E" stroke="#616161" stroke-width="1"/>';
+        } else {
+            s += '<rect x="20" y="' + (Y - 30) + '" width="44" height="60" rx="7" fill="#5D6470" stroke="#3E434C" stroke-width="1.5"/>' +
+                '<circle cx="42" cy="' + Y + '" r="19" fill="rgba(255,193,7,0.35)" stroke="none"/><circle cx="42" cy="' + Y + '" r="11" fill="#FFC107" stroke="#FF8F00" stroke-width="1.5"/>';
+        }
+        // lens
+        s += '<path d="M110,164 Q125,196 110,228 Q95,196 110,164 Z" fill="#E1F5FE" stroke="#4FA3C7" stroke-width="1.6"/>';
+        // polariser N1
+        s += '<polygon points="160,168 186,168 198,224 172,224" fill="#B2DFDB" stroke="#00796B" stroke-width="1.6"/><line x1="160" y1="168" x2="198" y2="224" stroke="#00796B" stroke-width="1.2"/>';
+        // half-shade device
+        const hL = bq ? '#FFE0B2' : '#E1BEE7', hR = bq ? '#D1C4E9' : '#E3F2FD';
+        s += '<path d="M250,166 A10,30 0 0 0 250,226 Z" fill="' + hL + '" stroke="#555" stroke-width="1.3"/><path d="M250,166 A10,30 0 0 1 250,226 Z" fill="' + hR + '" stroke="#555" stroke-width="1.3"/>';
+        // tube with solution
+        s += '<path d="M' + (mid - 16) + ',178 C' + (mid - 12) + ',160 ' + (mid + 12) + ',160 ' + (mid + 16) + ',178 Z" fill="' + tint + '" stroke="#607D8B" stroke-width="1.5"/>';
+        s += '<rect x="' + tx0 + '" y="178" width="' + tl + '" height="36" rx="5" fill="' + tint + '" stroke="#607D8B" stroke-width="1.5"/>';
+        s += '<rect x="' + (tx0 - 6) + '" y="173" width="10" height="46" rx="2" fill="#90A4AE" stroke="#546E7A" stroke-width="1"/><rect x="' + (tx1 - 4) + '" y="173" width="10" height="46" rx="2" fill="#90A4AE" stroke="#546E7A" stroke-width="1"/>';
+        s += '<circle id="live-dot" cx="' + tx0 + '" cy="' + Y + '" r="4.5" fill="' + (bq ? '#7E57C2' : '#E65100') + '" stroke="#fff" stroke-width="1.2"/>';
+        // analyser N2 with circular scale
+        s += '<polygon points="656,168 682,168 694,224 668,224" fill="#B2DFDB" stroke="#00796B" stroke-width="1.6"/><line x1="656" y1="168" x2="694" y2="224" stroke="#00796B" stroke-width="1.2"/>';
+        s += '<ellipse cx="675" cy="' + Y + '" rx="13" ry="40" fill="none" stroke="#455A64" stroke-width="3"/>';
+        for (let k = -3; k <= 3; k++) { const yy = Y + k * 10, xx = 675 - 13 * Math.sqrt(1 - Math.pow((yy - Y) / 40, 2)); s += '<line x1="' + f2(xx) + '" y1="' + yy + '" x2="' + f2(xx + 5) + '" y2="' + yy + '" stroke="#455A64" stroke-width="1"/>'; }
+        // eyepiece + eye
+        s += '<rect x="716" y="186" width="70" height="20" rx="3" fill="#CFD8DC" stroke="#546E7A" stroke-width="1.4"/><ellipse cx="786" cy="' + Y + '" rx="3" ry="12" fill="#E1F5FE" stroke="#4FA3C7" stroke-width="1.2"/>';
+        s += '<path d="M815,196 Q836,176 857,196 Q836,216 815,196 Z" fill="#fff" stroke="#455A64" stroke-width="1.5"/><circle cx="826" cy="196" r="7" fill="#6D4C41"/><circle cx="825" cy="196" r="3.2" fill="#111"/>';
+        // labels
+        const lab1 = [[42, 'S'], [110, 'L'], [179, 'N_1'], [250, 'H'], [mid, 'T'], [675, 'N_2'], [751, 'E']];
+        lab1.forEach(([x, t]) => { s += S.text(x, 244, t, { size: 14, weight: 800 }); });
+        const lab2 = [[42, bq ? 'white lamp' : 'Na lamp', 262], [110, 'lens', 280], [179, 'polariser', 262], [250, bq ? 'biquartz' : 'Laurent plate', 280],
+            [mid, 'l = ' + state.len + ' dm · ' + (state.conc ? state.conc + ' % sugar' : 'water'), 262], [675, 'analyser + scale', 280], [751, 'eyepiece', 262]];
+        lab2.forEach(([x, t, y]) => { s += S.text(x, y, t, { size: 12, cls: 'soft' }); });
+
+        // end-on insets (as seen by the eye looking towards the lamp)
+        const cy = 62;
+        s += leader(179, 89, 179, 164) + leader(250, 89, 250, 164) + leader(440, 89, 440, 176) + leader(tx1 - 10, 89, tx1 - 10, 176) + leader(675, 89, 675, 154) + leader(836, 89, 836, 178);
+        s += insetFrame(179, cy, 'after N_1') + (bq ? dbl(179, cy, 22, 0, COL.W, 2) : dbl(179, cy, 22, DELTA, COL.P, 2));
+        s += insetFrame(250, cy, 'after H') + planesMarkup(250, cy, 22, 0);
+        s += insetFrame(440, cy, 'inside T') + '<g id="live-g">' + planesMarkup(440, cy, 22, 0) + '</g>';
+        s += insetFrame(tx1 - 10, cy, 'leaving T') + (th ? planesMarkup(tx1 - 10, cy, 22, 0, { dash: '2 3', op: 0.35, noHead: true }) : '') + planesMarkup(tx1 - 10, cy, 22, th);
+        s += insetFrame(675, cy, 'analyser N_2') + planesMarkup(675, cy, 18, th, { op: 0.5, h: 5 }) + dbl(675, cy, 26, aAng, COL.A, 1.6, { dash: '5 3', noHead: true });
+        s += S.text(675 + 31 * Math.sin(aAng * D2R), cy - 31 * Math.cos(aAng * D2R), 'A', { size: 10, weight: 800 });
+        // field-of-view inset
+        s += insetFrame(836, cy, 'field of view');
+        s += '<path d="M836,' + (cy - 26) + ' A26,26 0 0 0 836,' + (cy + 26) + ' Z" fill="' + rgbStr(field.L) + '"/><path d="M836,' + (cy - 26) + ' A26,26 0 0 1 836,' + (cy + 26) + ' Z" fill="' + rgbStr(field.R) + '"/>';
+        s += '<circle cx="836" cy="' + cy + '" r="27" fill="none" stroke="#37474F" stroke-width="2.5"/>';
+        return s;
+    }
+    function renderBench() { $('bench').innerHTML = benchMarkup(); }
+
+    // ------------------------------------------------------------------ canvases
+    const fov = MSC.canvas($('fov'), 300, 300);
+    const vib = MSC.canvas($('vib'), 300, 300);
+    const dial = MSC.canvas($('dial'), 300, 300);
+    const lens = MSC.canvas($('lens'), 600, 170);
+    const graph = MSC.canvas($('graph'), 520, 330);
+
+    function drawFOV() {
+        const { ctx } = fov; fov.begin();
+        ctx.fillStyle = '#161A22'; ctx.fillRect(0, 0, 300, 300);
+        const cx = 150, cy = 144, r = 118;
+        ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.clip();
+        ctx.fillStyle = rgbStr(field.L); ctx.fillRect(cx - r, cy - r, r, 2 * r);
+        ctx.fillStyle = rgbStr(field.R); ctx.fillRect(cx, cy - r, r + 1, 2 * r);
+        const g = ctx.createRadialGradient(cx, cy, r * 0.5, cx, cy, r);
+        g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.38)');
+        ctx.fillStyle = g; ctx.fillRect(cx - r, cy - r, 2 * r, 2 * r);
+        ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 1.3;
+        ctx.beginPath(); ctx.moveTo(cx, cy - r); ctx.lineTo(cx, cy + r); ctx.stroke();
+        ctx.restore();
+        ctx.strokeStyle = '#3A4150'; ctx.lineWidth = 7; ctx.beginPath(); ctx.arc(cx, cy, r + 3.5, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = '#AEB6C6'; ctx.font = '700 12px Nunito, sans-serif'; ctx.textBaseline = 'middle';
+        ctx.textAlign = 'left'; ctx.fillText(state.mode === 'laurent' ? 'quartz (OQ)' : 'L-quartz', 10, 287);
+        ctx.textAlign = 'right'; ctx.fillText(state.mode === 'laurent' ? 'glass (OP)' : 'R-quartz', 290, 287);
+    }
+
+    function arrowC(ctx, cx, cy, len, ang, col, w, dashed, head) {
+        const a = ang * D2R, ux = Math.sin(a), uy = -Math.cos(a);
+        ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = w || 2;
+        ctx.setLineDash(dashed ? [6, 4] : []);
+        ctx.beginPath(); ctx.moveTo(cx - ux * len, cy - uy * len); ctx.lineTo(cx + ux * len, cy + uy * len); ctx.stroke();
+        ctx.setLineDash([]);
+        if (head !== false) {
+            [[1, 1], [-1, -1]].forEach(([sg]) => {
+                const tx = cx + sg * ux * len, ty = cy + sg * uy * len, dx = sg * ux, dy = sg * uy, h = 8, hw = 4.4;
+                ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(tx - dx * h - dy * hw, ty - dy * h + dx * hw); ctx.lineTo(tx - dx * h + dy * hw, ty - dy * h - dx * hw); ctx.closePath(); ctx.fill();
+            });
+        }
+    }
+    function drawVib() {
+        const { ctx } = vib; vib.begin();
+        ctx.fillStyle = '#FBFAFF'; ctx.fillRect(0, 0, 300, 300);
+        const th = theta(), phi = analyserAngle(state.R);
+        ctx.font = '700 12px Nunito, sans-serif'; ctx.textBaseline = 'middle';
+        if (state.mode === 'laurent') {
+            const cx = 150, cy = 136, r = 108;
+            ctx.strokeStyle = '#E0E3EE'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+            ctx.setLineDash([3, 4]); ctx.beginPath(); ctx.moveTo(cx, cy - r); ctx.lineTo(cx, cy + r); ctx.stroke(); ctx.setLineDash([]);
+            ctx.fillStyle = '#8A93A8'; ctx.textAlign = 'center'; ctx.fillText('line of junction', cx, cy + r + 12);
+            if (th > 0.01) { arrowC(ctx, cx, cy, r - 6, DELTA, 'rgba(0,137,123,0.25)', 1.5, true, false); arrowC(ctx, cx, cy, r - 6, -DELTA, 'rgba(230,119,0,0.25)', 1.5, true, false); }
+            arrowC(ctx, cx, cy, r - 6, th + DELTA, COL.P, 2.4);
+            arrowC(ctx, cx, cy, r - 6, th - DELTA, COL.Q, 2.4);
+            const lbl = (ang, t, col, rr) => { const a = ang * D2R; ctx.fillStyle = col; ctx.textAlign = 'center'; ctx.fillText(t, cx + Math.sin(a) * rr, cy - Math.cos(a) * rr); };
+            lbl(th + DELTA + 7, 'P', COL.P, r + 4); lbl(th - DELTA - 7, 'Q', COL.Q, r + 4);
+            // analyser principal section and the components along it
+            arrowC(ctx, cx, cy, r + 8, phi, COL.A, 1.6, true, false);
+            lbl(phi + 5, 'A', COL.A, r + 12);
+            const a = phi * D2R, ux = Math.sin(a), uy = -Math.cos(a);
+            [[th + DELTA, COL.P], [th - DELTA, COL.Q]].forEach(([pl, col]) => {
+                const amp = Math.cos((phi - pl) * D2R) * (r - 6);
+                const pa = pl * D2R, px = cx + Math.sin(pa) * (r - 6), py = cy - Math.cos(pa) * (r - 6);
+                const fx = cx + ux * amp, fy = cy + uy * amp;
+                ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.setLineDash([2, 3]);
+                ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(fx, fy); ctx.stroke(); ctx.setLineDash([]);
+                ctx.lineWidth = 5; ctx.globalAlpha = 0.75; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(fx, fy); ctx.stroke(); ctx.globalAlpha = 1;
+            });
+            ctx.fillStyle = COL.A; ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI * 2); ctx.fill();
+            ctx.textAlign = 'left'; ctx.fillStyle = '#5F5F6E'; ctx.font = '700 11px Nunito, sans-serif';
+            ctx.fillText('thick = component along A', 6, 290);
+        } else {
+            const fans = [[78, 'L-quartz half', -1], [222, 'R-quartz half', 1]];
+            const sample = [460, 500, 560, 610, 670];
+            fans.forEach(([cx, name, sg]) => {
+                const cy = 78, r = 58;
+                ctx.strokeStyle = '#E0E3EE'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+                sample.forEach(l => {
+                    const c = lamRGB(l);
+                    arrowC(ctx, cx, cy, r - 4, sg * rhoQ(l) + thetaL(th, l), rgbStr(c), l === 560 ? 2.6 : 1.6, false, false);
+                });
+                arrowC(ctx, cx, cy, r + 4, phi, COL.A, 1.4, true, false);
+                ctx.fillStyle = '#5F5F6E'; ctx.textAlign = 'center'; ctx.fillText(name, cx, cy + r + 13);
+            });
+            // transmitted spectra
+            const strip = (y0, T, name) => {
+                const x0 = 34, w = 256, bw = w / LAMS.length;
+                ctx.fillStyle = '#5F5F6E'; ctx.textAlign = 'left'; ctx.font = '700 11px Nunito, sans-serif'; ctx.fillText(name, 4, y0 - 36);
+                ctx.strokeStyle = '#C5CAE0'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0 + w, y0); ctx.stroke();
+                LAMS.forEach((l, i) => { ctx.fillStyle = rgbStr(lamRGB(l)); const h = 28 * T[i]; ctx.fillRect(x0 + i * bw + 0.5, y0 - h, bw - 1, h); });
+            };
+            strip(206, field.TL, 'L half — light passing N₂');
+            strip(262, field.TR, 'R half — light passing N₂');
+            ctx.fillStyle = '#8A93A8'; ctx.textAlign = 'left'; ctx.fillText('400', 30, 274); ctx.textAlign = 'right'; ctx.fillText('720 nm', 292, 274);
+            ctx.textAlign = 'center'; ctx.fillStyle = '#5F5F6E'; ctx.fillText('dashed = analyser N₂', 150, 291);
+        }
+    }
+
+    function drawDial() {
+        const { ctx } = dial; dial.begin();
+        ctx.fillStyle = '#FBFAFF'; ctx.fillRect(0, 0, 300, 300);
+        const cx = 150, cy = 150, R0 = 134;
+        ctx.fillStyle = '#fff'; ctx.strokeStyle = '#455A64'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(cx, cy, R0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        for (let d = 0; d < 360; d++) {
+            const a = d * D2R, len = d % 10 === 0 ? 13 : d % 5 === 0 ? 9 : 5;
+            ctx.strokeStyle = '#455A64'; ctx.lineWidth = d % 10 === 0 ? 1.4 : 0.7;
+            ctx.beginPath(); ctx.moveTo(cx + Math.sin(a) * R0, cy - Math.cos(a) * R0); ctx.lineTo(cx + Math.sin(a) * (R0 - len), cy - Math.cos(a) * (R0 - len)); ctx.stroke();
+        }
+        ctx.fillStyle = '#1F2A44'; ctx.font = '800 11px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        for (let d = 0; d < 360; d += 30) { const a = d * D2R; ctx.fillText(String(d), cx + Math.sin(a) * (R0 - 24), cy - Math.cos(a) * (R0 - 24)); }
+        // rotating analyser disc + arm
+        const a = norm360(state.R) * D2R, ux = Math.sin(a), uy = -Math.cos(a);
+        ctx.fillStyle = 'rgba(0,137,123,0.08)'; ctx.strokeStyle = 'rgba(0,137,123,0.5)'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(cx, cy, 92, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle = '#00897B'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(cx - ux * 40, cy - uy * 40); ctx.lineTo(cx + ux * (R0 - 2), cy + uy * (R0 - 2)); ctx.stroke(); ctx.lineCap = 'butt';
+        ctx.fillStyle = '#E53935'; ctx.beginPath(); ctx.moveTo(cx + ux * R0, cy + uy * R0); ctx.lineTo(cx + ux * (R0 - 12) - uy * 5, cy + uy * (R0 - 12) + ux * 5); ctx.lineTo(cx + ux * (R0 - 12) + uy * 5, cy + uy * (R0 - 12) - ux * 5); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#00897B'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(cx + ux * 78, cy + uy * 78, 14, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy, 30, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#B0BEC5'; ctx.lineWidth = 1; ctx.stroke();
+        ctx.fillStyle = '#1F2A44'; ctx.font = '800 14px ui-monospace, Menlo, monospace';
+        ctx.fillText(state.hide ? '?' : fmtR(readingOf(state.R)) + '°', cx, cy);
+    }
+
+    function drawLens() {
+        const { ctx } = lens; lens.begin();
+        const W = 600, H = 170, PX = 40, X0 = 150, YM = 84;
+        ctx.fillStyle = '#FFFDF6'; ctx.fillRect(0, 0, W, H);
+        const R = norm360(state.R), rd = readingOf(R);
+        // main scale (moves)
+        ctx.fillStyle = '#F3EEDF'; ctx.fillRect(0, 18, W, YM - 18);
+        ctx.strokeStyle = '#1F2A44'; ctx.fillStyle = '#1F2A44'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+        const vmin = Math.floor(R - X0 / PX) - 1, vmax = Math.ceil(R + (W - X0) / PX) + 1;
+        for (let v = vmin; v <= vmax; v++) {
+            const x = X0 + (v - R) * PX, vv = norm360(v), len = vv % 10 === 0 ? 34 : vv % 5 === 0 ? 26 : 17;
+            ctx.lineWidth = vv % 5 === 0 ? 1.8 : 1.1;
+            ctx.beginPath(); ctx.moveTo(x, YM); ctx.lineTo(x, YM - len); ctx.stroke();
+            if (vv % 5 === 0) { ctx.font = (vv % 10 === 0 ? '800 14px' : '700 12px') + ' Nunito, sans-serif'; ctx.fillText(String(vv), x, YM - len - 5); }
+        }
+        ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(0, YM); ctx.lineTo(W, YM); ctx.stroke();
+        // vernier (fixed)
+        ctx.fillStyle = '#E4F2F0'; ctx.fillRect(X0 - 24, YM, 10 * 0.9 * PX + 48, 58);
+        let best = -1;
+        if (!state.hide) best = rd.vs;
+        for (let k = 0; k <= 10; k++) {
+            const x = X0 + k * 0.9 * PX, len = k % 5 === 0 ? 30 : 20;
+            ctx.strokeStyle = k === best ? '#E53935' : '#00695C'; ctx.lineWidth = k === best ? 2.6 : (k % 5 === 0 ? 1.8 : 1.2);
+            ctx.beginPath(); ctx.moveTo(x, YM); ctx.lineTo(x, YM + len); ctx.stroke();
+            ctx.fillStyle = k === best ? '#E53935' : '#00695C'; ctx.font = (k % 5 === 0 ? '800 13px' : '700 11px') + ' Nunito, sans-serif';
+            ctx.fillText(String(k), x, YM + len + 13);
+        }
+        if (best >= 0 && best < 10) {
+            // mark the coinciding main-scale line too
+            const xm = X0 + best * 0.9 * PX;
+            ctx.strokeStyle = 'rgba(229,57,53,0.5)'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(xm, YM - 8); ctx.lineTo(xm, YM + 8); ctx.stroke();
+        }
+        // index
+        ctx.fillStyle = '#E53935'; ctx.beginPath(); ctx.moveTo(X0, YM + 2); ctx.lineTo(X0 - 6, YM + 12); ctx.lineTo(X0 + 6, YM + 12); ctx.closePath(); ctx.fill();
+        ctx.textAlign = 'left'; ctx.font = '800 11px Nunito, sans-serif'; ctx.fillStyle = '#5F5F6E';
+        ctx.fillText('MAIN SCALE (degree)', 8, 13);
+        ctx.fillText('VERNIER  10 VSD = 9 MSD', 8, H - 6);
+        // lens vignette
+        const g = ctx.createRadialGradient(W / 2, H / 2, H * 0.4, W / 2, H / 2, W * 0.62);
+        g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(60,50,20,0.22)');
+        ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    }
+
+    // ------------------------------------------------------------------ data: tables, graph, calc
+    const rowFor = (pct) => state.rows[pct] || (state.rows[pct] = { a: null, b: null });
+    function thetasOf(pct) {
+        const r = state.rows[pct], w = state.water;
+        if (!r) return null;
+        const t1 = r.a && w.a ? diff180(r.a.total - w.a.total) : null;
+        const t2 = r.b && w.b ? diff180(r.b.total - w.b.total) : null;
+        if (t1 === null && t2 === null) return null;
+        const mean = t1 !== null && t2 !== null ? (t1 + t2) / 2 : (t1 !== null ? t1 : t2);
+        return { t1, t2, mean };
+    }
+    function points() {
+        return CONCS.map(p => ({ pct: p, c: gcc(p), th: thetasOf(p) })).filter(p => p.th).map(p => ({ pct: p.pct, c: p.c, th: p.th.mean }));
+    }
+    function fit(pts) {
+        if (!pts.length) return null;
+        const sxy = pts.reduce((a, p) => a + p.c * p.th, 0), sxx = pts.reduce((a, p) => a + p.c * p.c, 0);
+        const m = sxy / sxx;
+        return { m, S: m / state.len };
+    }
+    const cellR = (rd, blank) => rd ? [String(rd.ms), String(rd.vs), { t: rd.total.toFixed(1), cls: 'mono' }] : [blank, blank, blank].map(t => ({ t, cls: 'empty' }));
+    function waterTable(forRecord) {
+        const bl = forRecord ? '' : '—', w = state.water;
+        return MSC.table([[{ t: 'First position, a_0', colspan: 3 }, { t: 'Second position, b_0', colspan: 3 }], ['M.S. (°)', 'V.S. (div)', 'Total reading (°)', 'M.S. (°)', 'V.S. (div)', 'Total reading (°)']],
+            [cellR(w.a, bl).concat(cellR(w.b, bl))], { highlight: forRecord || state.conc !== 0 ? -1 : 0 });
+    }
+    function thetaTable(forRecord) {
+        const bl = forRecord ? '' : '—';
+        let list = CONCS.slice();
+        if (forRecord) {
+            list = CONCS.filter(p => state.rows[p] && (state.rows[p].a || state.rows[p].b));
+        }
+        const rows = list.map((p, i) => {
+            const r = state.rows[p] || {}, th = thetasOf(p);
+            const fmt = (v, dp) => (v === null || v === undefined ? { t: bl, cls: 'empty' } : { t: v.toFixed(dp), cls: 'mono' });
+            return [String(i + 1), String(p), String(gcc(p))].concat(cellR(r.a, bl), cellR(r.b, bl),
+                [fmt(th && th.t1, 1), fmt(th && th.t2, 1), fmt(th && th.mean, 2)]);
+        });
+        if (forRecord) for (let i = rows.length; i < 3; i++) rows.push([String(i + 1)].concat(Array(11).fill('')));
+        const hl = forRecord ? -1 : list.indexOf(state.conc);
+        return MSC.table([
+            [{ t: 'Sr. No.', rowspan: 3 }, { t: 'Strength of sugar solution, C', colspan: 2, rowspan: 2 }, { t: 'Scale reading with sugar solution (°)', colspan: 6 }, { t: 'Rotation, θ (degree)', colspan: 2 }, { t: 'Mean θ (degree)', rowspan: 3 }],
+            [{ t: 'First position, a_1', colspan: 3 }, { t: 'Second position, b_1', colspan: 3 }, { t: 'θ_1 = a_1 − a_0', rowspan: 2 }, { t: 'θ_2 = b_1 − b_0', rowspan: 2 }],
+            ['(%)', 'g/cc', 'M.S.', 'V.S.', 'Total', 'M.S.', 'V.S.', 'Total'],
+        ], rows, { highlight: hl });
+    }
+    function obsHTML(forRecord) {
+        return '<div class="tbl-cap">Table 1 — Scale reading with water</div>' + waterTable(forRecord) +
+            '<div class="tbl-cap">Table 2 — Measurement of θ (tube length l = ' + state.len + ' dm)</div>' + thetaTable(forRecord) +
+            '<p class="small-note">Total reading = M.S. + (V.S. × L.C.), L.C. = 0.1°. The two positions are about 180° apart; each gives its own θ.</p>';
+    }
+
+    function calcHTML(forRecord) {
+        const pts = points(), F = fit(pts), l = state.len;
+        if (!pts.length) {
+            return '<p>' + (forRecord ? 'Specific rotation, S = θ / (l C) = ______ deg dm<sup>−1</sup> (g/cc)<sup>−1</sup>' :
+                'Record the water readings (a<sub>0</sub>, b<sub>0</sub>) and at least one sugar solution (a<sub>1</sub>, b<sub>1</sub>) — the worked calculation appears here.') + '</p>';
+        }
+        let s = '<p class="calc-line">Using S = θ / (l C) with l = ' + l + ' dm:</p>';
+        pts.forEach(p => { s += '<p class="calc-line">C = ' + p.c + ' g/cc: &nbsp; S = ' + p.th.toFixed(2) + ' / (' + l + ' × ' + p.c + ') = <b>' + (p.th / (l * p.c)).toFixed(1) + '</b></p>'; });
+        const mean = pts.reduce((a, p) => a + p.th / (l * p.c), 0) / pts.length;
+        s += '<p class="calc-line">Mean of the ' + pts.length + ' value' + (pts.length > 1 ? 's' : '') + ': S = <b>' + mean.toFixed(1) + '</b> deg dm<sup>−1</sup> (g/cc)<sup>−1</sup></p>';
+        if (pts.length >= 2) {
+            s += '<p class="calc-line">From the graph: slope θ/C = Σ(θC) / Σ(C²) = <b>' + F.m.toFixed(1) + '</b> degree per g/cc</p>';
+            s += '<p class="calc-line">S = slope / l = ' + F.m.toFixed(1) + ' / ' + l + ' = <b>' + F.S.toFixed(1) + '</b> deg dm<sup>−1</sup> (g/cc)<sup>−1</sup></p>';
+        }
+        const Sres = pts.length >= 2 ? F.S : mean;
+        s += '<p class="calc-line">Standard value ≈ ' + S_SUGAR + ' (yellow light, room temperature): difference = ' + (Math.abs(Sres - S_SUGAR) / S_SUGAR * 100).toFixed(1) + ' %</p>';
+        return s;
+    }
+    function resultS() { const pts = points(); if (!pts.length) return null; return pts.length >= 2 ? fit(pts).S : pts[0].th / (state.len * pts[0].c); }
+
+    function drawGraph() {
+        const { ctx } = graph; graph.begin();
+        const W = 520, H = 330, x0 = 64, y0 = 282, w = 425, h = 240;
+        ctx.fillStyle = '#FBFAFF'; ctx.fillRect(0, 0, W, H);
+        const pts = points(), F = fit(pts);
+        const cmax = 0.09, tmax = Math.max(thetaOf(8, state.len) * 1.15, ...pts.map(p => p.th * 1.15), 1);
+        const step = tmax > 20 ? 5 : tmax > 8 ? 2 : 1;
+        const X = (c) => x0 + c / cmax * w, Yp = (t) => y0 - t / tmax * h;
+        ctx.strokeStyle = 'rgba(0,0,0,0.07)'; ctx.lineWidth = 1;
+        for (let c = 0; c <= cmax + 1e-9; c += 0.01) { ctx.beginPath(); ctx.moveTo(X(c), y0); ctx.lineTo(X(c), y0 - h); ctx.stroke(); }
+        for (let t = 0; t <= tmax + 1e-9; t += step) { ctx.beginPath(); ctx.moveTo(x0, Yp(t)); ctx.lineTo(x0 + w, Yp(t)); ctx.stroke(); }
+        ctx.strokeStyle = '#1F2A44'; ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.moveTo(x0, y0 - h - 8); ctx.lineTo(x0, y0); ctx.lineTo(x0 + w + 10, y0); ctx.stroke();
+        ctx.fillStyle = '#1F2A44'; ctx.font = '700 11px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        for (let c = 0; c <= cmax + 1e-9; c += 0.02) ctx.fillText(c.toFixed(2), X(c), y0 + 5);
+        ctx.fillText('Concentration C (g/cc)', x0 + w / 2, y0 + 22);
+        ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+        for (let t = 0; t <= tmax + 1e-9; t += step) ctx.fillText(String(t), x0 - 6, Yp(t));
+        ctx.save(); ctx.translate(16, y0 - h / 2); ctx.rotate(-Math.PI / 2); ctx.textAlign = 'center'; ctx.fillText('Rotation θ (degree)', 0, 0); ctx.restore();
+        // expected line (faint)
+        ctx.strokeStyle = 'rgba(0,137,123,0.25)'; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.moveTo(X(0), Yp(0)); ctx.lineTo(X(cmax), Yp(thetaOf(9, state.len))); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle = 'rgba(0,137,123,0.55)'; ctx.textAlign = 'right'; ctx.font = '700 10px Nunito, sans-serif';
+        ctx.fillText('S = 66.5 (standard)', X(cmax) - 4, Yp(thetaOf(9, state.len)) + 12);
+        if (F && pts.length >= 2) {
+            ctx.strokeStyle = '#00897B'; ctx.lineWidth = 2.6;
+            ctx.beginPath(); ctx.moveTo(X(0), Yp(0)); ctx.lineTo(X(cmax), Yp(F.m * cmax)); ctx.stroke();
+            const c1 = 0.03, c2 = 0.07;
+            ctx.strokeStyle = '#E67700'; ctx.lineWidth = 1.4; ctx.setLineDash([4, 3]);
+            ctx.beginPath(); ctx.moveTo(X(c1), Yp(F.m * c1)); ctx.lineTo(X(c2), Yp(F.m * c1)); ctx.lineTo(X(c2), Yp(F.m * c2)); ctx.stroke(); ctx.setLineDash([]);
+            ctx.fillStyle = '#E67700'; ctx.font = '800 11px Nunito, sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText('ΔC', X((c1 + c2) / 2), Yp(F.m * c1) + 10);
+            ctx.textAlign = 'left'; ctx.fillText('Δθ', X(c2) + 5, Yp(F.m * (c1 + c2) / 2));
+            ctx.fillStyle = '#1F2A44'; ctx.font = '800 12px Nunito, sans-serif';
+            ctx.fillText('slope θ/C = ' + F.m.toFixed(1) + ' °/(g/cc)', x0 + 10, y0 - h + 6);
+            ctx.fillText('S = slope / l = ' + F.S.toFixed(1), x0 + 10, y0 - h + 24);
+        }
+        pts.forEach(p => {
+            ctx.fillStyle = '#E53935'; ctx.beginPath(); ctx.arc(X(p.c), Yp(p.th), 5, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.stroke();
+        });
+        if (!pts.length) { ctx.fillStyle = '#8A93A8'; ctx.font = '700 13px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('Points appear as you record the sugar solutions', x0 + w / 2, y0 - h / 2); }
+    }
+
+    /* Hand-drawn style graph of the student's data for the record sheet. */
+    function recGraphSVG() {
+        const pts = points(), F = fit(pts);
+        if (pts.length < 2) return null;
+        const x0 = 90, y0 = 330, gw = 470, gh = 270, cmax = 0.09, tmax = Math.ceil(Math.max(...pts.map(p => p.th)) * 1.2 / 2) * 2;
+        const X = (c) => x0 + c / cmax * gw, Yv = (t) => y0 - t / tmax * gh;
+        let s = S.axes(x0, y0, gw + 30, gh + 30, { xlabel: 'C (g/cc) →', ylabel: 'θ (degree)' });
+        for (let c = 0.01; c <= cmax + 1e-9; c += 0.01) { s += S.line(X(c), y0, X(c), y0 + 5, 'thin'); if (Math.round(c * 100) % 2 === 0) s += S.text(X(c), y0 + 17, c.toFixed(2), { size: 11 }); }
+        const st = tmax > 12 ? 4 : 2;
+        for (let t = st; t <= tmax; t += st) s += S.line(x0 - 5, Yv(t), x0, Yv(t), 'thin') + S.text(x0 - 9, Yv(t), String(t), { size: 11, anchor: 'end' });
+        s += S.line(X(0), Yv(0), X(cmax), Yv(F.m * cmax), 'thick accent');
+        pts.forEach(p => { s += S.circle(X(p.c), Yv(p.th), 4.5) + S.line(X(p.c) - 4, Yv(p.th), X(p.c) + 4, Yv(p.th), 'thin') + S.line(X(p.c), Yv(p.th) - 4, X(p.c), Yv(p.th) + 4, 'thin'); });
+        const c1 = 0.03, c2 = 0.07;
+        s += S.wire([[X(c1), Yv(F.m * c1)], [X(c2), Yv(F.m * c1)], [X(c2), Yv(F.m * c2)]], 'dash thin');
+        s += S.text(X((c1 + c2) / 2), Yv(F.m * c1) + 14, 'ΔC = ' + (c2 - c1).toFixed(2), { size: 12 });
+        s += S.text(X(c2) + 8, Yv(F.m * (c1 + c2) / 2), 'Δθ = ' + (F.m * (c2 - c1)).toFixed(2) + '°', { size: 12, anchor: 'start' });
+        s += S.text(x0 + 14, y0 - gh + 4, 'slope θ/C = ' + F.m.toFixed(1) + ' °/(g/cc),  l = ' + state.len + ' dm', { size: 13, anchor: 'start' });
+        return '<svg class="pen" viewBox="0 0 640 380" xmlns="http://www.w3.org/2000/svg">' + s + '</svg><div class="rec-cap">Graph: rotation θ against concentration C (your readings)</div>';
+    }
+
+    function updateRecord() {
+        $('obs-rec').innerHTML = obsHTML(true);
+        $('rec-conds').innerHTML =
+            '<p>Light source: ' + (state.mode === 'laurent' ? 'sodium vapour lamp (λ = 589.3 nm) with Laurent\'s half-shade plate' : 'white light with biquartz') + '</p>' +
+            '<p>Mass of cane sugar, m = 8 g (made up to 100 ml → 8 % = 0.08 g/cc)</p>' +
+            '<p>Length of the polarimeter tube, l = ' + state.len + ' dm</p>' +
+            '<p>Least count of the circular scale = 1 MSD − 1 VSD = 1° − 0.9° = 0.1°</p>';
+        const g = recGraphSVG();
+        const slot = $('rec-graph');
+        if (g) slot.innerHTML = g;
+        else {
+            const svg = MSC.staticSVG('graph');
+            slot.innerHTML = '';
+            if (svg) { slot.appendChild(svg); slot.appendChild(MSC.el('div', { class: 'rec-cap' }, 'Model graph — θ against C (record at least two solutions to plot your own)')); }
+        }
+        $('rec-calc').innerHTML = calcHTML(true);
+        const Sr = resultS();
+        $('rec-result').innerHTML = 'The specific rotation of cane sugar at room temperature (' + (state.mode === 'laurent' ? 'sodium light' : 'white light, tint of passage') + ') is S = ' +
+            (Sr === null ? '______' : '<b>' + Sr.toFixed(1) + '</b>') + ' deg dm<sup>−1</sup> (g/cc)<sup>−1</sup>' +
+            (Sr === null ? '' : ' &nbsp;(standard value ≈ 66.5 deg dm<sup>−1</sup> (g/cc)<sup>−1</sup>)') + '.';
+    }
+
+    function updateData() {
+        $('obs-sim').innerHTML = obsHTML(false);
+        $('calc-sim').innerHTML = calcHTML(false);
+        graphDirty = true;
+        updateRecord();
+    }
+
+    // ------------------------------------------------------------------ view update
+    let dirty = true, graphDirty = true;
+    function updateView() {
+        computeField();
+        renderBench();
+        const rd = readingOf(state.R);
+        $('reading').innerHTML = state.hide
+            ? 'Read the scale in the lens: M.S.R = ?, V.S.C = ? &nbsp;<span style="color:var(--ink-soft)">(untick “Hide the reading” to check)</span>'
+            : 'M.S.R = <b>' + rd.ms + '°</b> <span>V.S.C = <b>' + rd.vs + '</b></span> <span>Reading = ' + rd.ms + ' + ' + rd.vs + ' × 0.1 = <b>' + fmtR(rd) + '°</b></span>';
+        const water = state.conc === 0;
+        $('rec-a').innerHTML = '<span>&#x1F4CC; Record first position ' + (water ? 'a<sub>0</sub>' : 'a<sub>1</sub>') + '</span>';
+        $('rec-b').innerHTML = '<span>&#x1F4CC; Record second position ' + (water ? 'b<sub>0</sub>' : 'b<sub>1</sub>') + '</span>';
+        const pb = $('photo-box');
+        pb.hidden = !state.photo;
+        if (state.photo) {
+            const L = field.IL, R = field.IR, mx = Math.max(L, R, 1e-6);
+            const row = (n, v) => '<div class="photo-row"><b>' + n + '</b><div class="photo-bar"><i style="width:' + (v / Math.max(mx, 0.02) * 100).toFixed(1) + '%"></i></div><span class="mono">' + (v * 100).toFixed(2) + ' %</span></div>';
+            pb.innerHTML = row(state.mode === 'laurent' ? 'Left (OQ)' : 'Left (L)', L) + row(state.mode === 'laurent' ? 'Right (OP)' : 'Right (R)', R) +
+                (state.mode === 'biquartz' ? '<div class="small-note">Colour difference between halves ΔE = <b>' + field.dE.toFixed(1) + '</b> (0 = identical tint). Brightness shown as luminance.</div>'
+                    : '<div class="small-note">Intensity of each half as a % of the light leaving N<sub>1</sub>.</div>');
+        }
+        dirty = true;
+    }
+    function hintText() {
+        if (state.mode === 'laurent') return '<span class="note-tag">Laurent plate</span>Set the analyser where the two halves are <b>equally dim</b>. Turning a fraction of a degree makes one half darker — the eye notices this at once. The halves are also equal when both are <b>bright</b> (90° away), but that setting is insensitive; do not use it.';
+        return '<span class="note-tag">Biquartz</span>Set the analyser where both halves show the same <b>grayish-violet tint of passage</b> (yellow cut off from both). A small turn makes one half reddish and the other bluish. For strong solutions the tints never match perfectly — sugar turns violet more than red (rotatory dispersion) — so choose the setting where they look most alike.';
+    }
+
+    function setR(v, snap) {
+        let r = norm360(v);
+        if (snap) r = norm360(Math.round(r * 10) / 10);
+        state.R = r;
+        updateView();
+    }
+
+    // ------------------------------------------------------------------ interaction
+    $('fine').addEventListener('click', e => { const b = e.target.closest('[data-d]'); if (b) setR(state.R + Number(b.dataset.d), true); });
+    (function dialDrag() {
+        const cv = $('dial');
+        let drag = null;
+        const ang = (e) => { const p = dial.pt(e); return Math.atan2(p.x - 150, -(p.y - 150)); };
+        cv.addEventListener('pointerdown', e => { drag = { a: ang(e) }; cv.setPointerCapture(e.pointerId); e.preventDefault(); });
+        cv.addEventListener('pointermove', e => {
+            if (!drag) return;
+            const a = ang(e); let da = a - drag.a;
+            if (da > Math.PI) da -= 2 * Math.PI; if (da < -Math.PI) da += 2 * Math.PI;
+            drag.a = a; setR(state.R + da / D2R);
+        });
+        const end = () => { drag = null; };
+        cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+        cv.addEventListener('keydown', e => {
+            const big = e.shiftKey ? 10 : 1;
+            if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { setR(state.R + 0.1 * big, true); e.preventDefault(); }
+            else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { setR(state.R - 0.1 * big, true); e.preventDefault(); }
+            else if (e.key === 'PageUp') { setR(state.R + 10, true); e.preventDefault(); }
+            else if (e.key === 'PageDown') { setR(state.R - 10, true); e.preventDefault(); }
+        });
+    })();
+    (function fovDrag() {
+        const cv = $('fov');
+        let drag = null;
+        cv.addEventListener('pointerdown', e => { drag = { x: fov.pt(e).x }; cv.setPointerCapture(e.pointerId); e.preventDefault(); });
+        cv.addEventListener('pointermove', e => { if (!drag) return; const x = fov.pt(e).x; setR(state.R + (x - drag.x) * 0.02); drag.x = x; });
+        const end = () => { drag = null; };
+        cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+    })();
+
+    function say(html, cls) { const m = $('msg'); m.className = 'msg' + (cls ? ' ' + cls : ''); m.innerHTML = html; }
+    function record(which) {
+        const rd = readingOf(state.R);
+        const water = state.conc === 0;
+        const name = (which === 'a' ? 'a' : 'b') + '<sub>' + (water ? 0 : 1) + '</sub>';
+        if (water) state.water[which] = rd; else rowFor(state.conc)[which] = rd;
+        // gentle feedback on the setting
+        const off = diff180(state.R - matchR());
+        let extra = '', cls = 'good';
+        if (Math.abs(Math.abs(off) - 90) < 8) { extra = ' — but both halves are <b>bright</b> here: this is the insensitive setting. Turn about 90° to the dim / violet match.'; cls = 'warn'; }
+        else if (Math.abs(off) > 1.2) { extra = ' — the halves do not look alike here; check the match before you move on.'; cls = 'warn'; }
+        const other = which === 'a' ? 'b' : 'a';
+        const pair = water ? state.water : rowFor(state.conc);
+        if (!extra && pair[other]) {
+            const d = Math.abs(norm360(pair.b.total - pair.a.total) - 180);
+            if (d > 3) { extra = ' — note: the second position should be about 180° from the first.'; cls = 'warn'; }
+        }
+        say('Recorded ' + (water ? 'water' : state.conc + ' % solution') + ': ' + name + ' = ' + rd.ms + ' + ' + rd.vs + ' × 0.1 = <b>' + fmtR(rd) + '°</b>' + extra, cls);
+        updateData();
+    }
+    $('rec-a').addEventListener('click', () => record('a'));
+    $('rec-b').addEventListener('click', () => record('b'));
+
+    $('mode').addEventListener('change', e => {
+        state.mode = e.target.value;
+        $('hint-note').innerHTML = hintText();
+        say(state.mode === 'laurent' ? 'Sodium lamp and Laurent plate in place. Look for equal dimness.' : 'White lamp and biquartz in place. Look for the same grayish-violet tint in both halves.');
+        updateView(); updateData();
+    });
+    $('conc').addEventListener('change', e => {
+        state.conc = Number(e.target.value);
+        say(state.conc === 0 ? 'Tube filled with distilled water — find the match and record a<sub>0</sub> and b<sub>0</sub>.'
+            : 'Tube rinsed and filled with the ' + state.conc + ' % solution. The halves no longer match — turn the analyser clockwise to find the new match.');
+        updateView(); updateData();
+    });
+    $('len').addEventListener('change', e => {
+        const had = Object.keys(state.rows).some(k => state.rows[k].a || state.rows[k].b);
+        state.len = Number(e.target.value);
+        state.rows = {};
+        say('Tube length changed to ' + state.len + ' dm' + (had ? ' — the sugar readings were cleared (they belong to the other tube). Water readings are kept.' : '.'), had ? 'warn' : '');
+        updateView(); updateData();
+    });
+    $('exag').addEventListener('change', e => { state.exag = e.target.checked; updateView(); });
+    $('photo').addEventListener('change', e => { state.photo = e.target.checked; updateView(); });
+    $('hide').addEventListener('change', e => { state.hide = e.target.checked; updateView(); });
+    $('clear').addEventListener('click', () => { state.water = { a: null, b: null }; state.rows = {}; say('All readings cleared.'); updateData(); });
+    $('demo').addEventListener('click', () => {
+        const keep = state.conc;
+        const exact = (pct, k) => readingOf(ZERO + thetaOf(pct, state.len) + 180 * k);
+        state.water = { a: exact(0, 0), b: exact(0, 1) };
+        CONCS.forEach(p => { state.rows[p] = { a: exact(p, 0), b: exact(p, 1) }; });
+        state.conc = keep;
+        say('Demo readings filled in (exact match positions, read to 0.1°). Try taking them yourself too!');
+        updateData();
+    });
+
+    // ------------------------------------------------------------------ animation loop
+    const cvs = [[fov, drawFOV], [vib, drawVib], [dial, drawDial], [lens, drawLens]];
+    const lastW = new Map();
+    let t = 0;
+    MSC.loop(dt => {
+        t += dt;
+        cvs.forEach(([api, fn]) => { const w = api.ctx.canvas.width; if (dirty || lastW.get(api) !== w) { lastW.set(api, w); fn(); } });
+        dirty = false;
+        if (graphDirty || lastW.get(graph) !== graph.ctx.canvas.width) { lastW.set(graph, graph.ctx.canvas.width); drawGraph(); graphDirty = false; }
+        // light flowing along the beam, and the plane turning inside the tube
+        const flow = $('beam-flow'); if (flow) flow.style.strokeDashoffset = String(-(t * 40) % 18);
+        const [tx0, tx1] = tubeSpan(), f = (t / 3) % 1;
+        const dot = $('live-dot'); if (dot) dot.setAttribute('cx', f2(tx0 + f * (tx1 - tx0)));
+        const g = $('live-g'); if (g) g.setAttribute('transform', 'rotate(' + f2(theta() * (state.exag ? 5 : 1) * f) + ' 440 62)');
+    });
+
+    // ------------------------------------------------------------------ draw-along diagrams
+    function hatchHalf(cx, cy, r, side, gap, angDeg) {
+        // parallel lines inside a half disc (side = -1 left, +1 right, 0 whole), as one path
+        const a = angDeg * D2R, ux = Math.cos(a), uy = Math.sin(a), nx = -uy, ny = ux;
+        let d = '';
+        for (let s = -r + gap / 2; s < r; s += gap) {
+            const half = Math.sqrt(r * r - s * s);
+            let t0 = -half, t1 = half;
+            if (side) {
+                const bx = s * nx;                                    // x(t) - cx = bx + t ux ; need side*(...) >= 0
+                if (Math.abs(ux) < 1e-9) { if (side * bx < 0) continue; }
+                else { const tc = -bx / ux; if (side * ux > 0) t0 = Math.max(t0, tc); else t1 = Math.min(t1, tc); }
+            }
+            if (t1 - t0 < 1) continue;
+            const x1 = cx + s * nx + t0 * ux, y1 = cy + s * ny + t0 * uy, x2 = cx + s * nx + t1 * ux, y2 = cy + s * ny + t1 * uy;
+            d += 'M' + f2(x1) + ',' + f2(y1) + ' L' + f2(x2) + ',' + f2(y2) + ' ';
+        }
+        return d;
+    }
+    const ell = (cx, cy, rx, ry, c) => '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + rx + '" ry="' + ry + '"' + (c ? ' class="' + c + '"' : '') + '/>';
+    const pol = (x, y, ang, len) => { const a = ang * D2R; return [x + Math.sin(a) * len, y - Math.cos(a) * len]; };
+    function dblPen(cx, cy, len, ang, c) {
+        const p = pol(cx, cy, ang, len), q = pol(cx, cy, ang + 180, len);
+        return S.arrow(q[0], q[1], p[0], p[1], { size: 9, both: true, cls: c });
+    }
+    function arcPen(cx, cy, r, a1, a2, c) {
+        const p = pol(cx, cy, a1, r), q = pol(cx, cy, a2, r);
+        return S.path('M' + f2(p[0]) + ',' + f2(p[1]) + ' A' + r + ',' + r + ' 0 0 ' + (a2 > a1 ? 1 : 0) + ' ' + f2(q[0]) + ',' + f2(q[1]), c);
+    }
+
+    (function buildDiagrams() {
+        // ---- 1. experimental set-up (after the manual's figure)
+        const y = 150;
+        const nicol = (x) => S.poly([[x - 22, 108], [x + 18, 108], [x + 38, 192], [x - 2, 192]]) + S.line(x - 22, 108, x + 38, 192, 'thin');
+        MSC.diagram('#draw-setup', {
+            name: 'setup', title: 'Fig. 1  Schematic arrangement of the half-shade polarimeter', viewBox: '0 0 900 300',
+            steps: [
+                { c: 'Draw the optical axis (a horizontal line) and the monochromatic source S (sodium lamp) at the left end.', s: S.line(48, y, 872, y, 'thin dash') + S.circle(52, y, 9) + [0, 45, 90, 135, 180, 225, 270, 315].map(a => { const p = pol(52, y, a, 13), q = pol(52, y, a, 20); return S.line(p[0], p[1], q[0], q[1], 'thin'); }).join('') + S.text(52, y - 38, 'S', { size: 15 }) + S.text(52, y + 40, 'Na lamp', { size: 12 }) },
+                { c: 'Draw the convex lens L that makes the light parallel.', s: S.path('M122,102 Q142,150 122,198 Q102,150 122,102 Z') + S.text(122, 88, 'L', { size: 15 }) + S.text(122, 214, 'Lens', { size: 12 }) },
+                { c: 'Draw the polarising Nicol N_1 (P): a parallelogram with its diagonal (the Canada-balsam layer).', s: nicol(215) + S.text(223, 92, 'P (N_1)', { size: 15 }) + S.text(223, 212, 'Polariser', { size: 12 }) },
+                { c: 'Draw the half-shade device B (a circle with its dividing line) just after the polariser.', s: S.circle(318, y, 28) + S.line(318, y - 28, 318, y + 28) + S.text(318, 104, 'B', { size: 15 }) + S.text(318, 212, 'Half-shade', { size: 12 }) },
+                { c: 'Draw the polarimeter tube T with a bulge in the middle (to trap air bubbles) and the end caps.', s: S.line(372, 132, 452, 132) + S.path('M452,132 C457,112 477,112 482,132') + S.line(482, 132, 560, 132) + S.line(372, 168, 560, 168) + ell(372, y, 6, 20) + ell(560, y, 6, 20) + S.text(467, 96, 'T', { size: 15 }) + S.text(467, 212, 'Polarimeter tube', { size: 12 }) },
+                { c: 'Draw the analysing Nicol N_2 (A), which can be rotated about the axis.', s: nicol(640) + S.text(648, 92, 'A (N_2)', { size: 15 }) + S.text(648, 212, 'Analyser', { size: 12 }) },
+                { c: 'Show the circular scale (with vernier) attached to the analyser.', s: ell(648, y, 16, 60, 'thin') + [-3, -2, -1, 0, 1, 2, 3].map(k => { const yy = y + k * 15, xx = 648 - 16 * Math.sqrt(1 - Math.pow(k * 15 / 60, 2)); return S.line(xx, yy, xx + 6, yy, 'thin'); }).join('') + S.text(648, 262, 'circular scale + vernier', { size: 11 }) },
+                { c: 'Draw the eyepiece E (telescope) through which the field of view is seen.', s: S.rect(712, 140, 66, 20) + ell(778, y, 4, 13) + S.text(745, 122, 'E', { size: 15 }) + S.text(745, 212, 'Eyepiece', { size: 12 }) },
+                { c: 'Draw the eye looking into the eyepiece.', s: S.path('M812,150 Q836,130 860,150 Q836,170 812,150 Z') + S.circle(824, 150, 6) + S.dot(824, 150, 2.6) },
+                { c: 'Enclose the lens, Nicols, half-shade device and tube in the body of the polarimeter.', s: S.rect(96, 76, 604, 154, { rx: 4, cls: 'thin' }) },
+                { c: 'Mark the direction of the light with arrows along the axis.', s: [86, 170, 285, 350, 600, 700, 800].map(x => S.arrowHead(x, y, 0, 9)).join('') },
+            ],
+        });
+
+        // ---- 2. half-shade device: Laurent's plate (and biquartz)
+        const cx = 230, cy = 180, r = 125, dd = 25;   // δ exaggerated in the drawing
+        const P = pol(cx, cy, dd, r - 12), Pp = pol(cx, cy, dd + 180, r - 12), Q = pol(cx, cy, -dd, r - 12), Qp = pol(cx, cy, -dd + 180, r - 12);
+        const bx = 670, by = 180, br = 105;
+        MSC.diagram('#draw-half', {
+            name: 'half', title: "Fig. 2  (a) Laurent's half-shade plate   (b) Biquartz", viewBox: '0 0 900 360',
+            steps: [
+                { c: "Draw a circle — the Laurent's half-shade plate — and write (a) under it.", s: S.circle(cx, cy, r) + S.text(cx, 345, "(a) Laurent's half-shade plate", { size: 14 }) },
+                { c: 'Divide it by the vertical diameter AOC (the line of junction). The optic axis of the quartz is parallel to AOC.', s: S.line(cx, cy - r, cx, cy + r) + S.text(cx, cy - r - 12, 'A', { size: 15 }) + S.text(cx, cy + r + 13, 'C', { size: 15 }) + S.text(cx + 11, cy + 13, 'O', { size: 14 }) },
+                { c: 'Left semicircle: quartz half-wave plate; right semicircle: glass of equal absorption. Shade the quartz half lightly and label both.', s: S.path(hatchHalf(cx, cy, r - 3, -1, 13, 45), 'thin ghost') + S.text(cx - 62, cy + 70, 'Quartz', { size: 14 }) + S.text(cx - 62, cy + 88, '(λ/2 plate)', { size: 11 }) + S.text(cx + 62, cy + 70, 'Glass', { size: 14 }) },
+                { c: 'Draw POP′, the vibration from the polariser, at a small angle δ to AOC. It passes through the glass half unchanged.', s: S.arrow(Pp[0], Pp[1], P[0], P[1], { size: 9, both: true, cls: 'accent' }) + S.text(P[0] + 10, P[1] - 8, 'P', { size: 15, cls: 'accent' }) + S.text(Pp[0] - 10, Pp[1] + 8, 'P′', { size: 14, cls: 'accent' }) },
+                { c: 'In the quartz half the vibration becomes QOQ′, the mirror image of OP about the optic axis, so ∠AOP = ∠AOQ = δ.', s: S.arrow(Qp[0], Qp[1], Q[0], Q[1], { size: 9, both: true, cls: 'hot' }) + S.text(Q[0] - 10, Q[1] - 8, 'Q', { size: 15, cls: 'hot' }) + S.text(Qp[0] + 10, Qp[1] + 8, 'Q′', { size: 14, cls: 'hot' }) + arcPen(cx, cy, 48, 0, dd, 'thin') + arcPen(cx, cy, 48, -dd, 0, 'thin') + S.text(pol(cx, cy, dd / 2, 62)[0], pol(cx, cy, dd / 2, 62)[1], 'δ', { size: 14 }) + S.text(pol(cx, cy, -dd / 2, 62)[0], pol(cx, cy, -dd / 2, 62)[1], 'δ', { size: 14 }) },
+                { c: 'Analyser perpendicular to AOC (dashed): the components OM and ON of OP and OQ along it are equal, so both halves are equally dim.', s: S.line(cx - r - 18, cy, cx + r + 18, cy, 'dash') + S.text(cx + r + 24, cy, 'N_2', { size: 13, anchor: 'start' }) + S.line(P[0], P[1], P[0], cy, 'thin dash soft') + S.line(Q[0], Q[1], Q[0], cy, 'thin dash soft') + S.dot(P[0], cy, 3) + S.dot(Q[0], cy, 3) + S.text(P[0] + 4, cy + 14, 'M', { size: 13 }) + S.text(Q[0] - 4, cy + 14, 'N', { size: 13 }) },
+                { c: 'Draw the biquartz: a circle divided into right-handed (R) and left-handed (L) quartz, each 3.75 mm thick; write (b) under it.', s: S.circle(bx, by, br) + S.line(bx, by - br, bx, by + br) + S.text(bx + 48, by - 50, 'R', { size: 18 }) + S.text(bx - 48, by - 50, 'L', { size: 18 }) + S.text(bx, by + br + 22, '(b) Biquartz (3.75 mm, white light)', { size: 14 }) + S.path('M' + (bx + 30) + ',' + (by + 52) + ' A28,28 0 1 0 ' + (bx + 70) + ',' + (by + 42), 'thin') + S.arrowHead(bx + 70, by + 42, -1.2, 8) + S.path('M' + (bx - 30) + ',' + (by + 52) + ' A28,28 0 1 1 ' + (bx - 70) + ',' + (by + 42), 'thin') + S.arrowHead(bx - 70, by + 42, Math.PI + 1.2, 8) },
+                { c: 'Show the incident vibration (vertical, dashed) and the yellow vibration after the biquartz: turned 90° clockwise in R and 90° anticlockwise in L — both horizontal.', s: S.line(bx, by - br + 8, bx, by + br - 8, 'dash soft') + S.arrow(bx - br + 12, by, bx + br - 12, by, { size: 9, both: true, cls: 'accent' }) + S.text(bx + 4, by - 14, 'yellow', { size: 12, anchor: 'start', cls: 'accent' }) },
+            ],
+        });
+
+        // ---- 3. field of view: three appearances
+        const cs = [150, 450, 750], fy = 138, fr = 92, dv = 20;
+        const anLine = (x, ang) => { const p = pol(x, fy, ang, fr + 16), q = pol(x, fy, ang + 180, fr + 16); return S.line(q[0], q[1], p[0], p[1], 'dash') + S.text(p[0] + (Math.sin(ang * D2R) > 0 ? 6 : -6), p[1] - 6, 'N_2', { size: 12, anchor: Math.sin(ang * D2R) > 0 ? 'start' : 'end' }); };
+        MSC.diagram('#draw-fov', {
+            name: 'fov', title: 'Fig. 3  Appearance of the field of view (half-shade)', viewBox: '0 0 900 330',
+            steps: [
+                { c: 'Draw three equal circles for the field of view, each divided into two halves by a vertical line.', s: cs.map(x => S.circle(x, fy, fr) + S.line(x, fy - fr, x, fy + fr)).join('') },
+                { c: '(a) Analyser perpendicular to OQ: the left (quartz) half is dark and the right half bright — shade the left half.', s: S.path(hatchHalf(cs[0], fy, fr - 2, -1, 6, 45)) + anLine(cs[0], 90 - dv) + S.text(cs[0], 256, '(a) Left half darker', { size: 14 }) + S.text(cs[0], 276, 'N_2 ⊥ OQ', { size: 12, cls: 'soft' }) },
+                { c: '(b) Analyser perpendicular to the line of junction: both halves are equally dim — this is the position for the reading.', s: S.path(hatchHalf(cs[1], fy, fr - 2, 0, 13, 45), 'thin') + anLine(cs[1], 90) + S.text(cs[1], 256, '(b) Equally dim — reading', { size: 14 }) + S.text(cs[1], 276, 'N_2 ⊥ line of junction', { size: 12, cls: 'soft' }) },
+                { c: '(c) Analyser perpendicular to OP: the right (glass) half is dark — shade the right half.', s: S.path(hatchHalf(cs[2], fy, fr - 2, 1, 6, 45)) + anLine(cs[2], 90 + dv) + S.text(cs[2], 256, '(c) Right half darker', { size: 14 }) + S.text(cs[2], 276, 'N_2 ⊥ OP', { size: 12, cls: 'soft' }) },
+                { c: 'In each circle draw the vibrations OQ (left) and OP (right) lightly, at ±δ to the dividing line.', s: cs.map(x => { const p = pol(x, fy, dv, fr - 16), q = pol(x, fy, -dv, fr - 16); return S.arrow(x, fy, p[0], p[1], { size: 7, cls: 'thin accent' }) + S.arrow(x, fy, q[0], q[1], { size: 7, cls: 'thin hot' }) + S.text(p[0] + 8, p[1], 'P', { size: 11, cls: 'accent', anchor: 'start' }) + S.text(q[0] - 8, q[1], 'Q', { size: 11, cls: 'hot', anchor: 'end' }); }).join('') },
+                { c: 'Note: with a biquartz the halves in (a) and (c) are reddish / bluish, and in (b) both show the same grayish-violet tint of passage.', s: S.text(450, 312, 'Biquartz: (a), (c) one half reddish, other bluish;  (b) same grayish-violet tint of passage in both halves', { size: 12, cls: 'soft' }) },
+            ],
+        });
+
+        // ---- 4. model graph θ vs C
+        const gx0 = 90, gy0 = 330, gw = 460, gh = 270, cmax = 0.09, tmax = 12;
+        const GX = (c) => gx0 + c / cmax * gw, GY = (t) => gy0 - t / tmax * gh;
+        const mdl = [0.005, 0.01, 0.02, 0.04, 0.08].map(c => [c, 133 * c]);
+        MSC.diagram('#draw-graph', {
+            name: 'graph', title: 'Model graph — rotation θ against concentration C (l = 2 dm)', viewBox: '0 0 640 380',
+            steps: [
+                { c: 'Draw the axes: concentration C (g/cc) on the X-axis and rotation θ (degree) on the Y-axis.', s: S.axes(gx0, gy0, gw + 30, gh + 30, { xlabel: 'C (g/cc) →', ylabel: 'θ (degree)' }) },
+                { c: 'Mark the scales: C from 0 to 0.08 g/cc and θ from 0 to 12°.', s: [0.02, 0.04, 0.06, 0.08].map(c => S.line(GX(c), gy0, GX(c), gy0 + 5) + S.text(GX(c), gy0 + 17, c.toFixed(2), { size: 11 })).join('') + [2, 4, 6, 8, 10, 12].map(t => S.line(gx0 - 5, GY(t), gx0, GY(t)) + S.text(gx0 - 9, GY(t), String(t), { size: 11, anchor: 'end' })).join('') },
+                { c: 'Plot the mean θ for each solution (0.5 %, 1 %, 2 %, 4 %, 8 %).', s: mdl.map(([c, t]) => S.circle(GX(c), GY(t), 4.5) + S.line(GX(c) - 4, GY(t), GX(c) + 4, GY(t), 'thin') + S.line(GX(c), GY(t) - 4, GX(c), GY(t) + 4, 'thin')).join('') },
+                { c: 'Draw the best straight line through the points — it passes through the origin (θ ∝ C).', s: S.line(GX(0), GY(0), GX(0.088), GY(133 * 0.088), 'thick accent') },
+                { c: 'Draw a large slope triangle: slope = Δθ/ΔC = θ/C. Then S = slope / l.', s: S.wire([[GX(0.03), GY(3.99)], [GX(0.07), GY(3.99)], [GX(0.07), GY(9.31)]], 'dash thin') + S.text(GX(0.05), GY(3.99) + 14, 'ΔC', { size: 13 }) + S.text(GX(0.07) + 8, GY(6.65), 'Δθ', { size: 13, anchor: 'start' }) + S.text(gx0 + 14, gy0 - gh + 4, 'S = (1/l) × (Δθ/ΔC)  deg dm^{−1} (g/cc)^{−1}', { size: 13, anchor: 'start' }) },
+            ],
+        });
+    })();
+
+    // ------------------------------------------------------------------ viva
+    MSC.viva('#viva-list', [
+        { q: 'What is optical activity? Give examples.', a: 'The property of some substances of rotating the plane of vibration of plane-polarised light passing through them. Examples: quartz, cane sugar solution, glucose, tartaric acid, turpentine. It arises from the asymmetric (chiral) structure of the molecules or crystal.' },
+        { q: 'Define specific rotation. What is its unit?', a: 'The rotation produced by a 1 dm long column of solution containing 1 g of the active substance per cc, at a given temperature and wavelength: S = θ/(l C). Unit: degree dm<sup>−1</sup> (g/cc)<sup>−1</sup>. For cane sugar S ≈ +66.5 for sodium light at room temperature.' },
+        { q: 'Why is a half-shade device used? Why not set the analyser for complete darkness?', a: 'Near extinction the brightness changes very slowly with the analyser angle (∝ ε²), so the dark position cannot be judged precisely. With a half-shade device the eye compares two adjacent halves; at the equal-dim position a small turn makes one half clearly darker than the other, so the setting is very sensitive.' },
+        { q: "What is Laurent's half-shade plate? Why is the quartz a half-wave plate?", a: 'A semicircular quartz plate cut parallel to its optic axis, cemented to a semicircular glass plate of equal absorption. Its thickness t = λ/2(μ<sub>e</sub> − μ<sub>o</sub>) gives a path difference λ/2 between the e- and o-components, so the emergent vibration OQ is the mirror image of OP about the optic axis. The two halves then have vibrations at ±δ to the line of junction.' },
+        { q: 'Why must monochromatic (sodium) light be used with a Laurent plate?', a: 'The quartz is a half-wave plate for only one wavelength, and the rotation θ itself depends on wavelength (rotatory dispersion). With white light the halves would be coloured and would never match.' },
+        { q: 'What is a biquartz? What is the tint of passage?', a: 'Two semicircular plates of right- and left-handed quartz, each 3.75 mm thick, which turn the plane of yellow light by 90° in opposite senses. With white light and the analyser parallel to the polariser, yellow is cut off from both halves and both show the same grayish-violet tint — the tint of passage (sensitive tint). A slight turn makes one half red and the other blue.' },
+        { q: 'What are dextro-rotatory and laevo-rotatory substances?', a: 'Dextro-rotatory substances turn the plane of vibration clockwise as seen by an observer looking towards the light (cane sugar, glucose); laevo-rotatory ones turn it anticlockwise (fruit sugar / fructose).' },
+        { q: 'How does the rotation depend on wavelength and temperature?', a: 'Biot found θ ∝ 1/λ² approximately (rotatory dispersion): violet is rotated much more than red. The specific rotation also changes slightly with temperature, so the temperature and wavelength are always stated with S.' },
+        { q: 'Why is the reading with water subtracted?', a: 'Water is optically inactive, so the water reading a<sub>0</sub> (b<sub>0</sub>) is the zero of the instrument. Subtracting it removes the zero error of the scale and any effect of the tube windows; θ = a<sub>1</sub> − a<sub>0</sub> is then due to the sugar alone.' },
+        { q: 'Why are two positions (a and b) taken?', a: 'The matching setting repeats every 180° of the analyser. Taking both positions and averaging θ<sub>1</sub> and θ<sub>2</sub> reduces errors of judgement and of eccentricity of the circular scale.' },
+        { q: 'Why is the graph of θ against C a straight line through the origin?', a: 'θ = S l C: for a fixed tube length the rotation is directly proportional to the concentration (Biot\'s law), with no rotation when C = 0. The slope θ/C = S l, so S = slope / l.' },
+        { q: 'Give some uses of the polarimeter.', a: 'Finding the concentration and purity of sugar in the sugar industry (saccharimeter), sugar in urine, testing optically active drugs, and following reactions such as the inversion of cane sugar.' },
+    ]);
+
+    // ------------------------------------------------------------------ boot
+    $('hint-note').innerHTML = hintText();
+    say('Water in the tube. Turn the analyser until the two halves look alike, then record a<sub>0</sub>.');
+    updateView();
+    updateData();
+
+    // hooks for testing
+    window.POL = {
+        state, theta, matchR, laurent, biquartz, analyserAngle, readingOf, setR,
+        lsug: () => LSUG,
+        /* numerically locate the sensitive match nearest to R0 (both modes) */
+        findMatch(R0) {
+            if (state.mode === 'laurent') {
+                let a = R0 - 20, b = R0 + 20;
+                const fn = (R) => { const h = laurent(R); return h.left - h.right; };
+                // bracket the dim crossing: scan
+                let prev = fn(a), lo = null, hi = null;
+                for (let R = a + 0.05; R <= b; R += 0.05) { const v = fn(R); const h = laurent(R); if (prev * v <= 0 && h.left + h.right < 0.2) { lo = R - 0.05; hi = R; break; } prev = v; }
+                if (lo === null) return null;
+                for (let i = 0; i < 60; i++) { const m = (lo + hi) / 2; if (fn(lo) * fn(m) <= 0) hi = m; else lo = m; }
+                return (lo + hi) / 2;
+            }
+            return goldenMin(R => biquartz(R).dE, R0 - 4, R0 + 4, 80);
+        },
+    };
+    </script>
+</body>
+</html>
