@@ -6,7 +6,7 @@ This file provides comprehensive context for AI agents (Codex, Copilot, Cursor, 
 
 ## Project Overview
 
-An interactive physics simulations suite demonstrating the **Magnetic**, **Heating**, and **Chemical** effects of electric current, plus a **Types of Forces** module. This is the **personal portfolio site of Megha Ananthi B** — she presents and explains the experiments herself.
+An interactive physics simulations suite demonstrating the **Magnetic**, **Heating**, and **Chemical** effects of electric current, plus **Types of Forces** and **Pressure, Winds & Storms** modules. This is the **personal portfolio site of Megha Ananthi B** — she presents and explains the experiments herself.
 
 **Branding rule (owner request):** do NOT put school names, "CBSE", class/grade levels, curriculum chapter references, or "For Teachers" sections on any user-facing page. Credit lines say only "Megha Ananthi B".
 
@@ -44,12 +44,20 @@ physics-simulations/
 │   ├── heating.html                # Exp 3: Nichrome Wire Heating (Heating Effect)
 │   ├── lemon-battery.html          # Exp 4: Lemon Battery (Chemical Effect)
 │   ├── voltaic-cell.html           # Exp 5: Voltaic Cell (Chemical Effect)
-│   └── forces/                     # "Types of Forces" module (Canvas 2D, no Three.js)
-│       ├── index.html              # Module hub + "Sort the Force" contact/non-contact game
-│       ├── friction.html           # Tabs: pull-block, rolling race, parachute drop, zoom-in
-│       ├── gravity.html            # Tabs: drop race, two-mass attraction, orbit view
-│       ├── magnetic.html           # Tabs: magnet playground, two magnets
-│       └── electrostatic.html      # Single scene: balloon + 4 selectable targets
+│   ├── forces/                     # "Types of Forces" module (Canvas 2D, no Three.js)
+│   │   ├── index.html              # Module hub + "Sort the Force" contact/non-contact game
+│   │   ├── friction.html           # Tabs: pull-block, rolling race, parachute drop, zoom-in
+│   │   ├── gravity.html            # Tabs: drop race, two-mass attraction, orbit view
+│   │   ├── magnetic.html           # Tabs: magnet playground, two magnets
+│   │   └── electrostatic.html      # Single scene: balloon + 4 selectable targets
+│   └── pressure/                   # "Pressure, Winds & Storms" module (Canvas 2D, light theme)
+│       ├── index.html              # Module hub: "Probe and ponder" question cards + 6-step journey + badges
+│       ├── area-pressure.html      # Reference page. Tabs: sand pit, bag straps, sharp vs blunt (+ calculator)
+│       ├── liquid-pressure.html    # Tabs: balloon pipes, leaky bottle, water-tank tower, dam & connected vessels
+│       ├── air-pressure.html       # Tabs: air column above you, balloon, rubber sucker, crushing can
+│       ├── wind.html               # Tabs: balloon race, sea & land breeze, fast air = low pressure, roofs
+│       ├── storms-lightning.html   # Tabs: storm engine (cycle), charging the cloud, lightning conductor, stay safe
+│       └── cyclone.html            # Tabs: build a cyclone (Earth rotation on/off), inside the eye, landfall
 ├── AGENTS.md                       # This file — AI agent context
 ├── README.md                       # Human-readable project docs
 └── .Codex/
@@ -268,6 +276,25 @@ the canonical template):
 - Each page targets a documented misconception (friction acts only when moving; heavier falls faster;
   no gravity in space; magnets attract all metals; electric = magnetic attraction). If you add a sim,
   pick its misconception first and design the reveal around it.
+
+## "Pressure, Winds & Storms" Module (`experiments/pressure/`)
+
+Six Canvas 2D simulations for the Grade 8 chapter "Pressure, Winds, Storms, and Cyclones" (the chapter's
+Activity 6.3, paper plate under chart paper, is deliberately left out). It follows every convention of the
+Types of Forces module: one self-contained HTML file per page, the same light page skeleton and shared helpers,
+Predict → Observe → Explain bars, a 3-question challenge per page (4 on storms and cyclone) and `localStorage` badges. Differences:
+
+- **Reference page**: `area-pressure.html`. New pages copy its `<style>` block (changing only the three
+  `--accent` variables) and its helpers, which add `text()`, `roundRect()` and a needle `gauge()` to the
+  forces set.
+- **Accents**: area `#F4511E`, liquid `#0288D1`, air `#00897B`, wind `#43A047`, storms `#5E35B1`,
+  cyclone `#C2185B`; the module/home-card colour is `--color-pressure: #0277BD`.
+- **Badges**: `localStorage` key `pressure-lab-progress` holds `{area, liquid, air, wind, storms, cyclone}`;
+  the hub shows a "Weather Wizard" banner when all six are earned.
+- **Visual language**: air is drawn as small moving particles (pressure = how hard and how often they hit a
+  surface); red = high pressure, blue = low pressure, with big H/L letters and isobar rings on the weather pages.
+- **Test hooks**: each page exposes its sim objects on `window` (e.g. `window.PLAB`) so the physics can be
+  checked from the console by calling `update(dt)` in a loop — the Claude browser pane throttles animation frames.
 
 ## How to Add a New Experiment
 

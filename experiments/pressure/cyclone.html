@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyclones - Pressure, Winds &amp; Storms - Science Lab</title>
+    <meta name="description" content="Build a cyclone over a warm sea, fly a drone into its calm eye, and steer it to the coast to see storm surge, warnings and why it weakens over land.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F300;</text></svg>">
+    <style>
+        /* ===== Shared "Pressure, Winds & Storms" sim-page styles — light, projector-friendly (accent set per page) ===== */
+        :root {
+            --accent: #C2185B;
+            --accent-soft: rgba(194, 24, 91, 0.13);
+            --accent-border: rgba(194, 24, 91, 0.55);
+            --good: #4CAF50;
+            --bad: #E53935;
+            --ink: #2D2D2D;
+            --panel-bg: rgba(255, 255, 255, 0.92);
+            --panel-border: rgba(0, 0, 0, 0.08);
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Nunito', sans-serif; background: #F5F0FF; color: var(--ink); min-height: 100vh; -webkit-tap-highlight-color: transparent; }
+        a { color: inherit; text-decoration: none; }
+        .top-bar { display: flex; align-items: center; justify-content: space-between; padding: 0.9rem 1.2rem; gap: 0.6rem; flex-wrap: wrap; }
+        .back-btn {
+            background: #fff; border: 1px solid rgba(0,0,0,0.12); color: #444; padding: 0.5rem 1rem; border-radius: 50px;
+            font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem;
+            transition: background 0.3s; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .back-btn:hover { background: #F0EAFB; }
+        .exp-title { font-family: 'Fredoka One', cursive; font-size: 1.5rem; text-align: center; color: #6B3FA0; }
+        .big-idea { text-align: center; opacity: 0.85; max-width: 760px; margin: 0.2rem auto 0.8rem; padding: 0 1.2rem; font-size: 0.98rem; }
+        .big-idea strong { color: var(--accent); }
+        .tabs { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; padding: 0 1rem; margin-bottom: 0.9rem; }
+        .tab-btn {
+            background: #fff; border: 1px solid rgba(0,0,0,0.12); color: #444; padding: 0.5rem 1rem; border-radius: 50px;
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.85rem; cursor: pointer;
+            transition: background 0.25s, border-color 0.25s, transform 0.15s;
+        }
+        .tab-btn:hover { transform: translateY(-1px); }
+        .tab-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+        .stage-wrap { position: relative; max-width: 960px; margin: 0 auto; padding: 0 0.8rem; }
+        #sim-canvas { display: block; width: 100%; background: #FBFAFF; border-radius: 16px; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 4px 18px rgba(0,0,0,0.07); touch-action: none; }
+        .info-display {
+            position: absolute; top: 0.7rem; right: 1.4rem; background: var(--panel-bg);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--panel-border); border-radius: 14px; padding: 0.7rem 0.9rem; font-size: 0.8rem; min-width: 170px; display: none;
+        }
+        .info-display.active { display: block; }
+        .info-row { display: flex; justify-content: space-between; gap: 0.9rem; padding: 0.12rem 0; }
+        .info-label { opacity: 0.6; }
+        .info-val { font-weight: 800; color: var(--accent); }
+        .panels { max-width: 960px; margin: 0 auto; padding: 0 0.8rem 2rem; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+        .predict-bar { background: var(--accent-soft); border: 1px solid var(--accent-border); border-radius: 14px; padding: 0.85rem 1rem; margin: 0.9rem 0 0.6rem; }
+        .predict-q { font-weight: 800; font-size: 0.95rem; margin-bottom: 0.55rem; }
+        .predict-q .tag { background: var(--accent); color: #fff; border-radius: 50px; font-size: 0.7rem; padding: 0.1rem 0.6rem; margin-right: 0.45rem; text-transform: uppercase; letter-spacing: 0.5px; vertical-align: middle; }
+        .predict-opts { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .predict-opt {
+            background: #fff; border: 1px solid rgba(0,0,0,0.15); color: #333; border-radius: 50px; padding: 0.42rem 0.95rem;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.83rem; cursor: pointer; transition: background 0.2s, border-color 0.2s;
+        }
+        .predict-opt:hover { background: rgba(0,0,0,0.05); }
+        .predict-opt.chosen { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+        .predict-opt.right { border-color: var(--good); background: rgba(76,175,80,0.14); color: #2E7D32; }
+        .predict-opt.wrong { border-color: var(--bad); background: rgba(229,57,53,0.12); color: #C62828; }
+        .predict-reveal { margin-top: 0.55rem; font-size: 0.88rem; display: none; }
+        .predict-reveal.show { display: block; animation: popIn 0.3s ease; }
+        .control-panel {
+            background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 18px; padding: 1rem 1.3rem;
+            display: flex; align-items: center; gap: 1.3rem; flex-wrap: wrap; justify-content: center; margin-top: 0.7rem;
+        }
+        .control-group { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+        .control-label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
+        .control-value { font-family: 'Fredoka One', cursive; font-size: 1rem; color: var(--accent); }
+        input[type="range"] { -webkit-appearance: none; appearance: none; width: 130px; height: 8px; border-radius: 4px; background: rgba(0,0,0,0.12); outline: none; cursor: pointer; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; cursor: pointer; }
+        input[type="range"]::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; cursor: pointer; }
+        select, .num-in {
+            background: #fff; color: #333; border: 1px solid rgba(0,0,0,0.2); border-radius: 10px;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.85rem; padding: 0.4rem 0.6rem; cursor: pointer;
+        }
+        .num-in { width: 7rem; cursor: text; }
+        .action-btn {
+            background: var(--accent); color: #fff; border: none; border-radius: 50px; padding: 0.55rem 1.3rem;
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.9rem; cursor: pointer; transition: transform 0.15s, filter 0.2s;
+        }
+        .action-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        .action-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+        .ghost-btn {
+            background: #fff; color: #444; border: 1px solid rgba(0,0,0,0.15); border-radius: 50px; padding: 0.55rem 1.1rem;
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.85rem; cursor: pointer; transition: background 0.2s;
+        }
+        .ghost-btn:hover { background: #F3EFFA; }
+        .ghost-btn.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+        .hint { text-align: center; font-size: 0.8rem; opacity: 0.55; margin-top: 0.5rem; }
+        .section-card { background: #fff; border: 1px solid rgba(0,0,0,0.06); border-radius: 18px; padding: 1.3rem 1.4rem; margin-top: 1.6rem; box-shadow: 0 4px 15px rgba(0,0,0,0.06); }
+        .section-card h2 { font-family: 'Fredoka One', cursive; font-size: 1.25rem; color: var(--accent); margin-bottom: 0.6rem; }
+        .section-card p, .section-card li { font-size: 0.93rem; opacity: 0.9; line-height: 1.65; }
+        .section-card ul { padding-left: 1.3rem; margin: 0.4rem 0; }
+        .callout-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.7rem; }
+        .callout-chip { background: #F6F2FE; border: 1px solid rgba(0,0,0,0.08); border-radius: 50px; padding: 0.35rem 0.85rem; font-size: 0.8rem; font-weight: 700; }
+        .quiz-q { margin-top: 1rem; }
+        .quiz-q .q-text { font-weight: 800; font-size: 0.95rem; margin-bottom: 0.5rem; }
+        .quiz-opts { display: flex; flex-direction: column; gap: 0.45rem; }
+        .quiz-opt {
+            text-align: left; background: #FBFAFF; border: 1px solid rgba(0,0,0,0.14); color: #333; border-radius: 12px; padding: 0.55rem 0.9rem;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: background 0.2s, border-color 0.2s;
+        }
+        .quiz-opt:hover { background: #F1ECFA; }
+        .quiz-opt.right { border-color: var(--good); background: rgba(76,175,80,0.14); }
+        .quiz-opt.wrong { border-color: var(--bad); background: rgba(229,57,53,0.12); }
+        .quiz-explain { display: none; font-size: 0.85rem; margin-top: 0.4rem; color: #2E7D32; }
+        .quiz-explain.show { display: block; animation: popIn 0.3s ease; }
+        .badge-banner { display: none; text-align: center; margin-top: 1.2rem; background: linear-gradient(135deg, #FFF8E1, #FFECB3); border: 1px solid #F0C24B; border-radius: 16px; padding: 1rem; }
+        .badge-banner.show { display: block; animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .badge-banner .big { font-family: 'Fredoka One', cursive; font-size: 1.3rem; color: #B8860B; }
+        .page-footer { text-align: center; padding: 1.2rem; font-size: 0.8rem; opacity: 0.5; }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.92); } 100% { opacity: 1; transform: scale(1); } }
+        /* page-specific */
+        .calc-row { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: flex-end; }
+        .calc-out { font-family: 'Fredoka One', cursive; font-size: 1.35rem; color: var(--accent); margin-top: 0.7rem; }
+        .calc-work { font-size: 0.92rem; margin-top: 0.3rem; font-family: 'Times New Roman', Georgia, serif; }
+        .preset-row { display: flex; gap: 0.45rem; flex-wrap: wrap; margin-top: 0.7rem; }
+        .kit-box { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 18px; padding: 0.9rem 1.1rem; margin-top: 0.7rem; }
+        .kit-title { font-weight: 800; font-size: 0.92rem; margin-bottom: 0.55rem; }
+        .kit-grid { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+        .kit-status { margin-top: 0.55rem; font-weight: 800; font-size: 0.88rem; color: var(--accent); min-height: 1.2em; }
+        @media (max-width: 600px) {
+            .exp-title { font-size: 1.15rem; }
+            .top-bar { padding: 0.7rem 0.8rem; }
+            .info-display { position: static; display: none; margin: 0.6rem 0 0; width: 100%; }
+            .info-display.active { display: flex; flex-wrap: wrap; gap: 0.1rem 1.2rem; }
+            .info-display .info-row { flex: 1 1 40%; }
+            .control-panel { padding: 0.8rem; gap: 0.9rem; }
+            input[type="range"] { width: 105px; }
+        }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="index.html" class="back-btn">&larr; Pressure &amp; Weather</a>
+        <div class="exp-title">&#x1F300; Cyclones</div>
+        <a href="../../index.html" class="back-btn">&#x1F3E0; Lab</a>
+    </div>
+    <p class="big-idea">A cyclone is a giant <strong>spinning storm</strong> born over a <strong>warm sea</strong>.
+        Warm, moist air rises and leaves <strong>low pressure</strong> behind; air rushes in, and the Earth's rotation sets it spinning.</p>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="build">&#x1F300; Build a Cyclone</button>
+        <button class="tab-btn" data-tab="eye">&#x1F441;&#xFE0F; Inside the Eye</button>
+        <button class="tab-btn" data-tab="land">&#x1F30A; Landfall</button>
+        <button class="tab-btn" data-tab="size">&#x1F4CF; Cyclone vs Thunderstorm</button>
+    </div>
+
+    <div class="stage-wrap">
+        <canvas id="sim-canvas"></canvas>
+        <div class="info-display" id="info-build">
+            <div class="info-row"><span class="info-label">Sea temperature</span><span class="info-val" id="b-sea">-</span></div>
+            <div class="info-row"><span class="info-label">Centre pressure</span><span class="info-val" id="b-p">-</span></div>
+            <div class="info-row"><span class="info-label">Wind speed</span><span class="info-val" id="b-w">-</span></div>
+            <div class="info-row"><span class="info-label">Spin</span><span class="info-val" id="b-spin">-</span></div>
+        </div>
+        <div class="info-display" id="info-eye">
+            <div class="info-row"><span class="info-label">Drone is</span><span class="info-val" id="e-pos">-</span></div>
+            <div class="info-row"><span class="info-label">Wind speed</span><span class="info-val" id="e-w">-</span></div>
+            <div class="info-row"><span class="info-label">Pressure</span><span class="info-val" id="e-p">-</span></div>
+            <div class="info-row"><span class="info-label">Rain</span><span class="info-val" id="e-r">-</span></div>
+        </div>
+        <div class="info-display" id="info-land">
+            <div class="info-row"><span class="info-label">Wind speed</span><span class="info-val" id="l-w">-</span></div>
+            <div class="info-row"><span class="info-label">To the coast</span><span class="info-val" id="l-d">-</span></div>
+            <div class="info-row"><span class="info-label">Storm surge</span><span class="info-val" id="l-s">-</span></div>
+            <div class="info-row"><span class="info-label">People safe</span><span class="info-val" id="l-p">-</span></div>
+        </div>
+        <div class="info-display" id="info-size">
+            <div class="info-row"><span class="info-label">View width</span><span class="info-val" id="z-view">-</span></div>
+            <div class="info-row"><span class="info-label">Thunderstorm</span><span class="info-val">&asymp; 15 km</span></div>
+            <div class="info-row"><span class="info-label">Cyclone</span><span class="info-val">&asymp; 600 km</span></div>
+            <div class="info-row"><span class="info-label">Cyclone is</span><span class="info-val">&asymp; 40&times; wider</span></div>
+        </div>
+    </div>
+
+    <div class="panels">
+        <div class="tab-panel active" id="panel-build">
+            <div class="predict-bar" id="predict-build"></div>
+            <div class="control-panel">
+                <div class="control-group">
+                    <span class="control-label">Sea temperature</span><span class="control-value" id="sea-val">29 &deg;C</span>
+                    <input type="range" id="sea-t" min="22" max="30" step="0.5" value="29">
+                </div>
+                <button class="ghost-btn on" id="rot-btn">&#x1F30D; Earth rotation: ON</button>
+                <button class="action-btn" id="b-play">&#x25B6; Play</button>
+                <button class="ghost-btn" id="b-fast">&#x23E9; 3&times; speed</button>
+                <button class="ghost-btn" id="b-reset">&#x1F504; Reset</button>
+            </div>
+            <p class="hint">Press Play and follow the 5 steps along the bottom. Then switch Earth's rotation OFF, Reset and Play again. Try a cool sea too.</p>
+        </div>
+
+        <div class="tab-panel" id="panel-eye">
+            <div class="predict-bar" id="predict-eye"></div>
+            <div class="control-panel">
+                <button class="action-btn" id="e-fly">&#x2708;&#xFE0F; Fly into the eye</button>
+                <button class="ghost-btn" id="e-reset">&#x21A9;&#xFE0F; Back to the edge</button>
+            </div>
+            <p class="hint">Drag the drone across the storm. The graph underneath records the wind and pressure it measures.</p>
+        </div>
+
+        <div class="tab-panel" id="panel-land">
+            <div class="predict-bar" id="predict-land"></div>
+            <div class="control-panel">
+                <div class="control-group">
+                    <span class="control-label">Cyclone strength</span>
+                    <select id="l-strength">
+                        <option value="150">Severe (150 km/h)</option>
+                        <option value="200" selected>Very severe (200 km/h)</option>
+                        <option value="270">Super cyclone (270 km/h, like Amphan)</option>
+                    </select>
+                </div>
+                <button class="action-btn" id="l-go">&#x23E9; Advance</button>
+                <button class="ghost-btn" id="l-reset">&#x1F504; Reset</button>
+            </div>
+            <p class="hint">Press Advance or drag the cyclone to the coast. Watch the warnings, the fishing boats and the people.</p>
+            <div class="kit-box">
+                <div class="kit-title">&#x1F392; Pack the emergency kit &mdash; tap only what you really need</div>
+                <div class="kit-grid" id="kit-grid"></div>
+                <div class="kit-status" id="kit-status"></div>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="panel-size">
+            <div class="predict-bar" id="predict-size"></div>
+            <div class="control-panel">
+                <div class="control-group">
+                    <span class="control-label">Zoom out</span><span class="control-value" id="z-val">40 km</span>
+                    <input type="range" id="z-zoom" min="0" max="100" step="1" value="15">
+                </div>
+                <button class="ghost-btn" id="z-ts">&#x26C8;&#xFE0F; Thunderstorm close-up</button>
+                <button class="ghost-btn" id="z-both">&#x1F6F0;&#xFE0F; Satellite view of both</button>
+            </div>
+            <p class="hint">Slide to zoom out like a weather satellite. Watch the scale bar.</p>
+        </div>
+
+        <div class="section-card">
+            <h2>&#x1F4A1; What did we discover?</h2>
+            <ul>
+                <li><strong>Cyclones are large storms that form over warm ocean waters</strong> (about 27&nbsp;&deg;C or warmer). The warm, moist air above the sea rises.</li>
+                <li>As the moist air rises, water vapour <strong>condenses into raindrops and releases heat</strong>. The air warms, rises even further and the pressure drops even lower.</li>
+                <li>Air from the surrounding high-pressure regions rushes in and also rises. <strong>Earth's rotation makes the moving air spin</strong>. Without rotation there are clouds and rain but no cyclone.</li>
+                <li>The <strong>eye</strong> at the centre has the lowest pressure and calm wind. The wall of clouds around it has the strongest winds and the heaviest rain.</li>
+                <li>Strong winds push sea water onto the shore as a <strong>storm surge</strong>, a wall of water 3&ndash;12&nbsp;m high. Heavy rain floods rivers. Once over land, its supply of moist air is cut off and it <strong>weakens</strong>.</li>
+                <li><strong>Stay safe:</strong> follow India Meteorological Department (IMD) warnings, keep an emergency kit ready and move to the nearest cyclone shelter.</li>
+            </ul>
+            <div class="callout-chips">
+                <span class="callout-chip">&#x1F300; Amphan 2020 &mdash; peak winds 270 km/h</span>
+                <span class="callout-chip">&#x1F300; Fani 2019 &mdash; over a million people moved to safety in Odisha</span>
+                <span class="callout-chip">&#x1F3E2; Odisha's cyclone shelters save lives</span>
+                <span class="callout-chip">&#x1F6F0;&#xFE0F; IMD tracks cyclones by satellite</span>
+                <span class="callout-chip">&#x1F6A4; Fishermen warned not to go to sea</span>
+                <span class="callout-chip">&#x1F392; Emergency kit kept ready</span>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2>&#x1F3C6; Cyclone Challenge</h2>
+            <p>Answer all four correctly to earn the <strong>Cyclone badge</strong>!</p>
+            <div id="challenge-root"></div>
+            <div class="badge-banner" id="badge-banner">
+                <div class="big">&#x1F396;&#xFE0F; Cyclone Badge earned!</div>
+                <p>Head back to <a href="index.html" style="text-decoration: underline;">Pressure &amp; Weather</a> to see your progress.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="page-footer">Pressure, Winds &amp; Storms &bull; Made by Megha Ananthi B &bull; Simplified model for learning &mdash; values are illustrative</footer>
+
+    <script>
+    'use strict';
+
+    // ================= Shared helpers (same in every page of this module) =================
+    const PROGRESS_KEY = 'pressure-lab-progress';
+    function setBadge(name) {
+        let p = {};
+        try { p = JSON.parse(localStorage.getItem(PROGRESS_KEY)) || {}; } catch (e) {}
+        p[name] = true;
+        try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); } catch (e) {}
+    }
+    const canvas = document.getElementById('sim-canvas');
+    const ctx = canvas.getContext('2d');
+    const W = 900, H = 560;
+    let viewScale = 1;
+    function fitCanvas() {
+        const cssW = canvas.getBoundingClientRect().width || canvas.parentElement.clientWidth;
+        canvas.style.height = Math.round(cssW * H / W) + 'px';
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(cssW * dpr);
+        canvas.height = Math.round(cssW * H / W * dpr);
+        viewScale = canvas.width / W;
+    }
+    window.addEventListener('resize', fitCanvas);
+    fitCanvas();
+    function ptr(e) {
+        const r = canvas.getBoundingClientRect();
+        return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height };
+    }
+    function drawArrow(x1, y1, x2, y2, color, width, label, labelSide) {
+        const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
+        if (len < 2) return;
+        const ang = Math.atan2(dy, dx), head = Math.min(14, 6 + width * 1.4);
+        ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = width; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2 - Math.cos(ang) * head * 0.7, y2 - Math.sin(ang) * head * 0.7); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - Math.cos(ang - 0.45) * head, y2 - Math.sin(ang - 0.45) * head);
+        ctx.lineTo(x2 - Math.cos(ang + 0.45) * head, y2 - Math.sin(ang + 0.45) * head);
+        ctx.closePath(); ctx.fill();
+        if (label) {
+            ctx.font = '800 15px Nunito, sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText(label, (x1 + x2) / 2, (y1 + y2) / 2 + (labelSide === 'below' ? 24 : -12));
+        }
+    }
+    function emoji(txt, x, y, size) {
+        ctx.font = size + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(txt, x, y); ctx.textBaseline = 'alphabetic';
+    }
+    function text(str, x, y, o) {
+        o = o || {};
+        ctx.font = (o.weight || 800) + ' ' + (o.size || 14) + 'px ' + (o.font || 'Nunito, sans-serif');
+        ctx.fillStyle = o.color || '#2D2D2D'; ctx.textAlign = o.align || 'center'; ctx.textBaseline = o.base || 'alphabetic';
+        ctx.fillText(str, x, y); ctx.textBaseline = 'alphabetic';
+    }
+    function roundRect(x, y, w, h, r) {
+        ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+    }
+    /* Round needle gauge. frac 0..1 maps to the dial; zones coloured green → amber → red. */
+    function gauge(cx, cy, r, frac, label, valueText) {
+        frac = Math.max(0, Math.min(1, frac));
+        const a0 = Math.PI * 0.8, a1 = Math.PI * 2.2;
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy, r + 8, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 2; ctx.stroke();
+        [['#66BB6A', 0, 0.45], ['#FFB300', 0.45, 0.75], ['#E53935', 0.75, 1]].forEach(([c, f0, f1]) => {
+            ctx.strokeStyle = c; ctx.lineWidth = 9; ctx.beginPath(); ctx.arc(cx, cy, r - 4, a0 + (a1 - a0) * f0, a0 + (a1 - a0) * f1); ctx.stroke();
+        });
+        const a = a0 + (a1 - a0) * frac;
+        ctx.strokeStyle = '#263238'; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * (r - 10), cy + Math.sin(a) * (r - 10)); ctx.stroke();
+        ctx.fillStyle = '#263238'; ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI * 2); ctx.fill();
+        text(label, cx, cy + r * 0.5, { size: 11, color: '#607D8B' });
+        if (valueText) text(valueText, cx, cy + r + 26, { size: 15, color: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#F4511E' });
+    }
+    function setText(id, txt) { const el = document.getElementById(id); if (el && el.textContent !== txt) el.textContent = txt; }
+    function makePredict(rootId, question, options, correctIdx, revealText) {
+        const root = document.getElementById(rootId);
+        root.innerHTML = '<div class="predict-q"><span class="tag">Predict first!</span>' + question + '</div><div class="predict-opts"></div><div class="predict-reveal"></div>';
+        const optsEl = root.querySelector('.predict-opts'), revealEl = root.querySelector('.predict-reveal');
+        const state = { chosen: null, revealed: false, reveal() {
+            if (state.revealed) return;
+            state.revealed = true;
+            btns[correctIdx].classList.add('right');
+            let verdict = '🔍 ';
+            if (state.chosen === correctIdx) verdict = '🎉 Your prediction was right! ';
+            else if (state.chosen !== null) { btns[state.chosen].classList.add('wrong'); verdict = '🤯 Surprised? '; }
+            revealEl.innerHTML = verdict + revealText; revealEl.classList.add('show');
+        } };
+        const btns = options.map((o, i) => {
+            const b = document.createElement('button'); b.className = 'predict-opt'; b.textContent = o;
+            b.addEventListener('click', () => { if (state.revealed) return; state.chosen = i; btns.forEach(x => x.classList.remove('chosen')); b.classList.add('chosen'); });
+            optsEl.appendChild(b); return b;
+        });
+        return state;
+    }
+    function buildChallenge(rootId, questions, badgeName, bannerId) {
+        const root = document.getElementById(rootId), solved = new Set();
+        questions.forEach((q, qi) => {
+            const qEl = document.createElement('div'); qEl.className = 'quiz-q';
+            qEl.innerHTML = '<div class="q-text">' + (qi + 1) + '. ' + q.q + '</div>';
+            const opts = document.createElement('div'); opts.className = 'quiz-opts';
+            const explain = document.createElement('div'); explain.className = 'quiz-explain';
+            q.opts.forEach((o, oi) => {
+                const b = document.createElement('button'); b.className = 'quiz-opt'; b.textContent = o;
+                b.addEventListener('click', () => {
+                    if (solved.has(qi)) return;
+                    if (oi === q.correct) {
+                        b.classList.add('right'); explain.textContent = '✅ ' + q.explain; explain.classList.add('show'); solved.add(qi);
+                        if (solved.size === questions.length) { setBadge(badgeName); document.getElementById(bannerId).classList.add('show'); }
+                    } else { b.classList.add('wrong'); setTimeout(() => b.classList.remove('wrong'), 900); }
+                });
+                opts.appendChild(b);
+            });
+            qEl.appendChild(opts); qEl.appendChild(explain); root.appendChild(qEl);
+        });
+    }
+    function drawBackdrop(color) {
+        ctx.fillStyle = color || '#FBFAFF'; ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = 'rgba(0,0,0,0.035)';
+        for (let x = 0; x < W; x += 45) ctx.fillRect(x, 0, 1, H);
+        for (let y = 0; y < H; y += 45) ctx.fillRect(0, y, W, 1);
+    }
+    const $ = (id) => document.getElementById(id);
+
+    // ================= Page extras (cyclone drawing kit) =================
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const lerp = (a, b, t) => a + (b - a) * t;
+    const smooth = (e0, e1, x) => { const t = clamp((x - e0) / (e1 - e0), 0, 1); return t * t * (3 - 2 * t); };
+    function rng(seed) { return function () { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+    const MOBILE = window.innerWidth < 768;
+    const JT = (() => { const r = rng(7); return Array.from({ length: 512 }, () => r()); })();
+    function makeBlob(r, g, b) {
+        const c = document.createElement('canvas'); c.width = c.height = 64;
+        const x = c.getContext('2d'), gr = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+        gr.addColorStop(0, 'rgba(' + r + ',' + g + ',' + b + ',1)'); gr.addColorStop(0.5, 'rgba(' + r + ',' + g + ',' + b + ',0.6)'); gr.addColorStop(1, 'rgba(' + r + ',' + g + ',' + b + ',0)');
+        x.fillStyle = gr; x.fillRect(0, 0, 64, 64); return c;
+    }
+    const BLOB = { white: makeBlob(255, 255, 255), grey: makeBlob(196, 204, 214), slate: makeBlob(120, 132, 148), dark: makeBlob(25, 40, 65), orange: makeBlob(255, 150, 30) };
+    function blob(img, x, y, r, a) {
+        if (a <= 0.003 || r <= 0 || x + r < 0 || x - r > W || y + r < 0 || y - r > H) return;
+        ctx.globalAlpha = Math.min(1, a); ctx.drawImage(img, x - r, y - r, r * 2, r * 2);
+    }
+    /* text with a dark outline: readable on sea, cloud and land */
+    function otext(str, x, y, o) {
+        o = o || {};
+        ctx.font = (o.weight || 800) + ' ' + (o.size || 14) + 'px ' + (o.font || 'Nunito, sans-serif');
+        ctx.textAlign = o.align || 'center'; ctx.textBaseline = o.base || 'alphabetic'; ctx.lineJoin = 'round';
+        ctx.lineWidth = o.lw || 4; ctx.strokeStyle = o.stroke || 'rgba(10,25,45,0.85)'; ctx.strokeText(str, x, y);
+        ctx.fillStyle = o.color || '#fff'; ctx.fillText(str, x, y); ctx.textBaseline = 'alphabetic';
+    }
+    function pill(str, x, y, o) {
+        o = o || {};
+        const size = o.size || 13, font = o.font || 'Nunito, sans-serif', weight = o.weight || 800;
+        ctx.font = weight + ' ' + size + 'px ' + font;
+        const w = ctx.measureText(str).width + (o.padX || 11) * 2, h = size + 11;
+        ctx.fillStyle = o.bg || 'rgba(255,255,255,0.95)'; roundRect(x - w / 2, y - h / 2, w, h, h / 2); ctx.fill();
+        if (o.border) { ctx.strokeStyle = o.border; ctx.lineWidth = 2; ctx.stroke(); }
+        text(str, x, y + 1, { size, color: o.color || '#263238', base: 'middle', weight, font });
+        return w;
+    }
+    function fitSize(str, maxW, size, weight, font) {
+        ctx.font = weight + ' ' + size + 'px ' + font;
+        const w = ctx.measureText(str).width;
+        return w > maxW ? Math.max(9, Math.floor(size * maxW / w)) : size;
+    }
+    function bigLetter(ch, x, y, color, r) {
+        ctx.fillStyle = 'rgba(255,255,255,0.95)'; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.stroke();
+        text(ch, x, y + 2, { size: r * 1.25, color, base: 'middle', font: "'Fredoka One', cursive", weight: 400 });
+    }
+    const SEA_STREAKS = (() => { const r = rng(11); return Array.from({ length: 70 }, () => [r() * W, r() * H, 10 + r() * 26]); })();
+    function drawOcean(t, warm, cx, cy, light) {
+        const g = ctx.createLinearGradient(0, 0, 0, H);
+        g.addColorStop(0, light ? '#4D9FE0' : '#1D62A3'); g.addColorStop(1, light ? '#2F7FC4' : '#114F86');
+        ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+        if (warm > 0.01) {
+            let rg = ctx.createRadialGradient(cx, cy, 20, cx, cy, 480);
+            rg.addColorStop(0, 'rgba(0,190,200,' + (0.42 * warm).toFixed(3) + ')'); rg.addColorStop(0.55, 'rgba(0,170,190,' + (0.22 * warm).toFixed(3) + ')'); rg.addColorStop(1, 'rgba(0,150,180,' + (0.08 * warm).toFixed(3) + ')');
+            ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+            rg = ctx.createRadialGradient(cx, cy, 10, cx, cy, 260);
+            rg.addColorStop(0, 'rgba(255,152,0,' + (0.32 * warm * warm).toFixed(3) + ')'); rg.addColorStop(1, 'rgba(255,152,0,0)');
+            ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+        }
+        ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1.5; ctx.beginPath();
+        SEA_STREAKS.forEach(([x, y, l]) => { const xx = (x + t * 6) % (W + 40) - 20; ctx.moveTo(xx, y); ctx.quadraticCurveTo(xx + l / 2, y - 3, xx + l, y); });
+        ctx.stroke();
+    }
+    /* Satellite-style cyclone: dense core around a clear eye + log-spiral rain bands.
+       Visual anticlockwise spin (northern hemisphere): rot decreases with time; arms curl outward clockwise. */
+    function drawCyclone(cx, cy, o) {
+        const R = o.R, eye = o.eye || 0, A = o.alpha, loose = o.loose || 0, arms = o.arms || 3, rot = o.rot || 0;
+        if (A <= 0.01 || R < 2) return;
+        const cdo = Math.max(eye + 14, R * 0.3) * (1 - 0.25 * loose);
+        const passes = [[BLOB.dark, R * 0.025 + 2, R * 0.035 + 3, 0.28], [BLOB.white, 0, 0, 1]];
+        for (const [img, ox, oy, am] of passes) {
+            for (let a = 0; a < arms; a++) {
+                const th0 = rot + a * 2 * Math.PI / arms, thMax = 2.5 - 1.1 * loose;
+                const r0 = cdo * 0.8, b = Math.log(R / r0) / thMax, N = 22;
+                for (let i = 1; i <= N; i++) {
+                    const t = i / N, j = JT[(a * 37 + i * 3) % 512];
+                    if (loose > 0 && j < loose * 0.55) continue;
+                    const th = t * thMax, rr = r0 * Math.exp(b * th) * (0.94 + 0.12 * JT[(a * 53 + i * 7 + 100) % 512]);
+                    const ang = th0 + th, sz = R * (0.17 - 0.09 * t) * (1 - 0.3 * loose);
+                    blob(img, cx + Math.cos(ang) * rr + ox, cy + Math.sin(ang) * rr + oy, sz, A * am * (0.95 - 0.6 * t) * (1 - 0.45 * loose));
+                }
+            }
+            const n = 26;
+            for (let k = 0; k < n; k++) {
+                const j = JT[(k * 11 + 300) % 512], j2 = JT[(k * 13 + 400) % 512];
+                const bsz = (cdo - eye) * (0.55 + 0.25 * j2) + 6;
+                const rr = eye + bsz * 0.62 + Math.max(0, cdo - eye - bsz * 0.62) * j * 0.8;
+                const ang = rot * 1.2 + k * 2 * Math.PI / n;
+                blob(img, cx + Math.cos(ang) * rr + ox, cy + Math.sin(ang) * rr + oy, bsz, A * am * (0.9 - 0.4 * loose));
+            }
+        }
+        ctx.globalAlpha = 1;
+        if (eye > 3) {
+            ctx.globalAlpha = A; ctx.strokeStyle = 'rgba(255,255,255,0.95)'; ctx.lineWidth = Math.max(2, eye * 0.25);
+            ctx.beginPath(); ctx.arc(cx, cy, eye + ctx.lineWidth / 2, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1;
+        }
+        ctx.strokeStyle = 'rgba(255,255,255,' + (0.4 * A).toFixed(3) + ')'; ctx.lineWidth = Math.max(1, R * 0.008); ctx.lineCap = 'round';
+        for (let k = 0; k < 6; k++) {
+            const rr = eye + 6 + (cdo * 1.3 - eye) * (k + 0.5) / 6, a0 = rot * 1.6 + k * 1.1;
+            ctx.beginPath(); ctx.arc(cx, cy, rr, a0, a0 + 1.2); ctx.stroke();
+        }
+    }
+    const PILE = (() => { const r = rng(5); return Array.from({ length: 36 }, () => { const rr = Math.sqrt(r()) * 0.8, a = r() * 6.283; return { x: Math.cos(a) * rr, y: Math.sin(a) * rr, s: 0.28 + r() * 0.24, ph: r() * 6.283 }; }); })();
+    /* a heap of thunderstorm clouds: no spiral, no eye */
+    function drawPile(cx, cy, R, A, t) {
+        [[BLOB.dark, 4, 6, 0.3], [BLOB.white, 0, 0, 1]].forEach(([img, ox, oy, am]) => PILE.forEach(b =>
+            blob(img, cx + (b.x + 0.03 * Math.sin(t * 0.7 + b.ph)) * R + ox, cy + (b.y + 0.03 * Math.cos(t * 0.6 + b.ph)) * R + oy, b.s * R + 4, A * am * 0.8)));
+        blob(BLOB.white, cx, cy, R * 0.35, A);
+        ctx.globalAlpha = 1;
+    }
+
+    // =====================================================
+    // TAB 1 — Build a cyclone (top-down satellite view)
+    // =====================================================
+    const B_LAND = [[0,0],[900,0],[900,560],[862,560],[846,470],[822,380],[796,292],[762,205],[724,128],[684,66],[650,32],[612,44],[575,36],[540,48],[500,40],[462,52],[425,42],[392,58],[362,72],[336,96],[305,135],[270,195],[234,262],[202,334],[174,410],[152,482],[134,560],[0,560]];
+    const H_POS = [[262, 118], [800, 168], [300, 418], [770, 420]];
+    const STEP_LABELS = ['🌡️ Warm sea heats air', '⬆️ Moist air rises: LOW', '🔥 Rain releases heat', '💨 Air rushes in', '🌀 Earth\'s spin twists it'];
+    function flowArrow(hx, hy, cx, cy, curl, t, rEnd) {
+        const dx = hx - cx, dy = hy - cy, r0 = Math.hypot(dx, dy), a0 = Math.atan2(dy, dx), pts = [];
+        for (let i = 0; i <= 24; i++) { const s = i / 24, r = r0 - (r0 - rEnd) * s, a = a0 - curl * Math.pow(s, 1.4); pts.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); }
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        const path = () => { ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); };
+        path(); ctx.strokeStyle = 'rgba(0,30,60,0.6)'; ctx.lineWidth = 8; ctx.stroke();
+        path(); ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 4; ctx.setLineDash([12, 8]); ctx.lineDashOffset = -t * 40; ctx.stroke(); ctx.setLineDash([]);
+        const [x1, y1] = pts[pts.length - 3], [x2, y2] = pts[pts.length - 1], ang = Math.atan2(y2 - y1, x2 - x1);
+        ctx.beginPath(); ctx.moveTo(x2 + Math.cos(ang) * 8, y2 + Math.sin(ang) * 8);
+        ctx.lineTo(x2 + Math.cos(ang + 2.5) * 14, y2 + Math.sin(ang + 2.5) * 14); ctx.lineTo(x2 + Math.cos(ang - 2.5) * 14, y2 + Math.sin(ang - 2.5) * 14); ctx.closePath();
+        ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = 'rgba(0,30,60,0.7)'; ctx.lineWidth = 2; ctx.stroke();
+    }
+    const build = {
+        seaT: 29, rotation: true, running: false, fast: false, t: 0, I: 0, rotAng: 0, spin: 0, angMom: 0, fizzled: false,
+        cx: 520, cy: 250, parts: [], sparks: [], P: { G: 500, f: 1.4, k: 0.55, noise: 8 },
+        init() { this.parts = []; const n = MOBILE ? 380 : 620; for (let i = 0; i < n; i++) { const p = {}; this.spawn(p, true); this.parts.push(p); } },
+        spawn(p, anywhere) {
+            let x = 0, y = 0;
+            for (let k = 0; k < 30; k++) { x = Math.random() * W; y = Math.random() * H; if (anywhere || Math.hypot(x - this.cx, y - this.cy) > 240) break; }
+            p.x = x; p.y = y; p.vx = (Math.random() - 0.5) * 12; p.vy = (Math.random() - 0.5) * 12; p.warm = 0; p.psi = Math.random() * 6.283;
+        },
+        reset() { this.running = false; this.t = 0; this.I = 0; this.fizzled = false; this.sparks = []; this.spin = 0; this.angMom = 0; this.init(); syncBuildUI(); },
+        spinF() { return clamp(this.spin / 0.6, 0, 1); },
+        cap() { if (this.seaT < 27) return 0; return this.rotation ? 0.4 + 0.6 * (this.seaT - 27) / 3 : 0.2; },
+        eyeR() { return this.I > 0.33 ? (12 + 16 * clamp((this.I - 0.33) / 0.67, 0, 1)) * this.spinF() : 0; },
+        pressure() { return 1008 - 62 * this.I; },
+        wind() { return 10 + 70 * this.I + 190 * this.I * clamp(this.spin / 0.75, 0, 1); },
+        step() { if (!this.running && this.t === 0) return 0; const I = this.I; return I < 0.02 ? 1 : I < 0.06 ? 2 : I < 0.11 ? 3 : I < 0.17 ? 4 : 5; },
+        grow(dt) {
+            if (this.seaT >= 27) {
+                this.fizzled = false;
+                const cap = this.cap(), rate = 0.1 * (0.75 + 0.25 * (this.seaT - 27) / 3);
+                if (this.I < cap) this.I += rate * (0.12 + this.I) * (1 - this.I / cap) * dt;     // warm sea + released heat feed the low: slow start, then runaway
+                else this.I += (cap - this.I) * Math.min(1, 0.25 * dt);
+            } else {
+                if (this.t < 6 && this.I < 0.035) this.I += 0.007 * dt * clamp((this.seaT - 21) / 6, 0, 1);
+                else { this.I = Math.max(0, this.I - (0.012 + 0.08 * this.I) * dt); if (this.t >= 6) this.fizzled = true; }
+            }
+        },
+        /* air parcels: pull toward the low + Coriolis-like sideways push (∝ speed, to the right) + friction + gusts */
+        moveParts(h) {
+            const P = this.P, I = this.I, eye = this.eyeR(), rise = eye > 0 ? eye + 28 : 30;
+            const G = P.G * I, f = this.rotation ? P.f : 0, k = P.k, cx = this.cx, cy = this.cy;
+            for (const p of this.parts) {
+                const dx = p.x - cx, dy = p.y - cy, r = Math.hypot(dx, dy) + 1e-6;
+                let ax = 0, ay = 0;
+                if (r > eye) { const g = G * 60 / (r + 40); ax -= g * dx / r; ay -= g * dy / r; }
+                else { ax += 150 * dx / r; ay += 150 * dy / r; }
+                ax += -f * p.vy; ay += f * p.vx;
+                ax -= k * p.vx; ay -= k * p.vy;
+                p.psi += (Math.random() - 0.5) * 4 * h;
+                ax += P.noise * Math.cos(p.psi); ay += P.noise * Math.sin(p.psi);
+                p.vx += ax * h; p.vy += ay * h; p.x += p.vx * h; p.y += p.vy * h;
+                if (I > 0.03 && r < 110) p.warm = Math.min(1, p.warm + h * 2);
+                if ((I > 0.015 && r < rise && Math.random() < h * 1.6) || p.x < -40 || p.x > W + 40 || p.y < -40 || p.y > H + 40) this.spawn(p, false);
+            }
+        },
+        update(dt) {
+            const sdt = dt * (this.fast ? 3 : 1);
+            if (this.running) { this.t += sdt; this.grow(sdt); }
+            const nSub = Math.max(1, Math.ceil(sdt / 0.034)), h = sdt / nSub;
+            for (let s = 0; s < nSub; s++) this.moveParts(h);
+            this.rotAng -= (0.15 + 1.4 * this.I * this.spinF()) * sdt;
+            if (this.I >= 0.06 && this.running && this.sparks.length < 120) {
+                let n = (25 + 50 * this.I) * sdt;
+                while (n > 0) {
+                    if (Math.random() < n) { const eye = this.eyeR(), a = Math.random() * 6.283, r = eye > 0 ? eye + 4 + Math.random() * 40 : Math.random() * 60 * (0.5 + this.I); this.sparks.push({ a, r, life: 0 }); }
+                    n -= 1;
+                }
+            }
+            this.sparks.forEach(s => { s.life += sdt; s.a -= (0.3 + 1.6 * this.I * this.spinF()) * sdt; });
+            this.sparks = this.sparks.filter(s => s.life < 1);
+            let tan = 0, spd = 0, L = 0, n = 0;
+            for (const p of this.parts) {
+                const dx = p.x - this.cx, dy = p.y - this.cy, r = Math.hypot(dx, dy);
+                if (r < 30 || r > 260) continue;
+                const l = -(dx * p.vy - dy * p.vx);           // anticlockwise on screen = positive
+                tan += l / r; spd += Math.hypot(p.vx, p.vy); L += l; n++;
+            }
+            const sNow = spd > 1e-6 ? tan / spd : 0;
+            this.spin += (sNow - this.spin) * Math.min(1, sdt * 3);
+            this.angMom = n ? L / n : 0;
+            if (!this.rotation && this.seaT >= 27 && this.I >= 0.165 && Math.abs(this.spin) < 0.15) predicts.build.reveal();
+        },
+        caption(st) {
+            const sf = this.spinF();
+            if (this.fizzled) return ['❄️ Sea too cool (below 27 °C): not enough warm, moist air', 'The low fills up and the storm fizzles out.'];
+            if (st === 0) return ['Set the sea temperature, then press ▶ Play', 'Cyclones are born over warm ocean water.'];
+            if (st === 1) return ['① The warm sea heats the air above it', 'Water evaporates: the air becomes warm and moist.'];
+            if (st === 2) return ['② Warm, moist air rises → pressure drops: a LOW', 'Watch the pressure needle fall.'];
+            if (st === 3) return ['③ Vapour condenses into rain and RELEASES HEAT 🔥', 'The air warms again and rises even faster.'];
+            if (st === 4) return ['④ Air from the HIGH-pressure sides rushes in', 'Air always flows from high pressure to low pressure.'];
+            if (!this.rotation && sf < 0.3) return ['⑤ No rotation: air rushes straight in and up', 'Clouds pile up and it rains, but NO spin, NO eye: no cyclone.'];
+            if (this.I > 0.9 && sf > 0.7) return ['🌀 Super cyclone! As strong as Amphan (270 km/h)', predicts.build.revealed ? 'It keeps growing while the sea stays warm.' : 'Now switch 🌍 rotation OFF, Reset and Play again.'];
+            if (this.I > 0.33 && sf > 0.6) return ['🌀 A cyclone is born! Calm eye, howling winds around it', predicts.build.revealed ? 'Isobars squeeze together: strong winds.' : 'Now switch 🌍 rotation OFF, Reset and Play again.'];
+            return ['⑤ Earth\'s rotation turns the incoming air sideways', 'The air starts to spin anticlockwise.'];
+        },
+        draw() {
+            const I = this.I, cx = this.cx, cy = this.cy, t = performance.now() / 1000, st = this.step(), sf = this.spinF();
+            const warm = clamp((this.seaT - 22) / 8, 0, 1), P = this.pressure(), eye = this.eyeR();
+            drawOcean(t, warm, cx, cy);
+            ctx.beginPath(); B_LAND.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath();
+            const lg = ctx.createLinearGradient(0, 0, 0, H); lg.addColorStop(0, '#8BC34A'); lg.addColorStop(1, '#689F38');
+            ctx.fillStyle = lg; ctx.fill(); ctx.strokeStyle = '#F1E3B3'; ctx.lineWidth = 4; ctx.stroke();
+            otext('LAND', 560, 24, { size: 13, color: '#F1F8E9', stroke: 'rgba(40,70,20,0.7)' });
+            otext('LAND', 866, 300, { size: 13, color: '#F1F8E9', stroke: 'rgba(40,70,20,0.7)' });
+            otext('BAY OF BENGAL', 520, 440, { size: 15, color: 'rgba(255,255,255,0.8)', stroke: 'rgba(0,30,60,0.4)' });
+            otext('Sea ' + this.seaT.toFixed(1) + ' °C', 700, 440, { size: 13, color: this.seaT >= 27 ? '#FFE0B2' : '#B3E5FC' });
+            // warm moist air glowing above the warm sea
+            if (st >= 1 && this.seaT >= 27) {
+                const gr = ctx.createRadialGradient(cx, cy, 0, cx, cy, 90 + 40 * Math.sin(t * 2));
+                gr.addColorStop(0, 'rgba(255,170,60,' + (0.35 * (1 - sf * 0.6)).toFixed(3) + ')'); gr.addColorStop(1, 'rgba(255,170,60,0)');
+                ctx.fillStyle = gr; ctx.fillRect(cx - 140, cy - 140, 280, 280);
+            }
+            // isobars
+            if (I > 0.02) {
+                const a = clamp(I * 25, 0, 0.9), cols = ['#E53935', '#FB8C00', '#7E57C2', '#1E88E5'];
+                for (let k = 0; k < 4; k++) {
+                    const r = (235 - k * 58) * (1 - 0.35 * clamp(I, 0, 1)), val = Math.round(P + (1008 - P) * Math.pow(1 - k / 3, 2));
+                    ctx.globalAlpha = a; ctx.strokeStyle = cols[k]; ctx.lineWidth = 3; ctx.setLineDash([10, 6]);
+                    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+                    ctx.globalAlpha = 1;
+                }
+            }
+            // air particles
+            ctx.lineCap = 'round'; ctx.lineWidth = 2.4;
+            const cool = new Path2D(), hot = new Path2D();
+            for (const p of this.parts) {
+                const path = p.warm > 0.5 ? hot : cool;
+                path.moveTo(p.x - p.vx * 0.09 - 0.6, p.y - p.vy * 0.09); path.lineTo(p.x, p.y);
+            }
+            ctx.strokeStyle = 'rgba(225,245,255,0.9)'; ctx.stroke(cool);
+            ctx.strokeStyle = 'rgba(255,190,90,0.95)'; ctx.stroke(hot);
+            // clouds
+            const pileA = clamp(I / 0.04, 0, 1) * (1 - smooth(0.15, 0.32, I) * sf);
+            if (pileA > 0.01) drawPile(cx, cy, 18 + 150 * clamp(I / 0.2, 0, 1), pileA * 0.85, t);
+            const spA = smooth(0.12, 0.3, I) * sf;
+            if (spA > 0.01) drawCyclone(cx, cy, { R: 70 + 190 * smooth(0.12, 1, I), eye, rot: this.rotAng, alpha: 0.85 * spA, arms: 3 });
+            // isobar labels on top of the clouds
+            if (I > 0.02) {
+                const cols = ['#E53935', '#EF6C00', '#7E57C2', '#1E88E5'];
+                ctx.globalAlpha = clamp(I * 25, 0, 1);
+                for (let k = 0; k < 4; k++) {
+                    const r = (235 - k * 58) * (1 - 0.35 * clamp(I, 0, 1)), val = Math.round(P + (1008 - P) * Math.pow(1 - k / 3, 2)), a = -0.7 + k * 0.32;
+                    pill(val + ' mb', cx + Math.cos(a) * r, cy + Math.sin(a) * r, { size: 12, color: cols[k], border: cols[k] });
+                }
+                ctx.globalAlpha = 1;
+            }
+            // heat released by condensation
+            this.sparks.forEach(s => {
+                const k = s.life, x = cx + Math.cos(s.a) * s.r, y = cy + Math.sin(s.a) * s.r;
+                blob(BLOB.orange, x, y, 5 + 10 * k, 0.9 * (1 - k));
+                ctx.globalAlpha = 1 - k; ctx.fillStyle = '#FFF59D'; ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI * 2); ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+            // inflow arrows from the highs
+            if (st >= 4) {
+                ctx.globalAlpha = clamp((I - 0.11) / 0.04, 0, 1);
+                H_POS.forEach(([hx, hy]) => flowArrow(hx, hy, cx, cy, 1.7 * sf, t, 85 + eye));
+                ctx.globalAlpha = 1;
+            }
+            if (st >= 2) {
+                H_POS.forEach(([hx, hy]) => bigLetter('H', hx, hy, '#E53935', 20));
+                if (eye > 8) {
+                    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx + eye * 0.7, cy + eye * 0.7); ctx.lineTo(cx + 62 + eye, cy + 78 + eye); ctx.stroke();
+                    pill('EYE: lowest pressure, calm', cx + 62 + eye, cy + 88 + eye, { size: 12, color: '#1565C0', border: '#1565C0' });
+                } else bigLetter('L', cx, cy, '#1E88E5', 22 + 6 * clamp(I / 0.2, 0, 1));
+            }
+            // left instrument column
+            ctx.fillStyle = 'rgba(255,255,255,0.9)'; roundRect(8, 8, 172, 440, 14); ctx.fill();
+            text('Pressure at centre', 94, 28, { size: 13, color: '#1565C0' });
+            gauge(94, 92, 42, clamp((1008 - P) / 62, 0, 1), 'falls →', Math.round(P) + ' mb');
+            const wind = this.wind();
+            text('Wind speed', 94, 190, { size: 13, color: '#C2185B' });
+            gauge(94, 252, 42, wind / 280, 'km/h', Math.round(wind) + ' km/h');
+            this.drawInset(16, 336, 156, 104, t);
+            // step tracker
+            ctx.fillStyle = 'rgba(255,255,255,0.94)'; roundRect(8, 456, W - 16, 96, 14); ctx.fill();
+            const noSpin = !this.rotation && st === 5 && sf < 0.3, born = st === 5 && this.I > 0.33 && sf > 0.6;
+            for (let i = 0; i < 5; i++) {
+                const x = 100 + i * 175, y = 488;
+                if (i < 4) { ctx.strokeStyle = st > i + 1 ? '#43A047' : 'rgba(0,0,0,0.15)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x + 20, y); ctx.lineTo(x + 155, y); ctx.stroke(); }
+                const done = st > i + 1 || (i === 4 && born), cur = st === i + 1 && !done, bad = i === 4 && noSpin;
+                const r = cur ? 17 + 2 * Math.sin(t * 5) : 16;
+                ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+                ctx.fillStyle = bad ? '#E53935' : done ? '#43A047' : cur ? '#C2185B' : '#fff'; ctx.fill();
+                ctx.strokeStyle = bad || done || cur ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.25)'; ctx.lineWidth = 2; ctx.stroke();
+                text(bad ? '✗' : done ? '✓' : String(i + 1), x, y + 1, { size: 16, color: bad || done || cur ? '#fff' : '#90A4AE', base: 'middle' });
+                const lab = bad ? '🚫 No spin: no cyclone' : STEP_LABELS[i];
+                text(lab, x, 528, { size: fitSize(lab, 168, 13, 800, 'Nunito, sans-serif'), color: bad ? '#C62828' : cur ? '#C2185B' : done ? '#2E7D32' : '#78909C' });
+            }
+            // caption
+            const [c1, c2] = this.caption(st);
+            const fs = fitSize(c1, 500, 19, 400, "'Fredoka One', cursive");
+            ctx.fillStyle = 'rgba(255,255,255,0.94)'; roundRect(194, 10, 506, 58, 14); ctx.fill();
+            text(c1, 447, 35, { size: fs, color: this.fizzled || (st === 5 && noSpin) ? '#C62828' : '#6B3FA0', font: "'Fredoka One', cursive", weight: 400 });
+            text(c2, 447, 58, { size: fitSize(c2, 490, 13, 700, 'Nunito, sans-serif'), color: '#455A64', weight: 700 });
+            // info
+            setText('b-sea', this.seaT.toFixed(1) + ' °C' + (this.seaT >= 27 ? ' (warm)' : ' (cool)'));
+            setText('b-p', Math.round(P) + ' mb');
+            setText('b-w', Math.round(wind) + ' km/h');
+            setText('b-spin', sf > 0.6 ? 'Strong ↺' : sf > 0.25 ? 'Starting ↺' : 'None');
+        },
+        drawInset(x0, y0, w, h, t) {
+            const I = this.I, st = this.step(), grow = clamp(I / 0.17, 0, 1), mx = x0 + w / 2, seaY = y0 + h - 16;
+            ctx.save(); roundRect(x0, y0, w, h, 10); ctx.clip();
+            const sky = ctx.createLinearGradient(0, y0, 0, seaY); sky.addColorStop(0, '#BBDEFB'); sky.addColorStop(1, '#E3F2FD');
+            ctx.fillStyle = sky; ctx.fillRect(x0, y0, w, h);
+            ctx.fillStyle = this.seaT >= 27 ? '#F57C00' : '#1976D2'; ctx.fillRect(x0, seaY, w, 16);
+            ctx.fillStyle = 'rgba(30,100,190,0.55)'; ctx.fillRect(x0, seaY, w, 16);
+            if (st >= 1 && I > 0.005) {
+                ctx.strokeStyle = '#EF6C00'; ctx.lineWidth = 2.5; ctx.setLineDash([5, 4]); ctx.lineDashOffset = t * 20;
+                [-12, 0, 12].forEach(o => { ctx.beginPath(); ctx.moveTo(mx + o, seaY - 2); ctx.lineTo(mx + o, seaY - 16 - 40 * grow); ctx.stroke(); });
+                ctx.setLineDash([]);
+                [-12, 0, 12].forEach(o => drawArrow(mx + o, seaY - 10 - 40 * grow, mx + o, seaY - 18 - 40 * grow, '#EF6C00', 2, null));
+            }
+            if (I > 0.015) {
+                const top = seaY - 26 - 50 * grow, cw = 16 + 34 * grow;
+                for (let i = 0; i < 12; i++) blob(i < 6 ? BLOB.grey : BLOB.white, mx + (JT[i] - 0.5) * cw * 1.4, top + JT[i + 20] * (seaY - 34 - top) * (i < 6 ? 1 : 0.5), 9 + 8 * grow, 0.95);
+                if (grow > 0.7) for (let i = 0; i < 5; i++) blob(BLOB.white, mx + (i - 2) * 14, top - 2, 9, 0.9);
+                ctx.globalAlpha = 1;
+            }
+            if (st >= 3) {
+                ctx.strokeStyle = '#1E88E5'; ctx.lineWidth = 1.5;
+                for (let i = 0; i < 8; i++) { const x = mx - 22 + JT[i + 40] * 44, y = seaY - 30 + ((t * 60 + JT[i + 60] * 30) % 28); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 1, y + 5); ctx.stroke(); }
+                for (let i = 0; i < 6; i++) { const k = (t * 1.5 + JT[i + 80]) % 1; blob(BLOB.orange, mx - 18 + JT[i + 90] * 36, seaY - 40 - 40 * grow * JT[i + 100], 5, 1 - k); }
+                ctx.globalAlpha = 1;
+            }
+            if (st >= 4) { drawArrow(x0 + 6, seaY - 6, mx - 26, seaY - 6, '#1565C0', 3, null); drawArrow(x0 + w - 6, seaY - 6, mx + 26, seaY - 6, '#1565C0', 3, null); }
+            if (st === 5 && this.spinF() > 0.3) {
+                ctx.strokeStyle = '#C2185B'; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(mx, y0 + 22, 26, 7, 0, 0.3, Math.PI * 1.8); ctx.stroke();
+                drawArrow(mx + 22, y0 + 18, mx + 25, y0 + 22, '#C2185B', 3, null);
+            }
+            ctx.restore();
+            text('Side view', x0 + 8, y0 + 14, { size: 11, align: 'left', color: '#37474F' });
+        },
+    };
+
+    // =====================================================
+    // TAB 2 — Inside the eye (side cross-section)
+    // =====================================================
+    const eyeSim = {
+        x: 40, y: 300, drag: false, auto: false, t: 0, trace: [], sawWall: false, eyeShown: false, flash: 0, nextFlash: 2.5, bolt: null,
+        air: [], sink: [], drops: [], clouds: null, V: 220, C: 450, Re: 40, Rm: 72, kmPerPx: 0.5,
+        init() {
+            const r = rng(21), C = this.C;
+            this.clouds = { wall: [], bands: [], canopy: [], low: [] };
+            for (const side of [-1, 1]) {
+                for (let i = 0; i < 120; i++) {
+                    const y = 70 + Math.pow(r(), 0.8) * 320, inner = 42 + (400 - y) * 0.18, outer = 132 + (400 - y) * 0.12;
+                    this.clouds.wall.push({ x: C + side * (inner + 10 + r() * (outer - inner - 10)), y, s: 16 + r() * 20, ph: r() * 6.28 });
+                }
+                [[205, 64, 175], [320, 52, 235]].forEach(([d, w, top]) => { for (let i = 0; i < 34; i++) this.clouds.bands.push({ x: C + side * (d + (r() - 0.5) * w), y: top + r() * (330 - top), s: 13 + r() * 13, ph: r() * 6.28 }); });
+                for (let i = 0; i < 55; i++) { const d = 105 + r() * 330; this.clouds.canopy.push({ x: C + side * d, y: 40 + r() * 40 + (d > 300 ? (d - 300) * 0.12 : 0), s: 18 + r() * 16, a: 1 - (d - 105) / 420, ph: r() * 6.28 }); }
+                for (let i = 0; i < 5; i++) this.clouds.low.push({ x: C + side * r() * 32, y: 376 + r() * 14, s: 8 + r() * 5 });
+            }
+            this.clouds.wall.sort((a, b) => b.y - a.y);
+            this.clouds.bands.sort((a, b) => b.y - a.y);
+            const nA = MOBILE ? 100 : 150;
+            this.air = Array.from({ length: nA }, () => ({ side: Math.random() < 0.5 ? -1 : 1, seg: Math.floor(Math.random() * 3), u: Math.random(), lane: Math.random() }));
+            this.sink = Array.from({ length: 16 }, () => ({ x: (Math.random() - 0.5) * 56, y: 90 + Math.random() * 290 }));
+            this.drops = Array.from({ length: MOBILE ? 150 : 230 }, () => { const d = {}; this.spawnDrop(d, true); return d; });
+        },
+        reset() { this.x = 40; this.y = 300; this.auto = false; this.trace = []; this.sawWall = false; this.eyeShown = false; syncEyeUI(); },
+        dist(x) { return Math.abs(x - this.C); },
+        wind(x) {
+            const r = this.dist(x), Re = this.Re, Rm = this.Rm;
+            if (r <= Re) return 8 + 12 * r / Re;
+            if (r <= Rm) return 20 + (this.V - 20) * smooth(0, 1, (r - Re) / (Rm - Re));
+            return this.V * Math.pow(Rm / r, 0.75);
+        },
+        pressure(x) { const r = Math.max(1, this.dist(x)); return 950 + 58 * Math.exp(-this.Rm / r); },
+        rain(x) {
+            const r = this.dist(x), g = (m, s) => Math.exp(-((r - m) * (r - m)) / (2 * s * s));
+            if (r < this.Re - 2) return 0;
+            if (r < 125) return 1;
+            return clamp(0.08 + 0.92 * g(125, 18) + 0.6 * g(205, 25) + 0.5 * g(320, 22), 0, 1);
+        },
+        rainWord(v) { return v < 0.02 ? 'None' : v < 0.2 ? 'Light' : v < 0.55 ? 'Moderate' : 'Heavy'; },
+        spawnDrop(d, anywhere) {
+            let x = 0;
+            for (let k = 0; k < 20; k++) { x = 10 + Math.random() * 880; if (Math.random() < this.rain(x)) break; }
+            d.x = x; d.y = anywhere ? 250 + Math.random() * 150 : 250 + Math.random() * 60; d.v = 420 + Math.random() * 160;
+        },
+        moveTo(p) { this.x = clamp(p.x, 15, 885); this.y = clamp(p.y, 110, 370); },
+        update(dt) {
+            this.t += dt;
+            if (this.auto && !this.drag) { this.x = Math.min(this.C, this.x + 70 * dt); if (this.x >= this.C) { this.auto = false; syncEyeUI(); } }
+            const w = this.wind(this.x);
+            this.trace[Math.round(this.x / 4)] = { w, p: this.pressure(this.x) };
+            if (w > 0.85 * this.V) this.sawWall = true;
+            if (this.dist(this.x) < this.Re && this.sawWall) { this.eyeShown = true; predicts.eye.reveal(); }
+            // air circulation: inflow low down, up the eyewall, out at the top; slow sinking in the eye
+            for (const p of this.air) {
+                const v = p.seg === 0 ? 50 + 130 * p.u : p.seg === 1 ? 160 : 110, len = p.seg === 0 ? 340 : p.seg === 1 ? 300 : 342;
+                p.u += v / len * dt;
+                if (p.u >= 1) { p.u = 0; p.seg = (p.seg + 1) % 3; if (p.seg === 0) { p.lane = Math.random(); p.side = Math.random() < 0.5 ? -1 : 1; } }
+            }
+            this.sink.forEach(s => { s.y += 28 * dt; if (s.y > 385) { s.y = 90; s.x = (Math.random() - 0.5) * 56; } });
+            this.drops.forEach(d => { d.y += d.v * dt; d.x += -Math.sign(d.x - this.C) * this.wind(d.x) / this.V * 90 * dt; if (d.y > 400) this.spawnDrop(d, false); });
+            this.nextFlash -= dt; this.flash = Math.max(0, this.flash - dt);
+            if (this.nextFlash <= 0) {
+                const side = Math.random() < 0.5 ? -1 : 1, x0 = this.C + side * (85 + Math.random() * 30), pts = [[x0, 150]];
+                let x = x0; for (let y = 150; y < 395; y += 22) { x += (Math.random() - 0.5) * 26; pts.push([x, y]); }
+                this.bolt = pts; this.flash = 0.2; this.nextFlash = 2 + Math.random() * 3;
+            }
+        },
+        airPos(p) {
+            let dx, y;
+            if (p.seg === 0) { dx = 440 - p.u * 340; y = 386 - p.lane * 40; }
+            else if (p.seg === 1) { y = 380 - p.u * 300; dx = 70 + (400 - y) * 0.15 + p.lane * 34; }
+            else { dx = 118 + p.lane * 34 + p.u * 342; y = 80 - p.lane * 22 - p.u * 15; }
+            return [this.C + p.side * dx, y];
+        },
+        draw() {
+            const t = this.t, C = this.C;
+            const sky = ctx.createLinearGradient(0, 0, 0, 400); sky.addColorStop(0, '#8FA6BA'); sky.addColorStop(1, '#D3DCE4');
+            ctx.fillStyle = sky; ctx.fillRect(0, 0, W, 400);
+            // the clear eye: blue sky and sunshine
+            ctx.save(); ctx.beginPath(); ctx.moveTo(C - 114, 0); ctx.lineTo(C + 114, 0); ctx.lineTo(C + 42, 400); ctx.lineTo(C - 42, 400); ctx.closePath(); ctx.clip();
+            const es = ctx.createLinearGradient(0, 0, 0, 400); es.addColorStop(0, '#2F95F0'); es.addColorStop(1, '#BFE6FF');
+            ctx.fillStyle = es; ctx.fillRect(C - 120, 0, 240, 400);
+            const beam = ctx.createLinearGradient(0, 0, 0, 400); beam.addColorStop(0, 'rgba(255,241,118,0.55)'); beam.addColorStop(1, 'rgba(255,241,118,0.08)');
+            ctx.fillStyle = beam; ctx.beginPath(); ctx.moveTo(C - 12, 30); ctx.lineTo(C + 12, 30); ctx.lineTo(C + 40, 400); ctx.lineTo(C - 40, 400); ctx.closePath(); ctx.fill();
+            ctx.restore();
+            ctx.fillStyle = '#FFD54F'; ctx.beginPath(); ctx.arc(C, 30, 16, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#FFCA28'; ctx.lineWidth = 3;
+            for (let k = 0; k < 10; k++) { const a = k * 0.628 + t * 0.4; ctx.beginPath(); ctx.moveTo(C + Math.cos(a) * 21, 30 + Math.sin(a) * 21); ctx.lineTo(C + Math.cos(a) * 29, 30 + Math.sin(a) * 29); ctx.stroke(); }
+            // clouds
+            const cl = this.clouds, shade = (y) => y > 300 ? BLOB.slate : y > 200 ? BLOB.grey : BLOB.white;
+            cl.bands.forEach(b => blob(shade(b.y + 30), b.x, b.y + Math.sin(t + b.ph) * 1.5, b.s, 0.95));
+            cl.wall.forEach(b => blob(shade(b.y), b.x, b.y + Math.sin(t * 1.3 + b.ph) * 2, b.s, 0.97));
+            cl.canopy.forEach(b => blob(BLOB.white, b.x + Math.sin(t * 0.3 + b.ph) * 3, b.y, b.s, 0.9 * b.a));
+            cl.low.forEach(b => blob(BLOB.white, b.x, b.y, b.s, 0.85));
+            ctx.globalAlpha = 1;
+            // rain
+            ctx.strokeStyle = 'rgba(40,70,120,0.55)'; ctx.lineWidth = 1.5; ctx.beginPath();
+            this.drops.forEach(d => { const sl = -Math.sign(d.x - C) * this.wind(d.x) / this.V * 6; ctx.moveTo(d.x, d.y); ctx.lineTo(d.x + sl, d.y + 12); });
+            ctx.stroke();
+            // air particles
+            const groups = [['#0D47A1', []], ['#E65100', []], ['#455A64', []]];
+            this.air.forEach(p => groups[p.seg][1].push(this.airPos(p)));
+            groups.forEach(([c, pts]) => { ctx.fillStyle = c; ctx.beginPath(); pts.forEach(([x, y]) => { ctx.moveTo(x + 2.6, y); ctx.arc(x, y, 2.6, 0, Math.PI * 2); }); ctx.fill(); });
+            ctx.fillStyle = '#1565C0'; ctx.beginPath(); this.sink.forEach(s => { ctx.moveTo(C + s.x + 2.2, s.y); ctx.arc(C + s.x, s.y, 2.2, 0, Math.PI * 2); }); ctx.fill();
+            // sea
+            ctx.fillStyle = '#3D6E99'; ctx.beginPath(); ctx.moveTo(0, 440);
+            for (let x = 0; x <= W; x += 8) { const amp = 1 + 7 * this.wind(x) / this.V, dome = -7 * Math.exp(-Math.pow((x - C) / 70, 2)); ctx.lineTo(x, 400 + dome + Math.sin(x * 0.09 + t * 4) * amp); }
+            ctx.lineTo(W, 440); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = 'rgba(255,255,255,0.85)';
+            for (let x = 4; x < W; x += 16) { if (this.wind(x) > 110 && Math.sin(x * 0.09 + t * 4) > 0.6) { ctx.beginPath(); ctx.arc(x, 396 - 7 * Math.exp(-Math.pow((x - C) / 70, 2)), 2.5, 0, Math.PI * 2); ctx.fill(); } }
+            // lightning
+            if (this.flash > 0 && this.bolt) {
+                ctx.fillStyle = 'rgba(255,255,255,' + (this.flash * 1.2).toFixed(2) + ')'; ctx.fillRect(0, 0, W, 400);
+                ctx.strokeStyle = '#FFF59D'; ctx.lineWidth = 3; ctx.beginPath(); this.bolt.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.stroke();
+            }
+            // labels
+            pill('EYE: calm, clear', C, 232, { size: 13, color: '#1565C0' });
+            pill('lowest pressure', C, 256, { size: 11, color: '#1565C0' });
+            pill('EYEWALL', C - 92, 336, { size: 12, color: '#C2185B' });
+            pill('EYEWALL', C + 92, 336, { size: 12, color: '#C2185B' });
+            pill('rain band', C - 205, 160, { size: 11, color: '#455A64' });
+            pill('rain band', C + 320, 222, { size: 11, color: '#455A64' });
+            pill('outer edge', 50, 130, { size: 11, color: '#455A64' });
+            // drone + live readout
+            const w = this.wind(this.x), p = this.pressure(this.x), rn = this.rain(this.x);
+            const dx = this.x + Math.sin(t * 13) * w / this.V * 3, dy = this.y + Math.sin(t * 17) * w / this.V * 4;
+            this.drawDrone(dx, dy, t);
+            const bx = clamp(dx - 80, 6, W - 166), by = dy - 108 < 6 ? dy + 26 : dy - 108;
+            ctx.fillStyle = 'rgba(255,255,255,0.96)'; roundRect(bx, by, 160, 80, 12); ctx.fill(); ctx.strokeStyle = '#C2185B'; ctx.lineWidth = 2; ctx.stroke();
+            const bar = (row, label, val, frac, col) => {
+                const y = by + 20 + row * 23;
+                text(label, bx + 10, y + 4, { size: 12, align: 'left', color: '#37474F' });
+                text(val, bx + 150, y + 4, { size: 12, align: 'right', color: col });
+                ctx.fillStyle = 'rgba(0,0,0,0.08)'; ctx.fillRect(bx + 10, y + 8, 140, 5);
+                ctx.fillStyle = col; ctx.fillRect(bx + 10, y + 8, 140 * clamp(frac, 0, 1), 5);
+            };
+            bar(0, 'Wind', Math.round(w) + ' km/h', w / 230, '#C2185B');
+            bar(1, 'Pressure', Math.round(p) + ' mb', (1010 - p) / 60, '#1565C0');
+            bar(2, 'Rain', this.rainWord(rn), rn, '#00897B');
+            const inEye = this.dist(this.x) < this.Re;
+            if (inEye && this.eyeShown) {
+                ctx.fillStyle = 'rgba(255,255,255,0.96)'; roundRect(C - 150, 62, 300, 56, 16); ctx.fill(); ctx.strokeStyle = '#43A047'; ctx.lineWidth = 3; ctx.stroke();
+                text('😮 Calm! Blue sky above!', C, 90, { size: 22, color: '#2E7D32', font: "'Fredoka One', cursive", weight: 400 });
+                text('lowest pressure, yet hardly any wind', C, 110, { size: 12, color: '#455A64' });
+            }
+            // graph strip: same x as the scene above
+            ctx.fillStyle = '#fff'; ctx.fillRect(0, 440, W, 120);
+            ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, 440.5); ctx.lineTo(W, 440.5); ctx.stroke();
+            const gy0 = 456, gy1 = 544;
+            ctx.fillStyle = 'rgba(30,136,229,0.12)'; ctx.fillRect(C - this.Re, gy0, this.Re * 2, gy1 - gy0);
+            ctx.fillStyle = 'rgba(194,24,91,0.1)'; ctx.fillRect(C - 125, gy0, 125 - this.Re, gy1 - gy0); ctx.fillRect(C + this.Re, gy0, 125 - this.Re, gy1 - gy0);
+            text('eye', C, gy1 + 12, { size: 11, color: '#1565C0' });
+            text('eyewall', C - 84, gy1 + 12, { size: 11, color: '#C2185B' }); text('eyewall', C + 84, gy1 + 12, { size: 11, color: '#C2185B' });
+            ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.beginPath(); ctx.moveTo(10, gy1 + 0.5); ctx.lineTo(W - 10, gy1 + 0.5); ctx.stroke();
+            const wy = (v) => gy1 - v / 240 * (gy1 - gy0), py = (v) => gy1 - (v - 945) / 65 * (gy1 - gy0);
+            const plot = (key, fy, col, lw) => {
+                ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.lineJoin = 'round'; ctx.beginPath(); let pen = false;
+                for (let i = 0; i < this.trace.length; i++) { const s = this.trace[i]; if (!s) { pen = false; continue; } const x = i * 4, y = fy(s[key]); if (pen) ctx.lineTo(x, y); else ctx.moveTo(x, y); pen = true; }
+                ctx.stroke();
+            };
+            plot('p', py, '#1E88E5', 2.5); plot('w', wy, '#C2185B', 3.5);
+            ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.setLineDash([4, 4]); ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(this.x, gy0 - 6); ctx.lineTo(this.x, gy1); ctx.stroke(); ctx.setLineDash([]);
+            text('— Wind (km/h)', 14, 456, { size: 12, align: 'left', color: '#C2185B' });
+            text('— Pressure (mb)', 14, 472, { size: 12, align: 'left', color: '#1E88E5' });
+            text('Scale: 50 km', W - 70, 456, { size: 11, color: '#607D8B' });
+            ctx.strokeStyle = '#607D8B'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(W - 120, 464); ctx.lineTo(W - 20, 464); ctx.stroke();
+            const km = Math.round(this.dist(this.x) * this.kmPerPx);
+            setText('e-pos', inEye ? 'In the eye' : this.dist(this.x) < 125 ? 'In the eyewall' : km + ' km from the eye');
+            setText('e-w', Math.round(w) + ' km/h');
+            setText('e-p', Math.round(p) + ' mb');
+            setText('e-r', this.rainWord(rn));
+        },
+        drawDrone(x, y, t) {
+            ctx.strokeStyle = '#37474F'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+            ctx.beginPath(); ctx.moveTo(x - 22, y - 6); ctx.lineTo(x + 22, y - 6); ctx.stroke();
+            [-22, 22].forEach(o => { ctx.fillStyle = 'rgba(55,71,79,0.35)'; ctx.beginPath(); ctx.ellipse(x + o, y - 9, 13 * Math.abs(Math.sin(t * 30 + o)) + 4, 3, 0, 0, Math.PI * 2); ctx.fill(); });
+            ctx.fillStyle = '#C2185B'; roundRect(x - 15, y - 7, 30, 13, 5); ctx.fill();
+            ctx.fillStyle = '#263238'; ctx.beginPath(); ctx.arc(x, y + 9, 5, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = Math.sin(t * 8) > 0 ? '#FF1744' : '#B71C1C'; ctx.beginPath(); ctx.arc(x + 10, y - 1, 2.5, 0, Math.PI * 2); ctx.fill();
+            otext('DRONE', x, y + 28, { size: 11, lw: 3 });
+        },
+    };
+
+    // =====================================================
+    // TAB 3 — Landfall (map)
+    // =====================================================
+    const yC = (x) => 224 + 22 * Math.sin(x * 0.012 + 0.8) + 10 * Math.sin(x * 0.035 + 1.3);
+    const SHELTER = { x: 470, y: 104 };
+    const WARN = [
+        { c: '#43A047', head: 'No warning yet', t1: 'The cyclone is far out at sea.', t2: 'Keep listening to IMD updates.' },
+        { c: '#F9A825', head: 'CYCLONE WATCH', t1: 'Fishermen: do not go to sea!', t2: 'Boats hurry back to the harbour.' },
+        { c: '#EF6C00', head: 'CYCLONE WARNING', t1: 'Coastal people: take your kit and', t2: 'move to the cyclone shelter.' },
+        { c: '#D32F2F', head: 'DANGER: LANDFALL NEAR', t1: 'Everyone into the cyclone shelter', t2: 'NOW! Stay away from the sea.' },
+        { c: '#B71C1C', head: 'LANDFALL!', t1: 'Storm surge and fierce winds.', t2: 'Stay inside the shelter.' },
+        { c: '#6A1B9A', head: 'WEAKENING OVER LAND', t1: 'No warm sea to feed it any more.', t2: 'Stay put until the all-clear.' },
+    ];
+    const land = {
+        cx: 470, cy: 520, I: 1, V: 200, auto: false, drag: false, landfall: false, lfI: 1, lfX: 440, landT: 0, rot: 0, surge: 0, xS: 470,
+        flood: 0, maxLevel: 0, bannerT: 0, t: 0, track: [], huts: [], palms: [], poles: [], boats: [], people: [], debris: [], kmPerPx: 4,
+        reset() {
+            Object.assign(this, { cx: 470, cy: 520, I: 1, auto: false, drag: false, landfall: false, lfI: 1, landT: 0, surge: 0, flood: 0, maxLevel: 0, bannerT: 0, track: [[470, 520]], debris: [] });
+            this.huts = []; this.people = [];
+            [290, 560, 790].forEach((vx, vi) => {
+                const vy = yC(vx) - 40;
+                [[-36, -6], [-10, 8], [16, -8], [40, 6]].forEach(([ox, oy]) => this.huts.push({ x: vx + ox, y: vy + oy, roof: true }));
+                for (let i = 0; i < 8; i++) this.people.push({ x: vx - 40 + i * 11, y: vy + 20 + (i % 2) * 5, state: 'home', sp: 46 + Math.random() * 14, v: vi });
+            });
+            this.palms = []; for (let x = 30; x < 880; x += 58) if (x < 395 || x > 450) this.palms.push({ x, y: yC(x) - 10, down: false });
+            this.poles = []; for (let x = 524; x <= 850; x += 54) this.poles.push({ x, y: yC(x) - 70, down: false });
+            const boatSea = [[200, 330], [330, 300], [610, 320], [720, 360]];
+            this.boats = boatSea.map(([x, y], i) => ({ x, y, hx: [200, 232, 640, 672][i], hy: yC([200, 232, 640, 672][i]) + 9, state: 'sea', ph: Math.random() * 6 }));
+            syncLandUI();
+        },
+        dist() { return this.cy - yC(this.cx); },
+        windAt(x, y) {
+            const dx = x - this.cx, dy = y - this.cy, r = Math.hypot(dx, dy), Rm = 30 + 18 * this.I, q = r / Rm;
+            let f = q < 0.55 ? 0.12 + q * 0.4 : q < 1 ? 0.34 + (q - 0.55) / 0.45 * 0.66 : Math.pow(1 / q, 0.62);
+            if (r > 330) f *= Math.max(0, 1 - (r - 330) / 80);
+            return this.V * this.I * f;
+        },
+        windDir(x, y) { const dx = x - this.cx, dy = y - this.cy, r = Math.hypot(dx, dy) || 1, ux = (dy - 0.35 * dx) / r, uy = (-dx - 0.35 * dy) / r, m = Math.hypot(ux, uy) || 1; return [ux / m, uy / m]; },
+        level() { const d = this.dist(); if (this.landfall && d < 0) return this.I <= 0.6 * this.lfI ? 5 : 4; if (d <= 70) return 3; if (d <= 150) return 2; if (d <= 230) return 1; return 0; },
+        moveTo(p) { this.cx = clamp(p.x, 30, 870); this.cy = clamp(p.y, 20, 545); },
+        surgeExt(x) { return this.surge * 8 * Math.exp(-Math.pow((x - this.xS) / 150, 2)); },
+        flooded(x, y) { return yC(x) - y < this.surgeExt(x); },
+        update(dt) {
+            this.t += dt;
+            if (this.auto && !this.drag) { this.cx -= 4 * dt; this.cy -= 22 * dt; if (this.cy < 24) { this.cy = 24; this.auto = false; syncLandUI(); } }
+            const lastT = this.track[this.track.length - 1];
+            if (!lastT || Math.hypot(this.cx - lastT[0], this.cy - lastT[1]) > 8) this.track.push([this.cx, this.cy]);
+            const d = this.dist(), overLand = d < 0;
+            if (overLand && !this.landfall) { this.landfall = true; this.lfI = this.I; this.lfX = this.cx; this.bannerT = 3.5; }
+            if (overLand) { this.landT += dt; this.I = Math.max(0.05, this.I - 0.1 * this.I * dt); }      // moisture supply cut off
+            else { this.landT = Math.max(0, this.landT - dt * 2); this.I += (1 - this.I) * 0.05 * dt; }    // warm sea feeds it again
+            this.rot -= (0.35 + 1.4 * this.I) * dt;
+            if (this.landfall && this.I < 0.6 * this.lfI) predicts.land.reveal();
+            this.maxLevel = Math.max(this.maxLevel, this.level());
+            // storm surge
+            const prox = d > -60 ? clamp(1 - Math.abs(d) / 80, 0, 1) : 0;
+            const target = prox * clamp(2 + 10 * (this.V * this.I - 100) / 170, 0, 12);
+            if (d > -40) this.xS = this.cx + 30;
+            this.surge += (target - this.surge) * Math.min(1, (target > this.surge ? 1.2 : 0.25) * dt);
+            if (d < 120) this.flood += 0.05 * this.I * dt;
+            this.flood = clamp(this.flood - 0.008 * dt, 0, 1);
+            // damage
+            this.huts.forEach(h => {
+                if (h.roof && this.windAt(h.x, h.y) > 105) {
+                    h.roof = false; const [ux, uy] = this.windDir(h.x, h.y);
+                    this.debris.push({ x: h.x, y: h.y - 10, vx: ux * 90, vy: uy * 90 - 20, rot: 0, vr: 6 + Math.random() * 6, life: 3 });
+                }
+            });
+            this.palms.forEach(p => { if (!p.down && this.windAt(p.x, p.y) > 150) { p.down = true; p.dir = Math.sign(this.windDir(p.x, p.y)[0]) || 1; } });
+            this.poles.forEach(p => { if (!p.down && this.windAt(p.x, p.y) > 120) { p.down = true; p.dir = Math.sign(this.windDir(p.x, p.y)[0]) || 1; } });
+            this.boats.forEach(b => {
+                const w = this.windAt(b.x, b.y);
+                if ((b.state === 'sea' || b.state === 'returning') && w > 150) b.state = 'capsized';
+                if (b.state === 'sea' && this.maxLevel >= 1) b.state = 'returning';
+                if (b.state === 'returning') { const dx = b.hx - b.x, dy = b.hy - b.y, L = Math.hypot(dx, dy); if (L < 3) b.state = 'harbour'; else { b.x += dx / L * 70 * dt; b.y += dy / L * 70 * dt; } }
+                if (b.state === 'harbour' && this.surge > 4 && this.flooded(b.x, b.y - 4)) b.state = 'tossed';
+            });
+            this.people.forEach(p => {
+                if (p.state === 'home' && this.maxLevel >= 2) p.state = 'walking';
+                if (p.state === 'walking') { const dx = SHELTER.x - p.x, dy = SHELTER.y + 22 - p.y, L = Math.hypot(dx, dy); if (L < 6) p.state = 'safe'; else { p.x += dx / L * p.sp * dt; p.y += dy / L * p.sp * dt; } }
+            });
+            this.debris.forEach(o => { o.x += o.vx * dt; o.y += o.vy * dt; o.vy += 10 * dt; o.rot += o.vr * dt; o.life -= dt; });
+            this.debris = this.debris.filter(o => o.life > 0);
+            this.bannerT = Math.max(0, this.bannerT - dt);
+        },
+        draw() {
+            const t = this.t, d = this.dist();
+            drawOcean(t, 0.12, this.cx, this.cy, true);
+            // land
+            ctx.beginPath(); ctx.moveTo(0, 0); for (let x = 0; x <= W; x += 10) ctx.lineTo(x, yC(x)); ctx.lineTo(W, 0); ctx.closePath();
+            const lg = ctx.createLinearGradient(0, 0, 0, 250); lg.addColorStop(0, '#7CB342'); lg.addColorStop(1, '#C5E1A5'); ctx.fillStyle = lg; ctx.fill();
+            ctx.fillStyle = 'rgba(85,139,47,0.45)'; [[90, 30, 90, 26], [250, 20, 80, 20], [640, 26, 110, 26], [860, 40, 70, 30]].forEach(([x, y, rx, ry]) => { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); ctx.fill(); });
+            ctx.strokeStyle = '#F5E1A4'; ctx.lineWidth = 7; ctx.beginPath(); for (let x = 0; x <= W; x += 10) x ? ctx.lineTo(x, yC(x) - 2) : ctx.moveTo(x, yC(x) - 2); ctx.stroke();
+            // river
+            const river = () => { ctx.beginPath(); ctx.moveTo(360, 0); ctx.bezierCurveTo(400, 40, 330, 90, 380, 130); ctx.bezierCurveTo(420, 165, 400, 190, 422, yC(422) + 2); };
+            if (this.flood > 0.05) { river(); ctx.strokeStyle = 'rgba(66,165,245,0.35)'; ctx.lineWidth = 6 + this.flood * 44; ctx.stroke(); }
+            river(); ctx.strokeStyle = '#42A5F5'; ctx.lineWidth = 5 + this.flood * 10; ctx.stroke();
+            // roads
+            ctx.strokeStyle = '#9E9E9E'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+            [[290, yC(290) - 30], [560, yC(560) - 32], [790, yC(790) - 28]].forEach(([x, y]) => { ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo((x + SHELTER.x) / 2, (y + SHELTER.y) / 2 - 20, SHELTER.x, SHELTER.y + 26); ctx.stroke(); });
+            // storm surge flooding the low coast
+            if (this.surge > 0.1) {
+                ctx.beginPath(); ctx.moveTo(0, yC(0)); for (let x = 0; x <= W; x += 8) ctx.lineTo(x, yC(x) - this.surgeExt(x)); ctx.lineTo(W, yC(W)); for (let x = W; x >= 0; x -= 8) ctx.lineTo(x, yC(x) + 2); ctx.closePath();
+                ctx.fillStyle = 'rgba(25,105,190,0.78)'; ctx.fill();
+                ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 3; ctx.beginPath();
+                for (let x = 0; x <= W; x += 6) { const e = this.surgeExt(x); if (e < 3) continue; const y = yC(x) - e + Math.sin(x * 0.2 + t * 6) * 2; ctx.lineTo(x, y); }
+                ctx.stroke();
+                if (this.surge > 3) otext('Storm surge! Sea water floods the land', clamp(this.xS, 160, 700), yC(clamp(this.xS, 160, 700)) - this.surgeExt(this.xS) - 10, { size: 14, color: '#E3F2FD' });
+            }
+            // track + forecast
+            ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 2; ctx.setLineDash([3, 6]); ctx.beginPath(); this.track.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.stroke(); ctx.setLineDash([]);
+            if (!this.landfall && d > 30) {
+                const ex = this.cx - 4 / 22 * (d + 30), ey = yC(ex) - 30;
+                ctx.fillStyle = 'rgba(255,255,255,0.18)'; ctx.beginPath(); ctx.moveTo(this.cx, this.cy); ctx.lineTo(ex - 50, ey); ctx.lineTo(ex + 50, ey); ctx.closePath(); ctx.fill();
+                ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.setLineDash([8, 6]); ctx.beginPath(); ctx.moveTo(this.cx, this.cy); ctx.lineTo(ex, ey); ctx.stroke(); ctx.setLineDash([]);
+                otext('forecast track', (this.cx + ex) / 2 + 54, (this.cy + ey) / 2, { size: 12, align: 'left' });
+            }
+            // the cyclone
+            const loose = clamp(this.landT / 9, 0, 1);
+            drawCyclone(this.cx, this.cy, { R: 60 + 90 * this.I, eye: this.I > 0.45 ? 6 + 8 * this.I : 0, rot: this.rot, alpha: 0.5 + 0.35 * this.I, loose, arms: 3 });
+            // things on the map
+            this.palms.forEach(p => this.drawPalm(p, t));
+            this.drawPoles();
+            this.huts.forEach(h => this.drawHut(h));
+            this.drawShelter();
+            this.boats.forEach(b => this.drawBoat(b, t));
+            ctx.fillStyle = '#4E342E';
+            this.people.forEach(p => { if (p.state === 'safe') return; ctx.beginPath(); ctx.arc(p.x, p.y - 7, 2.6, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(p.x - 1.5, p.y - 4.5, 3, 7); });
+            // rain under the storm
+            const R = 60 + 90 * this.I, n = Math.round(150 * this.I * (1 - 0.5 * loose));
+            ctx.strokeStyle = 'rgba(225,240,255,0.75)'; ctx.lineWidth = 1.4; ctx.beginPath();
+            for (let i = 0; i < n; i++) { const a = Math.random() * 6.283, r = Math.sqrt(Math.random()) * R, x = this.cx + Math.cos(a) * r, y = this.cy + Math.sin(a) * r, [ux, uy] = this.windDir(x, y); ctx.moveTo(x, y); ctx.lineTo(x + ux * 7, y + uy * 7 + 5); }
+            ctx.stroke();
+            this.debris.forEach(o => { ctx.save(); ctx.translate(o.x, o.y); ctx.rotate(o.rot); ctx.globalAlpha = Math.min(1, o.life); ctx.fillStyle = '#D84315'; ctx.beginPath(); ctx.moveTo(-10, 4); ctx.lineTo(0, -5); ctx.lineTo(10, 4); ctx.closePath(); ctx.fill(); ctx.restore(); });
+            ctx.globalAlpha = 1;
+            if (this.flood > 0.45) otext('River overflowing!', 470, 150, { size: 13, color: '#E3F2FD', stroke: 'rgba(13,71,161,0.9)' });
+            if (Math.hypot(this.cx - 470, this.cy - 520) < 5 && !this.auto) otext('Drag me ↑ or press Advance', this.cx, this.cy - 78, { size: 14 });
+            // IMD-style warning panel
+            const lv = this.level(), wv = WARN[lv];
+            ctx.fillStyle = 'rgba(255,255,255,0.96)'; roundRect(12, 440, 318, 110, 14); ctx.fill();
+            ctx.fillStyle = wv.c; roundRect(12, 440, 318, 34, 14); ctx.fill(); ctx.fillRect(12, 460, 318, 14);
+            const pulse = lv >= 3 ? 0.75 + 0.25 * Math.sin(t * 8) : 1;
+            ctx.globalAlpha = pulse; text('📡 IMD ALERT: ' + wv.head, 171, 463, { size: fitSize('📡 IMD ALERT: ' + wv.head, 300, 16, 800, 'Nunito, sans-serif'), color: '#fff' }); ctx.globalAlpha = 1;
+            text(wv.t1, 171, 500, { size: 15, color: '#263238' });
+            text(wv.t2, 171, 522, { size: 15, color: '#263238' });
+            const km = Math.round(Math.max(0, d) * this.kmPerPx);
+            text(this.landfall && d < 0 ? 'Over land' : 'Distance to coast: ' + km + ' km', 171, 543, { size: 12, color: '#607D8B' });
+            // wind gauge with Amphan marker
+            const wind = this.V * this.I;
+            gauge(690, 488, 42, wind / 300, 'km/h', Math.round(wind) + ' km/h');
+            const aA = Math.PI * 0.8 + Math.PI * 1.4 * 0.9;
+            ctx.strokeStyle = '#6A1B9A'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(690 + Math.cos(aA) * 44, 488 + Math.sin(aA) * 44); ctx.lineTo(690 + Math.cos(aA) * 56, 488 + Math.sin(aA) * 56); ctx.stroke();
+            text('★ Amphan 2020', 750, 482, { size: 13, align: 'left', color: '#6A1B9A' });
+            text('peak 270 km/h', 750, 499, { size: 12, align: 'left', color: '#6A1B9A' });
+            text('Wind speed', 690, 434, { size: 12, color: '#37474F' });
+            // surge scale bar
+            const sx = 806, sy0 = 236, sy1 = 406, mPx = (sy1 - sy0) / 12;
+            ctx.fillStyle = 'rgba(255,255,255,0.95)'; roundRect(sx - 6, 196, 92, 226, 12); ctx.fill();
+            text('Storm surge', sx + 40, 214, { size: 12, color: '#1565C0' });
+            text(this.surge.toFixed(1) + ' m', sx + 40, 230, { size: 13, color: '#C2185B' });
+            ctx.fillStyle = '#E3F2FD'; ctx.fillRect(sx + 4, sy0, 22, sy1 - sy0);
+            ctx.fillStyle = '#1E88E5'; ctx.fillRect(sx + 4, sy1 - this.surge * mPx, 22, this.surge * mPx);
+            ctx.strokeStyle = '#90A4AE'; ctx.lineWidth = 1; ctx.strokeRect(sx + 4, sy0, 22, sy1 - sy0);
+            [0, 3, 6, 9, 12].forEach(m => { const y = sy1 - m * mPx; ctx.fillStyle = '#546E7A'; ctx.fillRect(sx + 26, y - 0.5, 6, 1.5); text(m + ' m', sx + 34, y + 4, { size: 10, align: 'left', color: '#546E7A' }); });
+            ctx.fillStyle = '#FFB74D'; ctx.fillRect(sx, sy1 - 12 * mPx, 3, 9 * mPx);
+            text('3–12 m', sx + 64, sy0 + 40, { size: 10, color: '#EF6C00' });
+            // a person (1.6 m) for size
+            ctx.fillStyle = '#4E342E'; const ph = 1.6 * mPx; ctx.beginPath(); ctx.arc(sx + 70, sy1 - ph + 3, 3, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(sx + 68.5, sy1 - ph + 6, 3, ph - 6);
+            text('you', sx + 70, sy1 + 12, { size: 10, color: '#4E342E' });
+            // banners
+            if (this.bannerT > 0) {
+                ctx.globalAlpha = clamp(this.bannerT, 0, 1);
+                ctx.fillStyle = 'rgba(183,28,28,0.94)'; roundRect(250, 262, 400, 50, 16); ctx.fill();
+                text('🌊 LANDFALL! The cyclone hits the coast', 450, 294, { size: 20, color: '#fff', font: "'Fredoka One', cursive", weight: 400 });
+                ctx.globalAlpha = 1;
+            } else if (lv === 5) {
+                ctx.fillStyle = 'rgba(106,27,154,0.92)'; roundRect(230, 262, 440, 50, 16); ctx.fill();
+                text('Weakening over land: no warm, moist sea air', 450, 293, { size: 18, color: '#fff', font: "'Fredoka One', cursive", weight: 400 });
+            }
+            const safe = this.people.filter(p => p.state === 'safe').length;
+            setText('l-w', Math.round(wind) + ' km/h');
+            setText('l-d', this.landfall && d < 0 ? 'over land' : km + ' km');
+            setText('l-s', this.surge.toFixed(1) + ' m');
+            setText('l-p', safe + ' / ' + this.people.length);
+        },
+        drawPalm(p, t) {
+            const w = this.windAt(p.x, p.y), [ux] = this.windDir(p.x, p.y), bend = clamp(w / 180, 0, 1) * 14 * ux + Math.sin(t * 9 + p.x) * w / 180 * 2;
+            ctx.save(); ctx.translate(p.x, p.y);
+            if (p.down) ctx.rotate(p.dir * 1.35);
+            ctx.strokeStyle = '#8D6E63'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+            ctx.beginPath(); ctx.moveTo(0, 0); ctx.quadraticCurveTo(bend * 0.3, -14, p.down ? 0 : bend, -26); ctx.stroke();
+            const tx = p.down ? 0 : bend, ty = -26;
+            ctx.strokeStyle = '#2E7D32'; ctx.lineWidth = 3;
+            for (let k = 0; k < 5; k++) { const a = -Math.PI / 2 + (k - 2) * 0.7 + (p.down ? 0 : bend * 0.06); ctx.beginPath(); ctx.moveTo(tx, ty); ctx.quadraticCurveTo(tx + Math.cos(a) * 8, ty + Math.sin(a) * 8 - 2, tx + Math.cos(a) * 13 + bend * 0.25, ty + Math.sin(a) * 11 + 5); ctx.stroke(); }
+            ctx.restore();
+        },
+        drawPoles() {
+            const top = (p) => p.down ? [p.x + p.dir * 20, p.y - 4] : [p.x, p.y - 24];
+            ctx.strokeStyle = '#37474F'; ctx.lineWidth = 1.3;
+            for (let i = 0; i < this.poles.length - 1; i++) { const [x1, y1] = top(this.poles[i]), [x2, y2] = top(this.poles[i + 1]); ctx.beginPath(); ctx.moveTo(x1, y1); ctx.quadraticCurveTo((x1 + x2) / 2, Math.max(y1, y2) + 6, x2, y2); ctx.stroke(); }
+            this.poles.forEach(p => {
+                ctx.save(); ctx.translate(p.x, p.y); if (p.down) ctx.rotate(p.dir * 1.4);
+                ctx.strokeStyle = '#6D4C41'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -24); ctx.moveTo(-6, -20); ctx.lineTo(6, -20); ctx.stroke();
+                ctx.restore();
+            });
+        },
+        drawHut(h) {
+            ctx.fillStyle = '#FFE0B2'; ctx.fillRect(h.x - 8, h.y - 9, 16, 10); ctx.strokeStyle = '#8D6E63'; ctx.lineWidth = 1; ctx.strokeRect(h.x - 8, h.y - 9, 16, 10);
+            ctx.fillStyle = '#6D4C41'; ctx.fillRect(h.x - 2, h.y - 5, 4, 6);
+            if (h.roof) { ctx.fillStyle = '#D84315'; ctx.beginPath(); ctx.moveTo(h.x - 11, h.y - 8); ctx.lineTo(h.x, h.y - 18); ctx.lineTo(h.x + 11, h.y - 8); ctx.closePath(); ctx.fill(); }
+            else { ctx.strokeStyle = '#6D4C41'; ctx.beginPath(); ctx.moveTo(h.x - 8, h.y - 9); ctx.lineTo(h.x, h.y - 16); ctx.lineTo(h.x + 8, h.y - 9); ctx.stroke(); }
+            if (this.flooded(h.x, h.y)) { ctx.fillStyle = 'rgba(25,105,190,0.7)'; ctx.fillRect(h.x - 11, h.y - 4, 22, 6); }
+        },
+        drawShelter() {
+            const { x, y } = SHELTER;
+            ctx.strokeStyle = '#78909C'; ctx.lineWidth = 3; [-30, -10, 10, 30].forEach(o => { ctx.beginPath(); ctx.moveTo(x + o, y + 6); ctx.lineTo(x + o, y + 24); ctx.stroke(); });
+            ctx.fillStyle = '#FCE4EC'; roundRect(x - 40, y - 30, 80, 38, 4); ctx.fill(); ctx.strokeStyle = '#C2185B'; ctx.lineWidth = 2.5; ctx.stroke();
+            ctx.fillStyle = '#C2185B'; ctx.fillRect(x - 44, y - 34, 88, 6);
+            ctx.fillStyle = '#90CAF9'; [-26, -8, 10, 26].forEach(o => ctx.fillRect(x + o - 4, y - 20, 8, 8));
+            pill('CYCLONE SHELTER', x, y - 46, { size: 11, color: '#fff', bg: '#C2185B' });
+            const safe = this.people.filter(p => p.state === 'safe').length;
+            if (safe) pill('👪 ' + safe + ' safe', x + 78, y - 8, { size: 11, color: '#2E7D32', border: '#43A047' });
+        },
+        drawBoat(b, t) {
+            const w = this.windAt(b.x, b.y);
+            ctx.save(); ctx.translate(b.x, b.y);
+            const rock = b.state === 'tossed' ? 0.9 : Math.sin(t * 6 + b.ph) * clamp(w / 140, 0.05, 0.6);
+            ctx.rotate(rock);
+            if (b.state === 'capsized') { ctx.scale(1, -1); }
+            ctx.fillStyle = '#6D4C41'; ctx.beginPath(); ctx.moveTo(-12, 0); ctx.lineTo(12, 0); ctx.lineTo(8, 6); ctx.lineTo(-8, 6); ctx.closePath(); ctx.fill();
+            if (b.state !== 'capsized') { ctx.strokeStyle = '#5D4037'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -16); ctx.stroke(); ctx.fillStyle = '#FFF'; ctx.beginPath(); ctx.moveTo(1, -16); ctx.lineTo(10, -2); ctx.lineTo(1, -2); ctx.closePath(); ctx.fill(); }
+            ctx.restore();
+        },
+    };
+
+    // =====================================================
+    // TAB 4 — Cyclone vs thunderstorm (size)
+    // =====================================================
+    const size = {
+        view: 40, rot: 0, t: 0, flash: 0, ts: { x: -520, y: 150 },
+        setFromSlider(v) { this.view = 20 * Math.pow(100, v / 100); syncSizeUI(); if (this.view >= 1000) predicts.size.reveal(); },
+        update(dt) { this.t += dt; this.rot -= 0.3 * dt; this.flash = Math.max(0, this.flash - dt); if (Math.random() < dt * 0.6) this.flash = 0.15; },
+        draw() {
+            const f = clamp(Math.log(this.view / 20) / Math.log(100), 0, 1), e = smooth(0, 1, f);
+            const camX = lerp(this.ts.x, -230, e), camY = lerp(this.ts.y, 60, e), s = 860 / this.view;
+            const X = (kx) => W / 2 + (kx - camX) * s, Y = (ky) => H / 2 + (ky - camY) * s;
+            drawOcean(this.t, 0, X(0), Y(0));
+            drawCyclone(X(0), Y(0), { R: 300 * s, eye: 20 * s, rot: this.rot, alpha: 0.95, arms: 3 });
+            // thunderstorm: about 15 km across
+            const tx = X(this.ts.x), ty = Y(this.ts.y), tr = 7.5 * s;
+            if (tr > 4) {
+                drawPile(tx, ty, tr, 0.95, this.t);
+                if (this.flash > 0) { ctx.strokeStyle = '#FFF59D'; ctx.lineWidth = Math.max(2, tr * 0.03); ctx.beginPath(); ctx.moveTo(tx - tr * 0.1, ty - tr * 0.3); ctx.lineTo(tx + tr * 0.05, ty); ctx.lineTo(tx - tr * 0.05, ty + 0.02 * tr); ctx.lineTo(tx + tr * 0.12, ty + tr * 0.35); ctx.stroke(); }
+            } else { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(tx, ty, Math.max(2, tr), 0, Math.PI * 2); ctx.fill(); }
+            ctx.strokeStyle = '#FFD54F'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(tx, ty, Math.max(tr * 1.15, 10), 0, Math.PI * 2); ctx.stroke();
+            otext('⛈️ Thunderstorm ≈ 15 km', tx, ty - Math.max(tr * 1.15, 10) - 10, { size: 15, color: '#FFE082' });
+            if (300 * s < 2000) otext('🌀 Cyclone ≈ 600 km across', X(0), Y(0) + 300 * s + 22, { size: 16 });
+            if (this.view > 900) {
+                ctx.strokeStyle = '#FFD54F'; ctx.lineWidth = 1.5;
+                for (let i = 0; i < 40; i++) { ctx.beginPath(); ctx.arc(X(-300 + 15 * (i + 0.5)), Y(0), 7.5 * s, 0, Math.PI * 2); ctx.stroke(); }
+                otext('≈ 40 thunderstorms side by side = 1 cyclone', X(0), Y(0) - 18, { size: 14, color: '#FFE082' });
+            }
+            // scale bar
+            const nice = [1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
+            let km = nice[0]; for (const n of nice) if (n * s < 220) km = n;
+            ctx.fillStyle = 'rgba(255,255,255,0.94)'; roundRect(14, H - 58, km * s + 40, 44, 10); ctx.fill();
+            ctx.fillStyle = '#263238'; ctx.fillRect(34, H - 30, km * s, 6);
+            text(km + ' km', 34 + km * s / 2, H - 38, { size: 14, color: '#263238' });
+            const msg = this.view < 100 ? 'Zoomed in on one thunderstorm. Zoom out →' : this.view < 1000 ? 'Keep zooming out…' : 'Satellite view: the cyclone dwarfs the thunderstorm!';
+            ctx.fillStyle = 'rgba(255,255,255,0.94)'; roundRect(W / 2 - 230, 12, 460, 40, 12); ctx.fill();
+            text(msg, W / 2, 39, { size: fitSize(msg, 440, 18, 400, "'Fredoka One', cursive"), color: '#6B3FA0', font: "'Fredoka One', cursive", weight: 400 });
+            setText('z-view', Math.round(this.view) + ' km');
+        },
+    };
+
+    // ================= Predictions =================
+    const predicts = {
+        build: makePredict('predict-build',
+            'If the Earth stopped rotating, would a cyclone still form over a warm sea?',
+            ['Yes, exactly the same spinning storm', 'Clouds and rain form, but the air does not spin: no cyclone', 'Nothing happens at all'], 1,
+            'Without rotation the air rushes <strong>straight</strong> into the low and rises. You still get tall clouds and rain, but no spin and no eye, so <strong>no cyclone</strong>. It is the Earth\'s rotation that makes the incoming air spin.'),
+        eye: makePredict('predict-eye',
+            'A drone flies from the edge of a cyclone into its very centre, the eye. What happens to the wind?',
+            ['It keeps getting stronger, strongest at the centre', 'Strongest in the wall of clouds, then calm in the eye', 'It stays the same all the way'], 1,
+            'The fiercest winds and heaviest rain are in the <strong>eyewall</strong>. Inside the <strong>eye</strong> the wind is calm and the sky is often clear, even though the pressure there is the <strong>lowest</strong>.'),
+        land: makePredict('predict-land',
+            'What happens to a cyclone after it crosses the coast onto land?',
+            ['It grows even stronger', 'It slowly weakens', 'It stays just as strong'], 1,
+            'Over land the cyclone\'s supply of <strong>warm, moist air</strong> from the sea is cut off, so it gradually loses strength. By then the storm surge, wind and rain have already done a lot of damage.'),
+        size: makePredict('predict-size',
+            'A thunderstorm is about 15 km across. How wide is a big cyclone?',
+            ['About the same, 15 km', 'About 50 km', 'Hundreds of km, many thunderstorms wide'], 2,
+            'A cyclone can be <strong>hundreds of kilometres</strong> wide, about 40 thunderstorms side by side. That is why one cyclone can affect a whole coastline at once.'),
+    };
+
+    // ================= Controls =================
+    function syncBuildUI() {
+        $('sea-val').textContent = build.seaT.toFixed(1) + ' °C' + (build.seaT >= 27 ? ' 🔥' : ' ❄️');
+        $('rot-btn').textContent = '🌍 Earth rotation: ' + (build.rotation ? 'ON' : 'OFF');
+        $('rot-btn').classList.toggle('on', build.rotation);
+        $('b-play').textContent = build.running ? '⏸ Pause' : '▶ Play';
+        $('b-fast').classList.toggle('on', build.fast);
+    }
+    $('sea-t').addEventListener('input', e => { build.seaT = +e.target.value; syncBuildUI(); });
+    $('rot-btn').addEventListener('click', () => { build.rotation = !build.rotation; syncBuildUI(); });
+    $('b-play').addEventListener('click', () => { build.running = !build.running; syncBuildUI(); });
+    $('b-fast').addEventListener('click', () => { build.fast = !build.fast; syncBuildUI(); });
+    $('b-reset').addEventListener('click', () => build.reset());
+    function syncEyeUI() { $('e-fly').disabled = eyeSim.auto; }
+    $('e-fly').addEventListener('click', () => { if (eyeSim.dist(eyeSim.x) < 5) eyeSim.x = 40; eyeSim.auto = true; eyeSim.y = 300; syncEyeUI(); });
+    $('e-reset').addEventListener('click', () => eyeSim.reset());
+    function syncLandUI() { $('l-go').textContent = land.auto ? '⏸ Pause' : '⏩ Advance'; }
+    $('l-go').addEventListener('click', () => { land.auto = !land.auto; syncLandUI(); });
+    $('l-reset').addEventListener('click', () => land.reset());
+    $('l-strength').addEventListener('change', e => { land.V = +e.target.value; });
+    function syncSizeUI() { $('z-val').textContent = Math.round(size.view) + ' km'; $('z-zoom').value = Math.round(Math.log(size.view / 20) / Math.log(100) * 100); }
+    $('z-zoom').addEventListener('input', e => size.setFromSlider(+e.target.value));
+    $('z-ts').addEventListener('click', () => size.setFromSlider(10));
+    $('z-both').addEventListener('click', () => size.setFromSlider(88));
+    // emergency kit
+    const KIT = [['🔦 Torch', 1], ['🔋 Spare batteries', 1], ['💧 Drinking water', 1], ['🍪 Dry food', 1], ['🩹 First-aid kit', 1], ['💊 Medicines', 1],
+        ['📻 Radio', 1], ['📄 Documents in a plastic bag', 1], ['🔌 Charged phone & power bank', 1], ['🎮 Video game', 0], ['📺 Television', 0]];
+    const kitGot = new Set();
+    KIT.forEach(([name, need], i) => {
+        const b = document.createElement('button'); b.className = 'predict-opt'; b.textContent = name;
+        b.addEventListener('click', () => {
+            if (!need) { b.classList.add('wrong'); $('kit-status').textContent = 'Leave it: it will not help you in a cyclone.'; setTimeout(() => b.classList.remove('wrong'), 900); return; }
+            kitGot.add(i); b.classList.add('right');
+            const n = KIT.filter(k => k[1]).length;
+            $('kit-status').textContent = kitGot.size === n ? '✅ Kit ready! Grab it and go to the cyclone shelter when IMD warns you.' : 'Packed ' + kitGot.size + ' of ' + n + ' essentials';
+        });
+        $('kit-grid').appendChild(b);
+    });
+
+    // canvas dragging (drone / cyclone)
+    let dragTarget = null;
+    canvas.addEventListener('pointerdown', e => {
+        const p = ptr(e);
+        if (active === 'eye' && p.y < 440) { dragTarget = 'eye'; eyeSim.drag = true; eyeSim.auto = false; eyeSim.moveTo(p); syncEyeUI(); }
+        else if (active === 'land' && Math.hypot(p.x - land.cx, p.y - land.cy) < 80) { dragTarget = 'land'; land.drag = true; }
+        else return;
+        try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+        e.preventDefault();
+    });
+    canvas.addEventListener('pointermove', e => {
+        const p = ptr(e);
+        if (dragTarget === 'eye') eyeSim.moveTo(p); else if (dragTarget === 'land') land.moveTo(p);
+        else canvas.style.cursor = (active === 'eye' && p.y < 440) || (active === 'land' && Math.hypot(p.x - land.cx, p.y - land.cy) < 80) ? 'grab' : 'default';
+    });
+    const endDrag = () => { dragTarget = null; eyeSim.drag = false; land.drag = false; };
+    canvas.addEventListener('pointerup', endDrag);
+    canvas.addEventListener('pointercancel', endDrag);
+
+    // ================= Tabs + loop =================
+    const sims = { build, eye: eyeSim, land, size };
+    let active = 'build';
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => {
+        active = btn.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + active));
+        document.querySelectorAll('.info-display').forEach(i => i.classList.toggle('active', i.id === 'info-' + active));
+    }));
+    $('info-build').classList.add('active');
+
+    buildChallenge('challenge-root', [
+        { q: 'How does a storm over the sea become a cyclone? Pick the right order.',
+          opts: ['Cold sea → air sinks → high pressure → the air spins',
+                 'Warm sea → moist air rises → vapour condenses and releases heat → air rises more, pressure drops → air rushes in → Earth\'s rotation makes it spin',
+                 'Wind blows from the land → clouds freeze → the clouds spin'], correct: 1,
+          explain: 'Warm water feeds moist air; condensation releases heat, the low deepens, air rushes in and the Earth\'s rotation sets it spinning. The cycle repeats.' },
+        { q: 'True or false: the weather is stormy at the eye of a cyclone.',
+          opts: ['True: the eye has the strongest winds and heaviest rain', 'False: the eye is calm, often with clear sky; the strongest winds are in the eyewall around it'], correct: 1,
+          explain: 'The eye has the lowest pressure but calm wind. The surrounding eyewall has the strong winds and heavy rain.' },
+        { q: 'Why does a cyclone weaken after it reaches land?',
+          opts: ['Its supply of warm, moist air from the sea is cut off', 'Trees and buildings stop the wind completely', 'Land has no air pressure'], correct: 0,
+          explain: 'A cyclone is powered by warm, moist sea air. Over land that source is cut off, so it gradually loses strength.' },
+        { q: 'If the Earth stopped rotating, would cyclones still form?',
+          opts: ['Yes, exactly the same', 'Air would still rush into the low and rise, giving clouds and rain, but it would not spin into a cyclone', 'There would be no clouds or rain at all'], correct: 1,
+          explain: 'Earth\'s rotation is what turns the inflowing air into a spinning system. Without it: storms, but no cyclone.' },
+    ], 'cyclone', 'badge-banner');
+
+    build.init(); syncBuildUI();
+    eyeSim.init(); syncEyeUI();
+    land.reset();
+    size.setFromSlider(15);
+    let last = performance.now();
+    function frame(now) {
+        const dt = Math.min((now - last) / 1000, 0.033); last = now;
+        const sim = sims[active];
+        sim.update(dt);
+        ctx.setTransform(viewScale, 0, 0, viewScale, 0, 0);
+        sim.draw();
+        requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+    window.CYC = { build, eye: eyeSim, land, size, predicts, sims, setTab: (name) => document.querySelector('.tab-btn[data-tab="' + name + '"]').click() };
+    </script>
+</body>
+</html>

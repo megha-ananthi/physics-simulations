@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How Wind Forms - Pressure, Winds &amp; Storms - Science Lab</title>
+    <meta name="description" content="Wind is air moving from high pressure to low pressure: race air between two balloons, watch the sea breeze and land breeze turn around over a day, and see fast air lift roofs and pull balloons together.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F343;</text></svg>">
+    <style>
+        /* ===== Shared "Pressure, Winds & Storms" sim-page styles — light, projector-friendly (accent set per page) ===== */
+        :root {
+            --accent: #43A047;
+            --accent-soft: rgba(67, 160, 71, 0.13);
+            --accent-border: rgba(67, 160, 71, 0.55);
+            --good: #4CAF50;
+            --bad: #E53935;
+            --ink: #2D2D2D;
+            --panel-bg: rgba(255, 255, 255, 0.92);
+            --panel-border: rgba(0, 0, 0, 0.08);
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Nunito', sans-serif; background: #F5F0FF; color: var(--ink); min-height: 100vh; -webkit-tap-highlight-color: transparent; }
+        a { color: inherit; text-decoration: none; }
+        .top-bar { display: flex; align-items: center; justify-content: space-between; padding: 0.9rem 1.2rem; gap: 0.6rem; flex-wrap: wrap; }
+        .back-btn {
+            background: #fff; border: 1px solid rgba(0,0,0,0.12); color: #444; padding: 0.5rem 1rem; border-radius: 50px;
+            font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem;
+            transition: background 0.3s; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .back-btn:hover { background: #F0EAFB; }
+        .exp-title { font-family: 'Fredoka One', cursive; font-size: 1.5rem; text-align: center; color: #6B3FA0; }
+        .big-idea { text-align: center; opacity: 0.85; max-width: 760px; margin: 0.2rem auto 0.8rem; padding: 0 1.2rem; font-size: 0.98rem; }
+        .big-idea strong { color: var(--accent); }
+        .tabs { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; padding: 0 1rem; margin-bottom: 0.9rem; }
+        .tab-btn {
+            background: #fff; border: 1px solid rgba(0,0,0,0.12); color: #444; padding: 0.5rem 1rem; border-radius: 50px;
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.85rem; cursor: pointer;
+            transition: background 0.25s, border-color 0.25s, transform 0.15s;
+        }
+        .tab-btn:hover { transform: translateY(-1px); }
+        .tab-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+        .stage-wrap { position: relative; max-width: 960px; margin: 0 auto; padding: 0 0.8rem; }
+        #sim-canvas { display: block; width: 100%; background: #FBFAFF; border-radius: 16px; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 4px 18px rgba(0,0,0,0.07); touch-action: none; }
+        .info-display {
+            position: absolute; top: 0.7rem; right: 1.4rem; background: var(--panel-bg);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--panel-border); border-radius: 14px; padding: 0.7rem 0.9rem; font-size: 0.8rem; min-width: 170px; display: none;
+        }
+        .info-display.active { display: block; }
+        .info-row { display: flex; justify-content: space-between; gap: 0.9rem; padding: 0.12rem 0; }
+        .info-label { opacity: 0.6; }
+        .info-val { font-weight: 800; color: var(--accent); }
+        .panels { max-width: 960px; margin: 0 auto; padding: 0 0.8rem 2rem; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+        .predict-bar { background: var(--accent-soft); border: 1px solid var(--accent-border); border-radius: 14px; padding: 0.85rem 1rem; margin: 0.9rem 0 0.6rem; }
+        .predict-q { font-weight: 800; font-size: 0.95rem; margin-bottom: 0.55rem; }
+        .predict-q .tag { background: var(--accent); color: #fff; border-radius: 50px; font-size: 0.7rem; padding: 0.1rem 0.6rem; margin-right: 0.45rem; text-transform: uppercase; letter-spacing: 0.5px; vertical-align: middle; }
+        .predict-opts { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .predict-opt {
+            background: #fff; border: 1px solid rgba(0,0,0,0.15); color: #333; border-radius: 50px; padding: 0.42rem 0.95rem;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.83rem; cursor: pointer; transition: background 0.2s, border-color 0.2s;
+        }
+        .predict-opt:hover { background: rgba(0,0,0,0.05); }
+        .predict-opt.chosen { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+        .predict-opt.right { border-color: var(--good); background: rgba(76,175,80,0.14); color: #2E7D32; }
+        .predict-opt.wrong { border-color: var(--bad); background: rgba(229,57,53,0.12); color: #C62828; }
+        .predict-reveal { margin-top: 0.55rem; font-size: 0.88rem; display: none; }
+        .predict-reveal.show { display: block; animation: popIn 0.3s ease; }
+        .control-panel {
+            background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 18px; padding: 1rem 1.3rem;
+            display: flex; align-items: center; gap: 1.3rem; flex-wrap: wrap; justify-content: center; margin-top: 0.7rem;
+        }
+        .control-group { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+        .control-label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
+        .control-value { font-family: 'Fredoka One', cursive; font-size: 1rem; color: var(--accent); }
+        input[type="range"] { -webkit-appearance: none; appearance: none; width: 130px; height: 8px; border-radius: 4px; background: rgba(0,0,0,0.12); outline: none; cursor: pointer; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; cursor: pointer; }
+        input[type="range"]::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; cursor: pointer; }
+        select, .num-in {
+            background: #fff; color: #333; border: 1px solid rgba(0,0,0,0.2); border-radius: 10px;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.85rem; padding: 0.4rem 0.6rem; cursor: pointer;
+        }
+        .num-in { width: 7rem; cursor: text; }
+        .action-btn {
+            background: var(--accent); color: #fff; border: none; border-radius: 50px; padding: 0.55rem 1.3rem;
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.9rem; cursor: pointer; transition: transform 0.15s, filter 0.2s;
+        }
+        .action-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        .action-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+        .ghost-btn {
+            background: #fff; color: #444; border: 1px solid rgba(0,0,0,0.15); border-radius: 50px; padding: 0.55rem 1.1rem;
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.85rem; cursor: pointer; transition: background 0.2s;
+        }
+        .ghost-btn:hover { background: #F3EFFA; }
+        .ghost-btn.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+        .hint { text-align: center; font-size: 0.8rem; opacity: 0.55; margin-top: 0.5rem; }
+        .section-card { background: #fff; border: 1px solid rgba(0,0,0,0.06); border-radius: 18px; padding: 1.3rem 1.4rem; margin-top: 1.6rem; box-shadow: 0 4px 15px rgba(0,0,0,0.06); }
+        .section-card h2 { font-family: 'Fredoka One', cursive; font-size: 1.25rem; color: var(--accent); margin-bottom: 0.6rem; }
+        .section-card p, .section-card li { font-size: 0.93rem; opacity: 0.9; line-height: 1.65; }
+        .section-card ul { padding-left: 1.3rem; margin: 0.4rem 0; }
+        .callout-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.7rem; }
+        .callout-chip { background: #F6F2FE; border: 1px solid rgba(0,0,0,0.08); border-radius: 50px; padding: 0.35rem 0.85rem; font-size: 0.8rem; font-weight: 700; }
+        .quiz-q { margin-top: 1rem; }
+        .quiz-q .q-text { font-weight: 800; font-size: 0.95rem; margin-bottom: 0.5rem; }
+        .quiz-opts { display: flex; flex-direction: column; gap: 0.45rem; }
+        .quiz-opt {
+            text-align: left; background: #FBFAFF; border: 1px solid rgba(0,0,0,0.14); color: #333; border-radius: 12px; padding: 0.55rem 0.9rem;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: background 0.2s, border-color 0.2s;
+        }
+        .quiz-opt:hover { background: #F1ECFA; }
+        .quiz-opt.right { border-color: var(--good); background: rgba(76,175,80,0.14); }
+        .quiz-opt.wrong { border-color: var(--bad); background: rgba(229,57,53,0.12); }
+        .quiz-explain { display: none; font-size: 0.85rem; margin-top: 0.4rem; color: #2E7D32; }
+        .quiz-explain.show { display: block; animation: popIn 0.3s ease; }
+        .badge-banner { display: none; text-align: center; margin-top: 1.2rem; background: linear-gradient(135deg, #FFF8E1, #FFECB3); border: 1px solid #F0C24B; border-radius: 16px; padding: 1rem; }
+        .badge-banner.show { display: block; animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .badge-banner .big { font-family: 'Fredoka One', cursive; font-size: 1.3rem; color: #B8860B; }
+        .page-footer { text-align: center; padding: 1.2rem; font-size: 0.8rem; opacity: 0.5; }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.92); } 100% { opacity: 1; transform: scale(1); } }
+        /* page-specific */
+        .calc-row { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: flex-end; }
+        .calc-out { font-family: 'Fredoka One', cursive; font-size: 1.35rem; color: var(--accent); margin-top: 0.7rem; }
+        .calc-work { font-size: 0.92rem; margin-top: 0.3rem; font-family: 'Times New Roman', Georgia, serif; }
+        .preset-row { display: flex; gap: 0.45rem; flex-wrap: wrap; margin-top: 0.7rem; }
+        @media (max-width: 600px) {
+            .exp-title { font-size: 1.15rem; }
+            .top-bar { padding: 0.7rem 0.8rem; }
+            .info-display { position: static; display: none; margin: 0.6rem 0 0; width: 100%; }
+            .info-display.active { display: flex; flex-wrap: wrap; gap: 0.1rem 1.2rem; }
+            .info-display .info-row { flex: 1 1 40%; }
+            .control-panel { padding: 0.8rem; gap: 0.9rem; }
+            input[type="range"] { width: 105px; }
+        }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="index.html" class="back-btn">&larr; Pressure &amp; Weather</a>
+        <div class="exp-title">&#x1F343; How Wind Forms</div>
+        <a href="../../index.html" class="back-btn">&#x1F3E0; Lab</a>
+    </div>
+    <p class="big-idea"><strong>Wind is air moving from HIGH pressure to LOW pressure.</strong>
+        The bigger the pressure difference, the faster the wind. And the other way round: <strong>fast-moving air has low pressure</strong>.</p>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="balloon">&#x1F388; Balloon Race</button>
+        <button class="tab-btn" data-tab="breeze">&#x1F3D6;&#xFE0F; Sea Breeze &amp; Land Breeze</button>
+        <button class="tab-btn" data-tab="fast">&#x1F4A8; Fast Air = Low Pressure</button>
+        <button class="tab-btn" data-tab="storm">&#x1F3E0; Storm Wind &amp; Roofs</button>
+    </div>
+
+    <div class="stage-wrap">
+        <canvas id="sim-canvas"></canvas>
+        <div class="info-display" id="info-balloon">
+            <div class="info-row"><span class="info-label">Balloon 1 pressure</span><span class="info-val" id="b-p1">-</span></div>
+            <div class="info-row"><span class="info-label">Balloon 2 pressure</span><span class="info-val" id="b-p2">-</span></div>
+            <div class="info-row"><span class="info-label">Difference</span><span class="info-val" id="b-dp">-</span></div>
+            <div class="info-row"><span class="info-label">Air speed now</span><span class="info-val" id="b-v">-</span></div>
+            <div class="info-row"><span class="info-label">Top speed</span><span class="info-val" id="b-top">-</span></div>
+        </div>
+        <div class="info-display" id="info-breeze">
+            <div class="info-row"><span class="info-label">Time</span><span class="info-val" id="br-clock">-</span></div>
+            <div class="info-row"><span class="info-label">Land</span><span class="info-val" id="br-tl">-</span></div>
+            <div class="info-row"><span class="info-label">Sea</span><span class="info-val" id="br-ts">-</span></div>
+            <div class="info-row"><span class="info-label">Wind</span><span class="info-val" id="br-w">-</span></div>
+        </div>
+        <div class="info-display" id="info-fast">
+            <div class="info-row"><span class="info-label">Blowing</span><span class="info-val" id="f-v">-</span></div>
+            <div class="info-row"><span class="info-label">Pressure in the jet</span><span class="info-val" id="f-p">-</span></div>
+            <div class="info-row"><span class="info-label" id="f-l3">Gap</span><span class="info-val" id="f-gap">-</span></div>
+            <div class="info-row"><span class="info-label" id="f-l4">Balloons</span><span class="info-val" id="f-st">-</span></div>
+        </div>
+        <div class="info-display" id="info-storm">
+            <div class="info-row"><span class="info-label">Wind</span><span class="info-val" id="s-wv">-</span></div>
+            <div class="info-row"><span class="info-label" id="s-l2">Pressure drop above</span><span class="info-val" id="s-drop">-</span></div>
+            <div class="info-row"><span class="info-label" id="s-l3">Pressure drop inside</span><span class="info-val" id="s-in">-</span></div>
+            <div class="info-row"><span class="info-label" id="s-l4">Net push up</span><span class="info-val" id="s-net">-</span></div>
+            <div class="info-row"><span class="info-label" id="s-l5">Roof</span><span class="info-val" id="s-st">-</span></div>
+        </div>
+    </div>
+
+    <div class="panels">
+        <div class="tab-panel active" id="panel-balloon">
+            <div class="predict-bar" id="predict-balloon"></div>
+            <div class="control-panel">
+                <div class="control-group">
+                    <span class="control-label">How hard is balloon 1 blown up?</span><span class="control-value" id="b-blow-val">6 puffs</span>
+                    <input type="range" id="b-blow" min="1" max="10" step="1" value="6">
+                </div>
+                <button class="action-btn" id="b-release">&#x1F513; Release the clip</button>
+                <button class="ghost-btn" id="b-reset">&#x1F504; Reset</button>
+            </div>
+            <p class="hint">Blow balloon 1 up harder and release again: a bigger pressure difference makes a faster wind through the straw.</p>
+        </div>
+
+        <div class="tab-panel" id="panel-breeze">
+            <div class="predict-bar" id="predict-breeze"></div>
+            <div class="control-panel">
+                <div class="control-group">
+                    <span class="control-label">Time of day</span><span class="control-value" id="br-time-val">8:00 AM</span>
+                    <input type="range" id="br-time" min="0" max="24" step="0.25" value="8">
+                </div>
+                <button class="action-btn" id="br-play">&#x25B6;&#xFE0F; Play a day</button>
+                <button class="ghost-btn" id="br-go-pm">&#x2600;&#xFE0F; 2 PM</button>
+                <button class="ghost-btn" id="br-go-am">&#x1F319; 2 AM</button>
+                <button class="ghost-btn on" id="br-p">&#x1F534;&#x1F535; Pressure</button>
+                <button class="ghost-btn on" id="br-t">&#x1F321;&#xFE0F; Temperatures</button>
+                <button class="ghost-btn on" id="br-l">&#x1F504; Air loop</button>
+            </div>
+            <p class="hint">Drag the clock in the corner of the picture (or the slider). Watch the thermometers, the palm trees, the flag, the kite and the boat.</p>
+        </div>
+
+        <div class="tab-panel" id="panel-fast">
+            <div class="predict-bar" id="predict-fast"></div>
+            <div class="control-panel">
+                <button class="ghost-btn on" id="f-s-b">&#x1F388; Two balloons</button>
+                <button class="ghost-btn" id="f-s-p">&#x1F4C4; Paper strip</button>
+                <div class="control-group">
+                    <span class="control-label">Blow strength</span><span class="control-value" id="f-str-val">5</span>
+                    <input type="range" id="f-str" min="1" max="10" step="1" value="5">
+                </div>
+                <button class="action-btn" id="f-blow">&#x1F4A8; Blow!</button>
+            </div>
+            <p class="hint">Each press blows for 3 seconds. Try a gentle blow, then a hard one, and compare.</p>
+        </div>
+
+        <div class="tab-panel" id="panel-storm">
+            <div class="predict-bar" id="predict-storm"></div>
+            <div class="control-panel">
+                <button class="ghost-btn on" id="s-s-r">&#x1F3E0; House roof</button>
+                <button class="ghost-btn" id="s-s-b">&#x1FAA7; Flex banner</button>
+                <div class="control-group">
+                    <span class="control-label">Storm wind speed</span><span class="control-value" id="s-v-val">40 km/h</span>
+                    <input type="range" id="s-v" min="0" max="150" step="5" value="40">
+                </div>
+                <button class="ghost-btn" id="s-open">&#x1FA9F; Windows &amp; doors: CLOSED</button>
+                <button class="ghost-btn" id="s-holes" style="display:none">&#x1F573;&#xFE0F; Holes in banner: NO</button>
+                <button class="action-btn" id="s-reset">&#x1F528; Repair</button>
+            </div>
+            <p class="hint" id="s-hint">Try a strong storm with the windows closed, then repair the roof and try again with them open.</p>
+        </div>
+
+        <div class="section-card">
+            <h2>&#x1F4A1; What did we discover?</h2>
+            <ul>
+                <li><strong>Wind is air moving from a region of high pressure to a region of low pressure.</strong> When the pressures become equal, the air stops flowing.</li>
+                <li><strong>The bigger the pressure difference, the faster the wind.</strong> A harder-blown balloon pushes air through the straw faster.</li>
+                <li><strong>Sea breeze (day):</strong> land heats up faster than water. Warm air over the land rises and leaves low pressure, so air from the sea (higher pressure) blows towards the land.</li>
+                <li><strong>Land breeze (night):</strong> land cools faster and the sea stays warmer. Low pressure forms over the sea, so the wind blows from the land to the sea.</li>
+                <li><strong>High-speed winds come with reduced air pressure.</strong> That is why balloons swing together when you blow between them, a paper strip rises when you blow over it, and storm winds can lift light roofs.</li>
+                <li>During storms, open doors and windows and holes in banners let air pass through, so the pressure difference stays small.</li>
+            </ul>
+            <div class="callout-chips">
+                <span class="callout-chip">&#x1F3A3; Fishermen sail out at night with the land breeze and come back with the sea breeze</span>
+                <span class="callout-chip">&#x1FA81; Kites fly high on the beach in the afternoon</span>
+                <span class="callout-chip">&#x1F334; Coastal trees bent towards the land</span>
+                <span class="callout-chip">&#x1F300; Cyclone season: keep doors and windows open, tie down tin roofs</span>
+                <span class="callout-chip">&#x1FAA7; Flex banners and hoardings with holes</span>
+                <span class="callout-chip">&#x1F6B2; Punctured tyre: air rushes out from high to low pressure</span>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2>&#x1F3C6; Wind Challenge</h2>
+            <p>Answer all three correctly to earn the <strong>Wind badge</strong>!</p>
+            <div id="challenge-root"></div>
+            <div class="badge-banner" id="badge-banner">
+                <div class="big">&#x1F396;&#xFE0F; Wind Badge earned!</div>
+                <p>Head back to <a href="index.html" style="text-decoration: underline;">Pressure &amp; Weather</a> to see your progress.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="page-footer">Pressure, Winds &amp; Storms &bull; Made by Megha Ananthi B &bull; Simplified model for learning &mdash; values are illustrative</footer>
+
+    <script>
+    'use strict';
+
+    // ================= Shared helpers (same in every page of this module) =================
+    const PROGRESS_KEY = 'pressure-lab-progress';
+    function setBadge(name) {
+        let p = {};
+        try { p = JSON.parse(localStorage.getItem(PROGRESS_KEY)) || {}; } catch (e) {}
+        p[name] = true;
+        try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); } catch (e) {}
+    }
+    const canvas = document.getElementById('sim-canvas');
+    const ctx = canvas.getContext('2d');
+    const W = 900, H = 560;
+    let viewScale = 1;
+    function fitCanvas() {
+        const cssW = canvas.getBoundingClientRect().width || canvas.parentElement.clientWidth;
+        canvas.style.height = Math.round(cssW * H / W) + 'px';
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(cssW * dpr);
+        canvas.height = Math.round(cssW * H / W * dpr);
+        viewScale = canvas.width / W;
+    }
+    window.addEventListener('resize', fitCanvas);
+    fitCanvas();
+    function ptr(e) {
+        const r = canvas.getBoundingClientRect();
+        return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height };
+    }
+    function drawArrow(x1, y1, x2, y2, color, width, label, labelSide) {
+        const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
+        if (len < 2) return;
+        const ang = Math.atan2(dy, dx), head = Math.min(14, 6 + width * 1.4);
+        ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = width; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2 - Math.cos(ang) * head * 0.7, y2 - Math.sin(ang) * head * 0.7); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - Math.cos(ang - 0.45) * head, y2 - Math.sin(ang - 0.45) * head);
+        ctx.lineTo(x2 - Math.cos(ang + 0.45) * head, y2 - Math.sin(ang + 0.45) * head);
+        ctx.closePath(); ctx.fill();
+        if (label) {
+            ctx.font = '800 15px Nunito, sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText(label, (x1 + x2) / 2, (y1 + y2) / 2 + (labelSide === 'below' ? 24 : -12));
+        }
+    }
+    function emoji(txt, x, y, size) {
+        ctx.font = size + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(txt, x, y); ctx.textBaseline = 'alphabetic';
+    }
+    function text(str, x, y, o) {
+        o = o || {};
+        ctx.font = (o.weight || 800) + ' ' + (o.size || 14) + 'px ' + (o.font || 'Nunito, sans-serif');
+        ctx.fillStyle = o.color || '#2D2D2D'; ctx.textAlign = o.align || 'center'; ctx.textBaseline = o.base || 'alphabetic';
+        ctx.fillText(str, x, y); ctx.textBaseline = 'alphabetic';
+    }
+    function roundRect(x, y, w, h, r) {
+        ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+    }
+    /* Round needle gauge. frac 0..1 maps to the dial; zones coloured green → amber → red. */
+    function gauge(cx, cy, r, frac, label, valueText) {
+        frac = Math.max(0, Math.min(1, frac));
+        const a0 = Math.PI * 0.8, a1 = Math.PI * 2.2;
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy, r + 8, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 2; ctx.stroke();
+        [['#66BB6A', 0, 0.45], ['#FFB300', 0.45, 0.75], ['#E53935', 0.75, 1]].forEach(([c, f0, f1]) => {
+            ctx.strokeStyle = c; ctx.lineWidth = 9; ctx.beginPath(); ctx.arc(cx, cy, r - 4, a0 + (a1 - a0) * f0, a0 + (a1 - a0) * f1); ctx.stroke();
+        });
+        const a = a0 + (a1 - a0) * frac;
+        ctx.strokeStyle = '#263238'; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * (r - 10), cy + Math.sin(a) * (r - 10)); ctx.stroke();
+        ctx.fillStyle = '#263238'; ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI * 2); ctx.fill();
+        text(label, cx, cy + r * 0.5, { size: 11, color: '#607D8B' });
+        if (valueText) text(valueText, cx, cy + r + 26, { size: 15, color: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#F4511E' });
+    }
+    function setText(id, txt) { const el = document.getElementById(id); if (el && el.textContent !== txt) el.textContent = txt; }
+    function makePredict(rootId, question, options, correctIdx, revealText) {
+        const root = document.getElementById(rootId);
+        root.innerHTML = '<div class="predict-q"><span class="tag">Predict first!</span>' + question + '</div><div class="predict-opts"></div><div class="predict-reveal"></div>';
+        const optsEl = root.querySelector('.predict-opts'), revealEl = root.querySelector('.predict-reveal');
+        const state = { chosen: null, revealed: false, reveal() {
+            if (state.revealed) return;
+            state.revealed = true;
+            btns[correctIdx].classList.add('right');
+            let verdict = '🔍 ';
+            if (state.chosen === correctIdx) verdict = '🎉 Your prediction was right! ';
+            else if (state.chosen !== null) { btns[state.chosen].classList.add('wrong'); verdict = '🤯 Surprised? '; }
+            revealEl.innerHTML = verdict + revealText; revealEl.classList.add('show');
+        } };
+        const btns = options.map((o, i) => {
+            const b = document.createElement('button'); b.className = 'predict-opt'; b.textContent = o;
+            b.addEventListener('click', () => { if (state.revealed) return; state.chosen = i; btns.forEach(x => x.classList.remove('chosen')); b.classList.add('chosen'); });
+            optsEl.appendChild(b); return b;
+        });
+        return state;
+    }
+    function buildChallenge(rootId, questions, badgeName, bannerId) {
+        const root = document.getElementById(rootId), solved = new Set();
+        questions.forEach((q, qi) => {
+            const qEl = document.createElement('div'); qEl.className = 'quiz-q';
+            qEl.innerHTML = '<div class="q-text">' + (qi + 1) + '. ' + q.q + '</div>';
+            const opts = document.createElement('div'); opts.className = 'quiz-opts';
+            const explain = document.createElement('div'); explain.className = 'quiz-explain';
+            q.opts.forEach((o, oi) => {
+                const b = document.createElement('button'); b.className = 'quiz-opt'; b.textContent = o;
+                b.addEventListener('click', () => {
+                    if (solved.has(qi)) return;
+                    if (oi === q.correct) {
+                        b.classList.add('right'); explain.textContent = '✅ ' + q.explain; explain.classList.add('show'); solved.add(qi);
+                        if (solved.size === questions.length) { setBadge(badgeName); document.getElementById(bannerId).classList.add('show'); }
+                    } else { b.classList.add('wrong'); setTimeout(() => b.classList.remove('wrong'), 900); }
+                });
+                opts.appendChild(b);
+            });
+            qEl.appendChild(opts); qEl.appendChild(explain); root.appendChild(qEl);
+        });
+    }
+    function drawBackdrop(color) {
+        ctx.fillStyle = color || '#FBFAFF'; ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = 'rgba(0,0,0,0.035)';
+        for (let x = 0; x < W; x += 45) ctx.fillRect(x, 0, 1, H);
+        for (let y = 0; y < H; y += 45) ctx.fillRect(0, y, W, 1);
+    }
+    const $ = (id) => document.getElementById(id);
+
+    // ================= Page helpers (wind page) =================
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const lerp = (a, b, t) => a + (b - a) * t;
+    const smooth = (e0, e1, x) => { const t = clamp((x - e0) / (e1 - e0), 0, 1); return t * t * (3 - 2 * t); };
+    const HIGH = '#E53935', LOW = '#1E88E5';
+    const hex = (c) => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
+    function mix(c1, c2, t) { const a = hex(c1), b = hex(c2); t = clamp(t, 0, 1); return 'rgb(' + a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(',') + ')'; }
+    function rgba(c, a) { const [r, g, b] = hex(c); return 'rgba(' + r + ',' + g + ',' + b + ',' + clamp(a, 0, 1).toFixed(3) + ')'; }
+    /* Big pressure letter: H = red (high), L = blue (low), white outline so it reads on any background. */
+    function letter(ch, x, y, size, alpha) {
+        ctx.save(); ctx.globalAlpha = alpha == null ? 1 : clamp(alpha, 0, 1);
+        ctx.font = Math.round(size) + "px 'Fredoka One', cursive"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.lineJoin = 'round'; ctx.lineWidth = Math.max(4, size / 8); ctx.strokeStyle = '#fff'; ctx.strokeText(ch, x, y);
+        ctx.fillStyle = ch === 'H' ? HIGH : ch === 'L' ? LOW : '#7E57C2'; ctx.fillText(ch, x, y);
+        ctx.restore();
+    }
+    /* White rounded label so text reads on sky, sea or grass. */
+    function pill(str, x, y, o) {
+        o = o || {}; const size = o.size || 14, font = o.font || 'Nunito, sans-serif', weight = o.weight || 800;
+        ctx.font = weight + ' ' + size + 'px ' + font;
+        const w = ctx.measureText(str).width + size * 1.3, h = size * 1.85;
+        ctx.fillStyle = o.bg || 'rgba(255,255,255,0.93)'; roundRect(x - w / 2, y - h / 2, w, h, h / 2); ctx.fill();
+        if (o.border) { ctx.strokeStyle = o.border; ctx.lineWidth = 2.5; ctx.stroke(); }
+        text(str, x, y + 1, { size, color: o.color || '#2D2D2D', base: 'middle', font, weight });
+    }
+    /* Soft coloured cloud marking a pressure region. */
+    function blob(x, y, rx, ry, color, alpha) {
+        if (alpha <= 0.005) return;
+        ctx.save(); ctx.translate(x, y); ctx.scale(1, ry / rx);
+        const g = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
+        g.addColorStop(0, rgba(color, alpha)); g.addColorStop(0.6, rgba(color, alpha * 0.7)); g.addColorStop(1, rgba(color, 0));
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, rx, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    }
+    function dot(x, y, r, color) { ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); }
+    /* A blowing face (puffed cheeks, round mouth). dir = direction the air leaves the mouth, in radians. */
+    function blowFace(x, y, r, dir, blowing) {
+        ctx.fillStyle = '#FFCC80'; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#4E342E'; ctx.beginPath(); ctx.arc(x - Math.cos(dir) * r * 0.25, y - Math.sin(dir) * r * 0.25, r * 1.0, dir + Math.PI * 0.62, dir + Math.PI * 1.38); ctx.fill();
+        const ex = Math.cos(dir), ey = Math.sin(dir), px = -ey, py = ex;
+        [-1, 1].forEach(k => {
+            dot(x + ex * r * 0.25 + px * k * r * 0.32, y + ey * r * 0.25 + py * k * r * 0.32, r * 0.09, '#263238');
+            dot(x + ex * r * 0.45 + px * k * r * 0.55, y + ey * r * 0.45 + py * k * r * 0.55, r * (blowing ? 0.24 : 0.16), 'rgba(239,83,80,0.45)');
+        });
+        ctx.fillStyle = '#C62828'; ctx.beginPath(); ctx.arc(x + ex * r * 0.8, y + ey * r * 0.8, r * (blowing ? 0.17 : 0.1), 0, Math.PI * 2); ctx.fill();
+    }
+    function fmtClock(t) {
+        let h = Math.floor(t), m = Math.round((t - h) * 60);
+        if (m === 60) { h += 1; m = 0; }
+        h = h % 24;
+        return (h % 12 || 12) + ':' + String(m).padStart(2, '0') + (h < 12 ? ' AM' : ' PM');
+    }
+    const fmtPa = (p) => Math.round(p).toLocaleString('en-IN') + ' Pa';
+
+    // =====================================================
+    // TAB 1 — Balloon race (two balloons joined by a straw)
+    // =====================================================
+    const B_RATE = 0.6;            // how quickly the straw lets air through
+    const B_PA = 300;              // illustrative extra pressure (Pa) per "puff" of air
+    const balloon = {
+        blow: 6, n1: 6, n2: 0, released: false, settled: false, speed: 0, topSpeed: 0, t: 0, straw: [], acc: 0,
+        dots: Array.from({ length: 110 }, () => ({ a: Math.random() * Math.PI * 2, r: Math.sqrt(Math.random()) * 0.8, ph: Math.random() * 6.28 })),
+        reset() { Object.assign(this, { n1: this.blow, n2: 0, released: false, settled: false, speed: 0, topSpeed: 0, straw: [], acc: 0 }); },
+        release() { if (this.released) this.reset(); this.released = true; },
+        p1() { return this.n1 * B_PA; },
+        p2() { return this.n2 * B_PA; },
+        diff() { return this.n1 - this.n2; },
+        update(dt) {
+            this.t += dt;
+            if (this.released && !this.settled) {
+                const d = this.n1 - this.n2;
+                this.speed = 1.2 * d;                       // air speed in the straw ∝ pressure difference
+                this.topSpeed = Math.max(this.topSpeed, this.speed);
+                const dn = Math.min(B_RATE * d * dt, d / 2);
+                this.n1 -= dn; this.n2 += dn;
+                if (this.n1 - this.n2 < 0.05) {
+                    const m = (this.n1 + this.n2) / 2; this.n1 = this.n2 = m;
+                    this.settled = true; this.speed = 0;
+                    predicts.balloon.reveal();
+                }
+            } else this.speed = 0;
+            this.acc += this.speed * 2.4 * dt;
+            while (this.acc >= 1) { this.acc -= 1; this.straw.push({ s: 0, o: (Math.random() - 0.5) * 9 }); }
+            const v = Math.max(this.speed, 2);
+            this.straw.forEach(p => { p.s += dt * v * 0.12; });
+            this.straw = this.straw.filter(p => p.s < 1);
+        },
+        drawBalloon(cx, cy, r, n, neckX, fill, side) {
+            // neck to the straw
+            ctx.fillStyle = fill; ctx.beginPath();
+            ctx.moveTo(cx + side * r * 0.8, cy - r * 0.35); ctx.lineTo(neckX, cy - 7); ctx.lineTo(neckX, cy + 7); ctx.lineTo(cx + side * r * 0.8, cy + r * 0.35); ctx.closePath(); ctx.fill();
+            const flat = n < 0.35;
+            ctx.beginPath(); ctx.ellipse(cx, cy, r, flat ? r * 0.75 : r * 1.06, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 2; ctx.stroke();
+            if (flat) {
+                ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 1.5;
+                for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(cx - r * 0.6, cy + i * 7); ctx.quadraticCurveTo(cx, cy + i * 7 + 6, cx + r * 0.6, cy + i * 7); ctx.stroke(); }
+            }
+            ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.beginPath(); ctx.ellipse(cx - r * 0.35, cy - r * 0.45, r * 0.18, r * 0.28, -0.5, 0, Math.PI * 2); ctx.fill();
+            // air particles inside: more air = more crowded dots
+            const count = Math.round(6 + 9.5 * n), jig = 1.5 + n * 0.35;
+            for (let i = 0; i < Math.min(count, this.dots.length); i++) {
+                const p = this.dots[i];
+                dot(cx + Math.cos(p.a) * p.r * r + Math.sin(this.t * (3 + n * 0.5) + p.ph) * jig,
+                    cy + Math.sin(p.a) * p.r * r * (flat ? 0.7 : 1.02) + Math.cos(this.t * (3.4 + n * 0.5) + p.ph * 1.3) * jig, 3.2, '#37474F');
+            }
+        },
+        draw() {
+            drawBackdrop();
+            const cy = 300, sL = 340, sR = 560;
+            const d = this.diff(), td = clamp(d / 3, 0, 1);
+            const r1 = 26 + 25 * Math.sqrt(this.n1), r2 = 26 + 25 * Math.sqrt(this.n2);
+            const c1 = sL - 16 - r1, c2 = sR + 16 + r2;
+            // straw
+            ctx.fillStyle = 'rgba(255,255,255,0.95)'; roundRect(sL - 22, cy - 10, sR - sL + 44, 20, 10); ctx.fill();
+            ctx.strokeStyle = '#90A4AE'; ctx.lineWidth = 2; ctx.stroke();
+            ctx.strokeStyle = 'rgba(236,64,122,0.35)'; ctx.lineWidth = 3;
+            for (let x = sL - 10; x < sR + 20; x += 22) { ctx.beginPath(); ctx.moveTo(x, cy + 9); ctx.lineTo(x + 10, cy - 9); ctx.stroke(); }
+            // particles rushing through the straw
+            this.straw.forEach(p => {
+                const x = sL - 16 + p.s * (sR - sL + 32), y = cy + p.o;
+                ctx.strokeStyle = 'rgba(30,136,229,0.45)'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(x - 4 - this.speed * 1.6, y); ctx.lineTo(x, y); ctx.stroke();
+                dot(x, y, 3.4, '#37474F');
+            });
+            // balloons (red = high pressure, blue = low pressure, violet = equal)
+            const f1 = this.settled ? '#E1BEE7' : mix('#E1BEE7', '#EF9A9A', td);
+            const f2 = this.settled ? '#E1BEE7' : mix('#E1BEE7', '#90CAF9', td);
+            this.drawBalloon(c1, cy, r1, this.n1, sL - 14, f1, 1);
+            this.drawBalloon(c2, cy, r2, this.n2, sR + 14, f2, -1);
+            if (td > 0.12) { letter('H', c1, cy - r1 - 34, 40 + 34 * td, 0.4 + 0.6 * td); letter('L', c2, cy - Math.max(r2, 40) - 34, 40 + 34 * td, 0.4 + 0.6 * td); }
+            text('Balloon 1', c1, cy + r1 + 30, { size: 15, color: '#6B3FA0' });
+            text('Balloon 2', c2, cy + Math.max(r2, 30) + 30, { size: 15, color: '#6B3FA0' });
+            // clip
+            if (!this.released) {
+                ctx.save(); ctx.translate(450, cy);
+                ctx.fillStyle = '#BCAAA4'; ctx.strokeStyle = '#6D4C41'; ctx.lineWidth = 2;
+                [-0.18, 0.18].forEach(a => { ctx.save(); ctx.rotate(a); roundRect(-9, -46, 18, 92, 6); ctx.fill(); ctx.stroke(); ctx.restore(); });
+                ctx.strokeStyle = '#78909C'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, -18, 7, 0, Math.PI * 2); ctx.stroke();
+                ctx.restore();
+                pill('CLIP closed', 450, cy + 66, { size: 13, color: '#6D4C41' });
+            }
+            // wind arrow above the straw
+            if (this.speed > 0.05) {
+                const L = 40 + this.speed * 9;
+                drawArrow(450 - L / 2, cy - 36, 450 + L / 2, cy - 36, '#2E7D32', 4 + this.speed * 0.5, null);
+                text('WIND: high → low', 450, cy - 56, { size: 15, color: '#2E7D32' });
+            }
+            if (this.settled) pill('Pressure equal → no wind', 450, cy - 46, { size: 16, color: '#6B3FA0', border: '#CE93D8' });
+            // air-speed meter
+            gauge(450, 118, 50, this.speed / 12, 'AIR SPEED', this.speed.toFixed(1) + ' m/s');
+            // pressure bars
+            [[c1, this.n1, this.p1(), d > 0.05 ? HIGH : '#AB47BC'], [c2, this.n2, this.p2(), d > 0.05 ? LOW : '#AB47BC']].forEach(([x, n, p, col]) => {
+                const bx = clamp(x, 120, 780) - 80, by = 452;
+                ctx.fillStyle = 'rgba(0,0,0,0.08)'; roundRect(bx, by, 160, 16, 8); ctx.fill();
+                if (n > 0.01) { ctx.fillStyle = col; roundRect(bx, by, Math.max(16, 160 * n / 10), 16, 8); ctx.fill(); }
+                text('pressure inside: ' + fmtPa(p), bx + 80, by + 36, { size: 13, color: '#455A64' });
+            });
+            const msg = !this.released ? 'Balloon 1 is full: HIGH pressure. Balloon 2 is flat: LOW pressure. Release the clip!'
+                : this.settled ? 'The flow stopped: both balloons ended up almost the same size.'
+                : 'Air rushes from HIGH to LOW pressure through the straw. Moving air = wind!';
+            text(msg, W / 2, 540, { size: 16, color: this.released && !this.settled ? '#2E7D32' : '#37474F' });
+            setText('b-p1', fmtPa(this.p1()));
+            setText('b-p2', fmtPa(this.p2()));
+            setText('b-dp', fmtPa(this.p1() - this.p2()));
+            setText('b-v', this.speed.toFixed(1) + ' m/s');
+            setText('b-top', this.topSpeed.toFixed(1) + ' m/s');
+        },
+    };
+
+    // =====================================================
+    // TAB 2 — Sea breeze & land breeze (24-hour coast)
+    // =====================================================
+    /* Rounded-rectangle loop, walked starting at the bottom-left going RIGHT along the bottom,
+       UP the right side, LEFT along the top and DOWN the left side (= the sea-breeze direction). */
+    function rrPoint(x0, y0, x1, y1, R, u) {
+        const Lh = x1 - x0 - 2 * R, Lv = y1 - y0 - 2 * R, Lc = Math.PI * R / 2;
+        let s = (((u % 1) + 1) % 1) * (2 * Lh + 2 * Lv + 4 * Lc), a;
+        if (s < Lh) return { x: x0 + R + s, y: y1, dx: 1, dy: 0 }; s -= Lh;
+        if (s < Lc) { a = Math.PI / 2 - s / R; return { x: x1 - R + R * Math.cos(a), y: y1 - R + R * Math.sin(a), dx: Math.sin(a), dy: -Math.cos(a) }; } s -= Lc;
+        if (s < Lv) return { x: x1, y: y1 - R - s, dx: 0, dy: -1 }; s -= Lv;
+        if (s < Lc) { a = -s / R; return { x: x1 - R + R * Math.cos(a), y: y0 + R + R * Math.sin(a), dx: Math.sin(a), dy: -Math.cos(a) }; } s -= Lc;
+        if (s < Lh) return { x: x1 - R - s, y: y0, dx: -1, dy: 0 }; s -= Lh;
+        if (s < Lc) { a = -Math.PI / 2 - s / R; return { x: x0 + R + R * Math.cos(a), y: y0 + R + R * Math.sin(a), dx: Math.sin(a), dy: -Math.cos(a) }; } s -= Lc;
+        if (s < Lv) return { x: x0, y: y0 + R + s, dx: 0, dy: 1 }; s -= Lv;
+        a = -Math.PI - s / R; return { x: x0 + R + R * Math.cos(a), y: y1 - R + R * Math.sin(a), dx: Math.sin(a), dy: -Math.cos(a) };
+    }
+    const LOOP = { x0: 105, y0: 135, x1: 795, y1: 368, R: 62 };
+    const loopPt = (u, off) => rrPoint(LOOP.x0 + off, LOOP.y0 + off, LOOP.x1 - off, LOOP.y1 - off, Math.max(8, LOOP.R - off), u);
+    const STARS = Array.from({ length: 46 }, (_, i) => ({ x: (i * 197 + 31) % 900, y: 16 + (i * 83) % 290, s: 1 + (i % 3) * 0.7, ph: i * 1.7 }));
+    const DIAL = { x: 838, y: 494, r: 50 };
+    const breeze = {
+        t: 8, playing: false, touched: false, wind: 0, showP: true, showT: true, showLoop: true, dragging: false,
+        boatX: 210, time: 0,
+        parts: Array.from({ length: 96 }, () => ({ u: Math.random(), off: Math.random() * 46, ph: Math.random() * 6.28 })),
+        // Land heats and cools a lot; the sea only a little. They are equal at about 8 AM and 8 PM.
+        tLand(t) { return 27 + 9 * Math.sin(2 * Math.PI * (t - 8) / 24); },
+        tSea(t) { return 27 + 1 * Math.sin(2 * Math.PI * (t - 8) / 24); },
+        target() { return clamp((this.tLand(this.t) - this.tSea(this.t)) / 8, -1, 1); },   // + = sea breeze (blows towards the land)
+        kind() { return Math.abs(this.wind) < 0.15 ? 'calm' : this.wind > 0 ? 'sea' : 'land'; },
+        setTime(t, byUser) {
+            this.t = ((t % 24) + 24) % 24;
+            if (byUser) this.touched = true;
+            const sl = $('br-time'); if (Math.abs(+sl.value - this.t) > 0.12) sl.value = this.t;
+            setText('br-time-val', fmtClock(this.t));
+        },
+        setPlaying(on) { this.playing = on; $('br-play').innerHTML = on ? '&#x23F8;&#xFE0F; Pause' : '&#x25B6;&#xFE0F; Play a day'; },
+        dragTo(p) {
+            const a = Math.atan2(p.y - DIAL.y, p.x - DIAL.x);
+            this.setTime(((a - Math.PI / 2) / (Math.PI * 2)) * 24, true);
+            this.setPlaying(false);
+        },
+        update(dt) {
+            this.time += dt;
+            if (this.playing) this.setTime(this.t + dt * 24 / 30, true);   // one day in 30 s
+            this.wind += (this.target() - this.wind) * Math.min(1, dt * 3);
+            const w = this.wind;
+            this.boatX = clamp(this.boatX + w * 32 * dt, 70, 292);
+            this.parts.forEach(p => { p.u = (p.u + w * 0.09 * dt + 1) % 1; });
+            if (this.touched && this.t >= 12 && this.t <= 17 && w > 0.5) predicts.breeze.reveal();
+        },
+        palm(x, h, nt) {
+            const w = this.wind, lean = w * 0.42 + Math.sin(this.time * 2.2 + x) * 0.05 * Math.abs(w);
+            const gy = 394, tx = x + Math.sin(lean) * h, ty = gy - Math.cos(lean) * h;
+            ctx.strokeStyle = nt('#8D6E63'); ctx.lineWidth = 11; ctx.lineCap = 'round';
+            ctx.beginPath(); ctx.moveTo(x, gy); ctx.quadraticCurveTo(x + Math.sin(lean) * h * 0.25, gy - h * 0.6, tx, ty); ctx.stroke();
+            ctx.strokeStyle = nt('#6D4C41'); ctx.lineWidth = 2;
+            for (let i = 1; i < 6; i++) { const f = i / 6, px = lerp(x, tx, f * f * 0.6 + f * 0.4), py = lerp(gy, ty, f); ctx.beginPath(); ctx.moveTo(px - 5, py); ctx.lineTo(px + 5, py - 2); ctx.stroke(); }
+            const drift = w * 34;
+            [-2.7, -2.2, -1.6, -1.0, -0.45, 0.05].forEach((a, i) => {
+                const L = 62 + (i % 2) * 10, flap = Math.sin(this.time * 4 + i) * 3 * Math.abs(w);
+                const ex = tx + Math.cos(a) * L + drift, ey = ty + Math.sin(a) * L * 0.55 + 26 + flap;
+                ctx.strokeStyle = nt(i % 2 ? '#43A047' : '#2E7D32'); ctx.lineWidth = 8;
+                ctx.beginPath(); ctx.moveTo(tx, ty); ctx.quadraticCurveTo(tx + Math.cos(a) * L * 0.5 + drift * 0.6, ty + Math.sin(a) * L * 0.6 - 14, ex, ey); ctx.stroke();
+            });
+            dot(tx - 4, ty + 6, 6, nt('#795548')); dot(tx + 5, ty + 7, 6, nt('#795548'));
+        },
+        draw() {
+            const t = this.t, w = this.wind, aw = Math.abs(w), kind = this.kind();
+            const e = Math.sin(Math.PI * (t - 6) / 12);
+            const day = smooth(-0.12, 0.25, e);
+            const nt = (c) => mix(c, '#1F2A60', 0.48 * (1 - day));
+            // sky
+            const sky = ctx.createLinearGradient(0, 0, 0, 400);
+            sky.addColorStop(0, mix('#3B4A8C', '#6EC6F5', day)); sky.addColorStop(1, mix('#6C77BC', '#E1F5FE', day));
+            ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+            const glow = 1 - smooth(0, 0.35, Math.abs(e));
+            if (glow > 0.02) { const g = ctx.createLinearGradient(0, 400, 0, 220); g.addColorStop(0, 'rgba(255,152,0,' + (0.45 * glow).toFixed(3) + ')'); g.addColorStop(1, 'rgba(255,152,0,0)'); ctx.fillStyle = g; ctx.fillRect(0, 220, W, 180); }
+            if (day < 0.8) STARS.forEach(s => dot(s.x, s.y, s.s, 'rgba(255,255,255,' + ((1 - day) * (0.6 + 0.4 * Math.sin(this.time * 2 + s.ph))).toFixed(3) + ')'));
+            // sun and moon (they set behind the sea / land, which is drawn after)
+            if (t > 5.4 && t < 18.6) {
+                const f = (t - 6) / 12, sx = 70 + f * 760, sy = 330 - Math.sin(Math.PI * clamp(f, -0.05, 1.05)) * 235 + (f < 0 || f > 1 ? 30 : 0);
+                ctx.strokeStyle = 'rgba(255,193,7,0.8)'; ctx.lineWidth = 4;
+                for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5 + this.time * 0.3; ctx.beginPath(); ctx.moveTo(sx + Math.cos(a) * 32, sy + Math.sin(a) * 32); ctx.lineTo(sx + Math.cos(a) * 44, sy + Math.sin(a) * 44); ctx.stroke(); }
+                dot(sx, sy, 26, '#FFD54F'); dot(sx, sy, 20, '#FFEB3B');
+            }
+            const tm = (((t - 18) % 24) + 24) % 24;
+            if (tm < 12.6) {
+                const f = tm / 12, mx = 70 + f * 760, my = 330 - Math.sin(Math.PI * clamp(f, 0, 1)) * 225 + (f > 1 ? 30 : 0);
+                dot(mx, my, 22, '#FFF8E1');
+                dot(mx + 10, my - 6, 19, mix('#3B4A8C', '#6EC6F5', day));
+            }
+            // sea
+            const sea = ctx.createLinearGradient(0, 400, 0, H);
+            sea.addColorStop(0, nt('#4FC3F7')); sea.addColorStop(1, nt('#0277BD'));
+            ctx.fillStyle = sea; ctx.fillRect(0, 400, 420, H - 400);
+            ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 2;
+            for (let row = 0; row < 3; row++) {
+                ctx.beginPath();
+                for (let x = 0; x <= 400; x += 10) { const y = 404 + row * 34 + Math.sin(x * 0.05 + this.time * (1 + aw) + row) * 3; x ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+                ctx.stroke();
+            }
+            // beach + land
+            ctx.fillStyle = nt('#F2D59B'); ctx.beginPath(); ctx.moveTo(368, H); ctx.lineTo(368, 412); ctx.quadraticCurveTo(420, 398, 490, 394); ctx.lineTo(490, H); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = nt('#C8A27A'); ctx.fillRect(488, 394, W - 488, H - 394);
+            ctx.fillStyle = nt('#8BC34A'); ctx.fillRect(488, 390, W - 488, 10);
+            text('SEA', 160, 470, { size: 22, color: 'rgba(255,255,255,0.85)', font: "'Fredoka One', cursive", weight: 400 });
+            text('LAND', 640, 470, { size: 22, color: 'rgba(255,255,255,0.85)', font: "'Fredoka One', cursive", weight: 400 });
+            // hut with a window that lights up at night
+            ctx.fillStyle = nt('#BCAAA4'); ctx.fillRect(770, 346, 74, 48);
+            ctx.fillStyle = nt('#8D6E63'); ctx.beginPath(); ctx.moveTo(758, 350); ctx.lineTo(807, 312); ctx.lineTo(856, 350); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = day < 0.5 ? '#FFD54F' : nt('#5D4037'); ctx.fillRect(782, 358, 18, 16);
+            ctx.fillStyle = nt('#6D4C41'); ctx.fillRect(814, 362, 18, 32);
+            // palms
+            this.palm(520, 118, nt); this.palm(578, 96, nt); this.palm(878, 104, nt);
+            // flag on the beach
+            const fx = 432, ftop = 300;
+            ctx.strokeStyle = nt('#607D8B'); ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(fx, 402); ctx.lineTo(fx, ftop); ctx.stroke();
+            {
+                const ang = clamp(aw / 0.6, 0, 1) * Math.PI / 2 * 0.95, dir = w >= 0 ? 1 : -1;
+                const vx = dir * Math.sin(ang), vy = Math.cos(ang), len = 58, wave = Math.sin(this.time * 9) * 5 * aw;
+                const tipX = fx + vx * len + (-vy) * wave * dir * 0.3, tipY = ftop + 13 + vy * len + vx * wave * 0.3 * dir;
+                ctx.fillStyle = nt('#FF7043'); ctx.beginPath(); ctx.moveTo(fx, ftop); ctx.quadraticCurveTo((fx + tipX) / 2, (ftop + tipY) / 2 - wave, tipX, tipY); ctx.lineTo(fx, ftop + 26); ctx.closePath(); ctx.fill();
+            }
+            // kid with a kite (daytime only; at night the kid has gone home)
+            if (day > 0.05) {
+                ctx.save(); ctx.globalAlpha = day;
+                const kx = 700, gy = 394;
+                ctx.strokeStyle = '#5C6BC0'; ctx.lineWidth = 6; ctx.lineCap = 'round';
+                ctx.beginPath(); ctx.moveTo(kx - 6, gy); ctx.lineTo(kx, gy - 22); ctx.lineTo(kx + 6, gy); ctx.stroke();
+                ctx.fillStyle = '#FFB74D'; roundRect(kx - 9, gy - 50, 18, 30, 7); ctx.fill();
+                dot(kx, gy - 60, 10, '#FFCC80'); dot(kx, gy - 64, 10, '#4E342E'); dot(kx, gy - 58, 8, '#FFCC80');
+                const flying = aw > 0.15, dir = w >= 0 ? 1 : -1;
+                const kiteX = flying ? kx + dir * (60 + 95 * aw) : kx + 30, kiteY = flying ? 330 - 165 * Math.min(1, aw * 1.4) + Math.sin(this.time * 3) * 6 : 384;
+                const hx = kx + dir * 12, hy = gy - 44;
+                ctx.strokeStyle = '#ECEFF1'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(hx, hy); ctx.quadraticCurveTo((hx + kiteX) / 2, Math.max(hy, kiteY) + 10, kiteX, kiteY + 18); ctx.stroke();
+                ctx.lineWidth = 6; ctx.strokeStyle = '#FFCC80'; ctx.beginPath(); ctx.moveTo(kx, gy - 42); ctx.lineTo(hx, hy); ctx.stroke();
+                ctx.save(); ctx.translate(kiteX, kiteY); ctx.rotate(flying ? dir * 0.25 : 1.3);
+                ctx.fillStyle = '#E91E63'; ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(15, 0); ctx.lineTo(0, 22); ctx.lineTo(-15, 0); ctx.closePath(); ctx.fill();
+                ctx.fillStyle = '#FFEB3B'; ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(15, 0); ctx.lineTo(0, 0); ctx.closePath(); ctx.fill();
+                ctx.restore();
+                ctx.strokeStyle = '#E91E63'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(kiteX, kiteY + 20);
+                for (let i = 1; i <= 5; i++) ctx.lineTo(kiteX + dir * i * 9 * (flying ? 1 : 0.2), kiteY + 20 + i * (flying ? 6 : 2) + Math.sin(this.time * 6 + i) * 4 * aw);
+                ctx.stroke();
+                ctx.restore();
+            }
+            // fishing boat
+            {
+                const bx = this.boatX, by = 402 + Math.sin(this.time * 2) * 2, dir = w >= 0 ? 1 : -1;
+                ctx.fillStyle = nt('#6D4C41'); ctx.beginPath(); ctx.moveTo(bx - 48, by - 10); ctx.lineTo(bx + 48, by - 10); ctx.lineTo(bx + 34, by + 10); ctx.lineTo(bx - 34, by + 10); ctx.closePath(); ctx.fill();
+                ctx.strokeStyle = nt('#4E342E'); ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(bx, by - 10); ctx.lineTo(bx, by - 86); ctx.stroke();
+                const bulge = 8 + 30 * aw;
+                ctx.fillStyle = nt('#FFF8E1'); ctx.beginPath(); ctx.moveTo(bx, by - 84); ctx.quadraticCurveTo(bx + dir * bulge * 1.5, by - 50, bx, by - 16); ctx.closePath(); ctx.fill();
+                ctx.strokeStyle = nt('#BCAAA4'); ctx.lineWidth = 1.5; ctx.stroke();
+                const mx = bx - dir * 26;
+                dot(mx, by - 30, 6, nt('#FFCC80')); ctx.fillStyle = nt('#1976D2'); roundRect(mx - 6, by - 24, 12, 14, 4); ctx.fill();
+                ctx.strokeStyle = nt('#5D4037'); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(mx, by - 20); ctx.lineTo(mx - dir * 34, by - 52); ctx.stroke();
+                ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(mx - dir * 34, by - 52); ctx.lineTo(mx - dir * 40, by + 8); ctx.stroke();
+            }
+            // pressure regions
+            if (this.showP) {
+                if (kind === 'calm') {
+                    blob(230, 330, 160, 60, '#9575CD', 0.16); blob(660, 330, 160, 60, '#9575CD', 0.16);
+                    pill('Same pressure over land and sea', 450, 300, { size: 14, color: '#6B3FA0', border: '#CE93D8' });
+                } else {
+                    const seaC = w > 0 ? HIGH : LOW, landC = w > 0 ? LOW : HIGH;
+                    blob(230, 335, 175, 66, seaC, 0.16 + 0.26 * aw); blob(660, 335, 175, 66, landC, 0.16 + 0.26 * aw);
+                    letter(w > 0 ? 'H' : 'L', 210, 268, 40 + 34 * aw); letter(w > 0 ? 'L' : 'H', 672, 268, 40 + 34 * aw);
+                }
+            }
+            // the air loop (particles + direction arrows)
+            if (this.showLoop) {
+                const dir = w >= 0 ? 1 : -1, pc = day > 0.5 ? '#37474F' : '#E8EAF6';
+                if (aw > 0.1) {
+                    ctx.save(); ctx.setLineDash([8, 10]); ctx.strokeStyle = rgba(day > 0.5 ? '#37474F' : '#E8EAF6', 0.25 + 0.2 * aw); ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    for (let i = 0; i <= 80; i++) { const q = loopPt(i / 80, 23); i ? ctx.lineTo(q.x, q.y) : ctx.moveTo(q.x, q.y); }
+                    ctx.stroke(); ctx.restore();
+                }
+                this.parts.forEach(p => {
+                    const q = loopPt(p.u, p.off), jx = Math.sin(this.time * 3 + p.ph) * 1.5, jy = Math.cos(this.time * 3.3 + p.ph) * 1.5;
+                    const tl = 3 + 16 * aw;
+                    ctx.strokeStyle = rgba(day > 0.5 ? '#37474F' : '#E8EAF6', 0.35); ctx.lineWidth = 2;
+                    ctx.beginPath(); ctx.moveTo(q.x + jx - q.dx * tl * dir, q.y + jy - q.dy * tl * dir); ctx.lineTo(q.x + jx, q.y + jy); ctx.stroke();
+                    dot(q.x + jx, q.y + jy, 3.2, pc);
+                });
+                if (aw > 0.1) {
+                    const col = day > 0.5 ? '#2E7D32' : '#B9F6CA', al = 10 + 12 * aw;
+                    [0.08, 0.2, 0.31, 0.45, 0.58, 0.69, 0.83, 0.95].forEach(u => {
+                        const q = loopPt(u, 23);
+                        drawArrow(q.x - q.dx * al * dir, q.y - q.dy * al * dir, q.x + q.dx * al * dir, q.y + q.dy * al * dir, col, 5, null);
+                    });
+                    const riseX = w > 0 ? 728 : 172, sinkX = w > 0 ? 172 : 728;
+                    pill('warm air rises ↑', riseX, 205, { size: 13, color: '#BF360C' });
+                    pill('cool air sinks ↓', sinkX, 205, { size: 13, color: '#0D47A1' });
+                }
+            }
+            // thermometers
+            if (this.showT) {
+                const thermo = (x, T, label) => {
+                    ctx.strokeStyle = nt('#78909C'); ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, 372); ctx.lineTo(x, 400); ctx.stroke();
+                    ctx.fillStyle = '#fff'; roundRect(x - 9, 250, 18, 112, 9); ctx.fill(); ctx.strokeStyle = '#90A4AE'; ctx.lineWidth = 2; ctx.stroke();
+                    dot(x, 366, 13, '#fff'); dot(x, 366, 10, '#E53935');
+                    const fh = 100 * clamp((T - 14) / 26, 0.03, 1);
+                    ctx.fillStyle = '#E53935'; ctx.fillRect(x - 4, 360 - fh, 8, fh + 4);
+                    ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth = 1;
+                    for (let i = 0; i <= 5; i++) { ctx.beginPath(); ctx.moveTo(x + 4, 260 + i * 20); ctx.lineTo(x + 9, 260 + i * 20); ctx.stroke(); }
+                    pill(label + ' ' + T.toFixed(0) + '°C', x, 234, { size: 14, color: '#C62828' });
+                };
+                const TL = this.tLand(t), TS = this.tSea(t);
+                thermo(352, TS, 'Sea'); thermo(598, TL, 'Land');
+            }
+            // headline
+            const head = kind === 'sea' ? 'SEA BREEZE: wind blows from sea → land' : kind === 'land' ? 'LAND BREEZE: wind blows from land → sea' : 'CALM: land and sea are equally warm';
+            pill(head, 380, 32, { size: 18, color: kind === 'calm' ? '#6B3FA0' : '#2E7D32', font: "'Fredoka One', cursive", weight: 400, border: kind === 'calm' ? '#CE93D8' : '#81C784' });
+            const exp = kind === 'sea' ? 'Day: land heats faster than the sea → warm air over land rises (LOW) → cooler sea air (HIGH) blows in.'
+                : kind === 'land' ? 'Night: land cools faster, the sea stays warm → air over the sea rises (LOW) → land air (HIGH) blows out.'
+                : 'Almost no temperature difference → almost no pressure difference → no breeze.';
+            pill(exp, 400, 538, { size: 13, color: '#37474F' });
+            if (kind === 'land' && this.boatX < 200) pill('Fishermen sail out on the land breeze', 190, 440, { size: 12, color: '#0D47A1' });
+            // 24-hour dial (drag it)
+            {
+                const { x, y, r } = DIAL;
+                ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, r + 8, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = 'rgba(0,0,0,0.2)'; ctx.lineWidth = 2; ctx.stroke();
+                ctx.fillStyle = '#FFF59D'; ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, r, Math.PI, Math.PI * 2); ctx.closePath(); ctx.fill();
+                ctx.fillStyle = '#9FA8DA'; ctx.beginPath(); ctx.moveTo(x, y); ctx.arc(x, y, r, 0, Math.PI); ctx.closePath(); ctx.fill();
+                ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 2;
+                for (let h = 0; h < 24; h += 3) { const a = Math.PI / 2 + h / 24 * Math.PI * 2; ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * (r - 7), y + Math.sin(a) * (r - 7)); ctx.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r); ctx.stroke(); }
+                const a = Math.PI / 2 + t / 24 * Math.PI * 2, kx = x + Math.cos(a) * (r - 4), ky = y + Math.sin(a) * (r - 4);
+                ctx.strokeStyle = '#455A64'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(kx, ky); ctx.stroke();
+                dot(kx, ky, 13, '#fff'); emoji(t >= 6 && t < 18 ? '☀️' : '🌙', kx, ky, 18);
+                pill(fmtClock(t), x, y + 2, { size: 12, color: '#37474F' });
+                text('drag me', x, y - r - 14, { size: 12, color: '#fff' });
+            }
+            setText('br-clock', fmtClock(t));
+            setText('br-tl', this.tLand(t).toFixed(1) + ' °C');
+            setText('br-ts', this.tSea(t).toFixed(1) + ' °C');
+            setText('br-w', kind === 'sea' ? 'Sea breeze →' : kind === 'land' ? '← Land breeze' : 'Calm');
+        },
+    };
+
+    // =====================================================
+    // TAB 3 — Fast air = low pressure (balloons + paper strip)
+    // =====================================================
+    const fast = {
+        scene: 'balloons', strength: 5, blowT: 0, d: 0, v: 0, maxIn: 0, lift: 0, liftV: 0, time: 0, jet: [], jet2: [], acc: 0,
+        amb: Array.from({ length: 95 }, () => ({ x: 120 + Math.random() * 660, y: 80 + Math.random() * 400, ph: Math.random() * 6.28 })),
+        blowing() { return this.blowT > 0; },
+        blow() { this.blowT = 3; this.maxIn = 0; },
+        jetSpeed() { return this.blowing() ? this.strength * 3 : 0; },                 // m/s, illustrative
+        jetDrop() { const v = this.jetSpeed(); return 0.5 * 1.2 * v * v; },               // Pa lower than the still air
+        gapCm() { return (40 - 2 * this.d) / 5; },                                         // 40 px = 8 cm at rest
+        update(dt) {
+            this.time += dt;
+            this.blowT = Math.max(0, this.blowT - dt);
+            const s = this.blowing() ? this.strength : 0;
+            // balloons: low pressure in the jet → outside air pushes each balloon inwards (push ∝ speed²)
+            const n = Math.max(1, Math.ceil(dt / 0.01)), h = dt / n;
+            for (let i = 0; i < n; i++) {
+                const a = 2.4 * s * s - 6 * this.d - 2.5 * this.v;
+                this.v += a * h; this.d += this.v * h;
+                if (this.d > 20) { this.d = 20; if (this.v > 0) this.v = 0; }
+                if (this.d < -12) { this.d = -12; if (this.v < 0) this.v = 0; }
+            }
+            if (s > 0) this.maxIn = Math.max(this.maxIn, this.v);
+            if (s > 0 && this.d > 6) predicts.fast.reveal();
+            // paper strip: blowing over the top lowers the pressure above it, so it rises
+            const target = s > 0 ? Math.min(1, 0.11 * s) : 0;
+            this.liftV += ((target - this.lift) * 14 - this.liftV * 4.5) * dt;
+            this.lift = clamp(this.lift + this.liftV * dt, 0, 1.05);
+            // particles
+            this.amb.forEach(p => { p.x += Math.sin(this.time * 0.9 + p.ph) * 6 * dt; p.y += Math.cos(this.time * 0.8 + p.ph * 1.7) * 6 * dt; });
+            if (s > 0) {
+                this.acc += 26 * dt;
+                while (this.acc >= 1) {
+                    this.acc -= 1;
+                    const half = Math.max(5, (40 - 2 * this.d) / 2 + 6);
+                    this.jet.push({ x: 450 + (Math.random() - 0.5) * 2 * Math.min(half, 18), y: 438 });
+                    this.jet2.push({ x: 236, y: 214 + (Math.random() - 0.5) * 14 });
+                }
+            }
+            const vj = 120 + 40 * this.strength;
+            this.jet.forEach(p => { p.y -= vj * dt; });
+            this.jet2.forEach(p => { p.x += vj * dt; });
+            this.jet = this.jet.filter(p => p.y > 60);
+            this.jet2 = this.jet2.filter(p => p.x < 800);
+        },
+        hangBalloon(px, py, cx, cy, r, col) {
+            ctx.strokeStyle = '#78909C'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(cx, cy - r * 1.15); ctx.stroke();
+            ctx.fillStyle = col; ctx.beginPath(); ctx.ellipse(cx, cy, r, r * 1.15, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = 'rgba(0,0,0,0.2)'; ctx.lineWidth = 2; ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(cx - 7, cy + r * 1.15 + 9); ctx.lineTo(cx + 7, cy + r * 1.15 + 9); ctx.lineTo(cx, cy + r * 1.15 - 1); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.beginPath(); ctx.ellipse(cx - r * 0.35, cy - r * 0.45, r * 0.16, r * 0.28, -0.5, 0, Math.PI * 2); ctx.fill();
+        },
+        drawBalloons(s) {
+            const cy = 320, r = 55, xL = 375 + this.d, xR = 525 - this.d;
+            ctx.fillStyle = '#8D6E63'; roundRect(230, 52, 440, 14, 7); ctx.fill();
+            text('stick', 690, 64, { size: 13, color: '#795548', align: 'left' });
+            if (s > 0) {
+                const a = 0.1 + 0.035 * s;
+                blob(xL - 125, cy, 110, 170, HIGH, a); blob(xR + 125, cy, 110, 170, HIGH, a);
+                ctx.fillStyle = rgba(LOW, a * 0.9); ctx.fillRect(450 - 24, 80, 48, 360);
+                letter('H', xL - 135, 165, 56); letter('H', xR + 135, 165, 56); letter('L', 450, 120, 56);
+            }
+            const vj = 120 + 40 * this.strength;
+            this.amb.forEach(p => {
+                const inL = Math.hypot((p.x - xL) / r, (p.y - cy) / (r * 1.15)) < 1.1, inR = Math.hypot((p.x - xR) / r, (p.y - cy) / (r * 1.15)) < 1.1;
+                if (inL || inR) return;
+                if (s > 0 && Math.abs(p.x - 450) < 26 && p.y > 78 && p.y < 440) return;   // the jet has swept the still air away
+                dot(p.x, p.y, 3.2, s > 0 ? '#C62828' : '#78909C');
+            });
+            this.jet.forEach(p => {
+                ctx.strokeStyle = 'rgba(30,136,229,0.55)'; ctx.lineWidth = 2.5;
+                ctx.beginPath(); ctx.moveTo(p.x, p.y + vj * 0.07); ctx.lineTo(p.x, p.y); ctx.stroke();
+                dot(p.x, p.y, 3.2, LOW);
+            });
+            this.hangBalloon(375, 64, xL, cy, r, '#FFD54F');
+            this.hangBalloon(525, 64, xR, cy, r, '#81C784');
+            if (s > 0) {
+                const L = 22 + 6 * s;
+                drawArrow(xL - r - 16 - L, cy, xL - r - 6, cy, HIGH, 6, null);
+                drawArrow(xR + r + 16 + L, cy, xR + r + 6, cy, HIGH, 6, null);
+                text('push', xL - r - 16 - L / 2, cy - 14, { size: 14, color: HIGH });
+                text('push', xR + r + 16 + L / 2, cy - 14, { size: 14, color: HIGH });
+            }
+            ctx.strokeStyle = '#6B3FA0'; ctx.lineWidth = 1.5;
+            const g1 = xL + r, g2 = xR - r;
+            if (g2 - g1 > 3) { ctx.beginPath(); ctx.moveTo(g1, cy + 92); ctx.lineTo(g2, cy + 92); ctx.stroke(); }
+            text('gap ' + this.gapCm().toFixed(1) + ' cm', 450, cy + 116, { size: 15, color: '#6B3FA0' });
+            ctx.fillStyle = '#F8BBD0'; ctx.fillRect(445, 448, 10, 48);
+            blowFace(450, 532, 34, -Math.PI / 2, s > 0);
+            gauge(110, 430, 46, s / 10, 'BLOW', (s * 3) + ' m/s');
+            const msg = s > 0 ? (this.d >= 19.9 ? 'They touch! Fast air between = LOW pressure. Still air outside pushes them in.'
+                : 'Fast air between the balloons → LOW pressure → the outside air pushes them together.')
+                : this.d > 2 ? 'Blowing stopped: the pressure is equal again, so they swing back.' : 'Two balloons hang 8 cm apart. Press Blow to send fast air between them.';
+            pill(msg, 450, 26, { size: 14, color: s > 0 ? '#1565C0' : '#37474F' });
+        },
+        drawStrip(s) {
+            const hx = 330, hy = 232, N = 20, seg = 15;
+            if (s > 0) {
+                const a = 0.08 + 0.03 * s;
+                blob(520, 200, 240, 40, LOW, a); letter('L', 560, 140, 52);
+                blob(520, 380, 210, 100, HIGH, a); letter('H', 700, 440, 52);
+                [440, 540, 640].forEach(x => drawArrow(x, 470, x, 470 - (24 + 6 * s), HIGH, 5, null));
+            }
+            const pts = [[hx + 8, hy]]; let x = hx + 8, y = hy;
+            for (let i = 0; i < N; i++) {
+                const f = (i + 0.5) / N, flutter = this.blowing() ? Math.sin(this.time * 18 + i * 0.7) * 0.05 * f : 0;
+                const a = (1 - this.lift) * 1.45 * Math.pow(f, 0.8) + flutter;
+                x += Math.cos(a) * seg; y += Math.sin(a) * seg; pts.push([x, y]);
+            }
+            this.amb.forEach(p => {
+                if (s > 0 && p.y > 196 && p.y < 230 && p.x > 230) return;
+                dot(p.x, p.y, 3.2, s > 0 && p.y > 240 ? '#C62828' : '#78909C');
+            });
+            const vj = 120 + 40 * this.strength;
+            this.jet2.forEach(p => {
+                ctx.strokeStyle = 'rgba(30,136,229,0.55)'; ctx.lineWidth = 2.5;
+                ctx.beginPath(); ctx.moveTo(p.x - vj * 0.07, p.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+                dot(p.x, p.y, 3.2, LOW);
+            });
+            ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+            [['#BCAAA4', 12], ['#FFF3E0', 8]].forEach(([c, lw]) => {
+                ctx.strokeStyle = c; ctx.lineWidth = lw; ctx.beginPath();
+                pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke();
+            });
+            // fingers pinching the end
+            ctx.fillStyle = '#FFCC80'; roundRect(hx - 40, hy - 26, 52, 20, 10); ctx.fill(); roundRect(hx - 40, hy + 6, 52, 20, 10); ctx.fill();
+            ctx.fillStyle = '#FFB74D'; roundRect(hx - 90, hy - 30, 56, 60, 18); ctx.fill();
+            blowFace(190, 214, 36, 0, s > 0);
+            text('paper strip (18 cm × 2 cm)', 290, 292, { size: 13, color: '#795548' });
+            gauge(110, 430, 46, s / 10, 'BLOW', (s * 3) + ' m/s');
+            const msg = s > 0 ? 'Fast air over the top → LOW pressure above. The still air below pushes the strip UP.'
+                : this.lift > 0.1 ? 'Blowing stopped: the strip falls back down.' : 'Hold a paper strip and blow OVER it. Press Blow!';
+            pill(msg, 450, 26, { size: 14, color: s > 0 ? '#1565C0' : '#37474F' });
+        },
+        draw() {
+            drawBackdrop();
+            const s = this.blowing() ? this.strength : 0;
+            if (this.scene === 'balloons') this.drawBalloons(s); else this.drawStrip(s);
+            setText('f-v', s > 0 ? (s * 3) + ' m/s' : 'not blowing');
+            setText('f-p', s > 0 ? 'lower by ' + fmtPa(this.jetDrop()) : 'normal');
+            if (this.scene === 'balloons') {
+                setText('f-l3', 'Gap'); setText('f-l4', 'Balloons');
+                setText('f-gap', this.gapCm().toFixed(1) + ' cm');
+                setText('f-st', this.d >= 19.9 ? 'touching!' : this.v > 2 ? 'moving together' : this.v < -2 ? 'swinging back' : 'still');
+            } else {
+                setText('f-l3', 'Strip lifted'); setText('f-l4', 'Strip');
+                setText('f-gap', Math.round(this.lift * 90) + '°');
+                setText('f-st', this.liftV > 0.2 ? 'rising' : this.liftV < -0.2 ? 'falling' : this.lift > 0.3 ? 'up' : 'hanging');
+            }
+        },
+    };
+
+    // =====================================================
+    // TAB 4 — Storm wind, roofs and banners
+    // =====================================================
+    const GROUND = 470, SKY_TOP = 70;
+    const dropFor = (kmh) => { const v = kmh / 3.6; return 0.5 * 1.2 * v * v; };      // Pa lower in fast wind
+    const ROOF_HOLD = dropFor(90);       // a light roof holds until the net upward push reaches this
+    const BANNER_HOLD = dropFor(100);    // a flex banner without holes tears at this push
+    function roofSurf(x) {
+        if (x < 190 || x > 690) return GROUND;
+        if (x < 275) return lerp(GROUND, 336, smooth(190, 275, x));
+        if (x <= 430) return lerp(336, 244, (x - 275) / 155);
+        if (x <= 585) return lerp(244, 336, (x - 430) / 155);
+        return lerp(336, GROUND, smooth(585, 690, x));
+    }
+    const storm = {
+        scene: 'roof', v: 40, open: false, holes: false, time: 0,
+        roof: { state: 'on', over: 0, x: 0, y: 0, ang: 0, vx: 0, vy: 0, va: 0 },
+        banner: { torn: false, over: 0, tilt: 0, bulge: 0 },
+        seenFly: false, seenOpenStrong: false, openStrongT: 0,
+        parts: Array.from({ length: 150 }, (_, i) => ({ id: i, x: Math.random() * 960 - 30, f: 0.03 + Math.random() * 0.97, ph: Math.random() * 6.28 })),
+        drop() { return dropFor(this.v); },
+        insideDrop() { return this.open ? 0.8 * this.drop() : 0; },
+        roofNet() { return this.drop() - this.insideDrop(); },
+        bannerPush() { return (this.holes ? 0.35 : 1) * this.drop(); },
+        repair() {
+            Object.assign(this.roof, { state: 'on', over: 0, x: 0, y: 0, ang: 0 });
+            Object.assign(this.banner, { torn: false, over: 0, tilt: 0 });
+        },
+        update(dt) {
+            this.time += dt;
+            const R = this.roof, net = this.roofNet();
+            if (R.state === 'on') {
+                R.over = net >= ROOF_HOLD ? R.over + dt : Math.max(0, R.over - dt);
+                if (R.over > 0.6) {
+                    Object.assign(R, { state: 'flying', vx: 120 + this.v * 2.2, vy: -230, va: 2.6 });
+                    this.seenFly = true;
+                }
+                if (this.open && this.v >= 90) { this.openStrongT += dt; if (this.openStrongT > 1) this.seenOpenStrong = true; } else this.openStrongT = 0;
+            } else if (R.state === 'flying') {
+                R.x += R.vx * dt; R.y += R.vy * dt; R.vy += 50 * dt; R.ang += R.va * dt;
+                if (R.x > 650 || R.y < -420) R.state = 'gone';
+            }
+            if (this.seenFly && this.seenOpenStrong) predicts.storm.reveal();
+            const B = this.banner, push = this.bannerPush();
+            B.bulge += (clamp(push / BANNER_HOLD, 0, 1.25) * 46 - B.bulge) * Math.min(1, dt * 4);
+            if (!B.torn) {
+                B.over = push >= BANNER_HOLD ? B.over + dt : Math.max(0, B.over - dt);
+                if (B.over > 0.7) B.torn = true;
+            } else B.tilt += (0.42 - B.tilt) * Math.min(1, dt * 2);
+            const base = 18 + this.v * 3.2;
+            this.parts.forEach(p => {
+                const k = this.scene === 'roof' ? this.roofLane(p) : null;
+                const mult = k ? k.mult : 1;
+                p.x += base * mult * dt;
+                if (p.x > 930) { p.x -= 960; p.f = 0.03 + Math.random() * 0.97; }
+            });
+        },
+        yFar(p) { return SKY_TOP + p.f * (GROUND - 8 - SKY_TOP); },
+        roofLane(p) {
+            const yf = this.yFar(p);
+            const through = this.open && this.roof.state !== 'gone' && p.id % 3 !== 0 && yf > 352 && yf < 404;
+            if (through) return { y: yf, mult: 0.8, through: true };
+            const surf = roofSurf(p.x) - 8;
+            return { y: SKY_TOP + p.f * (surf - SKY_TOP), mult: (GROUND - 8 - SKY_TOP) / (surf - SKY_TOP), through: false };
+        },
+        bannerLane(p) {
+            const yf = this.yFar(p), w = smooth(290, 365, p.x) * (1 - smooth(560, 650, p.x));
+            const pass = this.holes && !this.banner.torn && p.id % 5 < 3;
+            if (pass || this.banner.torn || yf < 120 || yf > 360) return { y: yf, pass };
+            const tgt = yf < 240 ? 118 - (240 - yf) * 0.35 : 372 + (yf - 240) * 0.5;
+            return { y: lerp(yf, Math.min(tgt, GROUND - 10), w), pass };
+        },
+        drawSky() {
+            const g = ctx.createLinearGradient(0, 0, 0, GROUND);
+            g.addColorStop(0, '#B0BEC5'); g.addColorStop(1, '#ECEFF1');
+            ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+            const drift = (this.time * (8 + this.v * 0.6)) % 1100;
+            [[80, 70, 1], [420, 50, 1.3], [760, 80, 1.1]].forEach(([cx, cy, s]) => {
+                const x = ((cx + drift) % 1100) - 100;
+                ctx.fillStyle = 'rgba(96,125,139,0.55)';
+                [[0, 0, 50], [40, -12, 40], [-42, 4, 34], [80, 6, 30]].forEach(([dx, dy, r]) => { ctx.beginPath(); ctx.arc(x + dx * s, cy + dy * s, r * s, 0, Math.PI * 2); ctx.fill(); });
+            });
+            ctx.fillStyle = '#9CCC65'; ctx.fillRect(0, GROUND, W, H - GROUND);
+            ctx.fillStyle = '#7CB342'; ctx.fillRect(0, GROUND, W, 6);
+        },
+        drawParticle(x, y, mult, fastCol) {
+            const L = 4 + (18 + this.v * 3.2) * mult * 0.035;
+            const col = mult > 1.45 ? LOW : fastCol || '#546E7A';
+            ctx.strokeStyle = rgba(col === LOW ? LOW : '#546E7A', 0.4); ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(x - L, y); ctx.lineTo(x, y); ctx.stroke();
+            dot(x, y, 3, col);
+        },
+        drawRoofScene() {
+            const R = this.roof, drop = this.drop(), net = this.roofNet(), on = R.state === 'on';
+            const strength = clamp(drop / dropFor(150), 0, 1);
+            // low pressure band hugging the roof
+            if (drop > 5) {
+                ctx.fillStyle = rgba(LOW, 0.08 + 0.3 * strength);
+                ctx.beginPath(); ctx.moveTo(250, 336); ctx.lineTo(430, 228); ctx.lineTo(610, 336); ctx.lineTo(560, 300); ctx.lineTo(430, 175); ctx.lineTo(300, 300); ctx.closePath(); ctx.fill();
+                letter('L', 430, 150, 40 + 30 * strength, 0.35 + 0.65 * strength);
+            }
+            // house
+            ctx.fillStyle = '#FFE0B2'; ctx.fillRect(300, 336, 260, GROUND - 336);
+            ctx.beginPath(); ctx.moveTo(300, 336); ctx.lineTo(430, 262); ctx.lineTo(560, 336); ctx.closePath(); ctx.fill();
+            ctx.strokeStyle = '#A1887F'; ctx.lineWidth = 2; ctx.strokeRect(300, 336, 260, GROUND - 336);
+            // inside pressure tint
+            const inC = this.open ? LOW : HIGH, inA = this.open ? 0.08 + 0.25 * strength : 0.12 + 0.14 * strength;
+            ctx.fillStyle = rgba(inC, inA); ctx.fillRect(302, 338, 256, GROUND - 340);
+            // windows + door
+            const win = (x) => {
+                if (this.open) {
+                    ctx.fillStyle = '#4E342E'; ctx.fillRect(x, 358, 48, 44);
+                    ctx.fillStyle = '#8D6E63'; ctx.beginPath(); ctx.moveTo(x, 358); ctx.lineTo(x - 16, 352); ctx.lineTo(x - 16, 408); ctx.lineTo(x, 402); ctx.closePath(); ctx.fill();
+                    ctx.beginPath(); ctx.moveTo(x + 48, 358); ctx.lineTo(x + 64, 352); ctx.lineTo(x + 64, 408); ctx.lineTo(x + 48, 402); ctx.closePath(); ctx.fill();
+                } else {
+                    ctx.fillStyle = '#B3E5FC'; ctx.fillRect(x, 358, 48, 44);
+                    ctx.strokeStyle = '#6D4C41'; ctx.lineWidth = 4; ctx.strokeRect(x, 358, 48, 44);
+                    ctx.beginPath(); ctx.moveTo(x + 24, 358); ctx.lineTo(x + 24, 402); ctx.moveTo(x, 380); ctx.lineTo(x + 48, 380); ctx.stroke();
+                }
+            };
+            win(322); win(490);
+            if (this.open) { ctx.fillStyle = '#4E342E'; ctx.fillRect(408, 398, 44, 72); ctx.fillStyle = '#8D6E63'; ctx.beginPath(); ctx.moveTo(408, 398); ctx.lineTo(392, 404); ctx.lineTo(392, 470); ctx.lineTo(408, 470); ctx.closePath(); ctx.fill(); }
+            else { ctx.fillStyle = '#8D6E63'; ctx.fillRect(408, 398, 44, 72); dot(444, 436, 3, '#FFD54F'); }
+            if (!on) { ctx.strokeStyle = '#6D4C41'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(300, 336); ctx.lineTo(430, 262); ctx.lineTo(560, 336); ctx.stroke(); }
+            // net upward push arrow inside
+            if (on && net > 5) {
+                const L = 24 + 120 * clamp(net / ROOF_HOLD, 0, 1.2);
+                drawArrow(430, 392, 430, 392 - L, HIGH, 9, null);
+                pill('push up', 520, 300, { size: 13, color: HIGH });
+            }
+            if (!this.open && drop > 30) letter('H', 360, 440, 34, 0.9);
+            // air particles
+            this.parts.forEach(p => {
+                const k = this.roofLane(p);
+                if (!k.through && p.x > 300 && p.x < 560 && k.y > 336) return;
+                this.drawParticle(p.x, k.y, k.mult);
+            });
+            // the roof (tin sheet)
+            const rattle = on ? clamp(net / ROOF_HOLD, 0, 1) : 0;
+            const jx = on && rattle > 0.6 ? Math.sin(this.time * 47) * 3 * rattle : 0;
+            const jy = on && rattle > 0.6 ? -Math.abs(Math.sin(this.time * 31)) * 6 * rattle : 0;
+            if (R.state !== 'gone') {
+                ctx.save(); ctx.translate(430 + R.x + jx, 296 + R.y + jy); ctx.rotate(R.ang + (on && rattle > 0.6 ? Math.sin(this.time * 23) * 0.02 : 0));
+                ctx.strokeStyle = '#78909C'; ctx.lineWidth = 13; ctx.lineJoin = 'miter'; ctx.lineCap = 'butt';
+                ctx.beginPath(); ctx.moveTo(-162, 44); ctx.lineTo(0, -46); ctx.lineTo(162, 44); ctx.stroke();
+                ctx.strokeStyle = '#B0BEC5'; ctx.lineWidth = 2;
+                for (let i = 1; i < 10; i++) { const f = i / 10; [[-162, 44], [162, 44]].forEach(([ex, ey]) => { const x = ex * f, y = -46 + (ey + 46) * f; ctx.beginPath(); ctx.moveTo(x, y - 6); ctx.lineTo(x, y + 6); ctx.stroke(); }); }
+                ctx.restore();
+            }
+            if (R.state !== 'on') text('WHOOSH!', 640, 200, { size: 34, color: '#C62828', font: "'Fredoka One', cursive", weight: 400 });
+            gauge(110, 120, 48, net / ROOF_HOLD * 0.75, 'PUSH UP', fmtPa(on ? net : 0));
+            text('roof lifts in the red zone', 110, 222, { size: 11, color: '#607D8B' });
+            const msg = !on ? 'The roof blew off! Low pressure above, normal pressure inside → big upward push.'
+                : this.open ? (this.v >= 60 ? 'Windows open: wind flows through the house, so the inside pressure drops too. Small difference → roof stays.' : 'Windows and doors are open. Turn up the storm.')
+                : this.v >= 60 ? 'Fast wind over the roof → LOW pressure above. Inside is still normal → the roof is pushed UP.'
+                : 'Turn up the storm. Watch the air squeeze over the roof and speed up.';
+            pill(msg, 450, 520, { size: 13, color: !on ? '#C62828' : '#37474F' });
+            setText('s-l2', 'Pressure drop above roof'); setText('s-l3', 'Pressure drop inside'); setText('s-l4', 'Net push up'); setText('s-l5', 'Roof');
+            setText('s-drop', fmtPa(drop)); setText('s-in', fmtPa(this.insideDrop())); setText('s-net', fmtPa(net));
+            setText('s-st', !on ? 'BLOWN OFF!' : rattle > 0.6 ? 'rattling!' : 'safe');
+        },
+        bPt(u, v) {
+            const B = this.banner, bx = 370 + 190 * u, by = GROUND - 75 * u;
+            let x = bx + B.bulge * Math.sin(Math.PI * clamp(u, 0, 1)) * (0.6 + 0.4 * Math.sin(Math.PI * v)), y = by - (110 + 160 * v);
+            if (B.torn) {
+                const k = u < 0.5 ? u / 0.47 : (1 - u) / 0.47;
+                x += (36 + 18 * Math.sin(this.time * 10 + v * 5 + (u < 0.5 ? 0 : 2))) * clamp(k, 0, 1);
+            }
+            x += (by - y) * Math.tan(B.tilt);
+            return [x, y];
+        },
+        drawBannerHalf(u0, u1) {
+            const NU = 8, NV = 6, cols = ['#FF7043', '#FFCA28', '#26A69A'];
+            for (let i = 0; i < NU; i++) for (let j = 0; j < NV; j++) {
+                const ua = lerp(u0, u1, i / NU), ub = lerp(u0, u1, (i + 1) / NU), va = j / NV, vb = (j + 1) / NV;
+                const p = [this.bPt(ua, va), this.bPt(ub, va), this.bPt(ub, vb), this.bPt(ua, vb)];
+                ctx.fillStyle = cols[Math.floor(j / 2)];
+                ctx.beginPath(); p.forEach((q, k) => k ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])); ctx.closePath(); ctx.fill();
+                ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 1; ctx.stroke();
+            }
+            ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 2; ctx.beginPath();
+            const edge = [];
+            for (let i = 0; i <= NU; i++) edge.push(this.bPt(lerp(u0, u1, i / NU), 0));
+            for (let j = 0; j <= NV; j++) edge.push(this.bPt(u1, j / NV));
+            for (let i = NU; i >= 0; i--) edge.push(this.bPt(lerp(u0, u1, i / NU), 1));
+            for (let j = NV; j >= 0; j--) edge.push(this.bPt(u0, j / NV));
+            edge.forEach((q, k) => k ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1])); ctx.stroke();
+        },
+        drawBannerScene() {
+            const B = this.banner, push = this.bannerPush(), drop = this.drop();
+            const pole = (u) => { const bx = 370 + 190 * u, by = GROUND - 75 * u, top = by - 300; return [bx, by, bx + 300 * Math.tan(B.tilt), top]; };
+            const [fx0, fy0, fx1, fy1] = pole(1), [nx0, ny0, nx1, ny1] = pole(0);
+            if (drop > 5) {
+                const s = clamp(push / BANNER_HOLD, 0, 1.2);
+                blob(330, 260, 90, 140, HIGH, 0.1 + 0.25 * s); letter('H', 300, 170, 40 + 24 * s);
+                blob(640, 240, 90, 140, LOW, 0.1 + 0.25 * s); letter('L', 680, 150, 40 + 24 * s);
+            }
+            ctx.strokeStyle = '#78909C'; ctx.lineWidth = 9; ctx.lineCap = 'round';
+            ctx.beginPath(); ctx.moveTo(fx0, fy0); ctx.lineTo(fx1, fy1); ctx.stroke();
+            if (B.torn) { this.drawBannerHalf(0, 0.47); this.drawBannerHalf(0.53, 1); } else this.drawBannerHalf(0, 1);
+            if (this.holes) {
+                [0.18, 0.38, 0.62, 0.82].forEach(u => [0.2, 0.5, 0.8].forEach(v => {
+                    if (B.torn && u > 0.45 && u < 0.55) return;
+                    const [x, y] = this.bPt(u, v);
+                    ctx.fillStyle = '#5D4037'; ctx.beginPath(); ctx.ellipse(x, y, 5, 9, 0, 0, Math.PI * 2); ctx.fill();
+                    ctx.strokeStyle = '#FFF8E1'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x + 3, y, 5, 9, 0, -Math.PI / 2, Math.PI / 2); ctx.stroke();
+                }));
+            }
+            ctx.strokeStyle = '#607D8B'; ctx.lineWidth = 11;
+            ctx.beginPath(); ctx.moveTo(nx0, ny0); ctx.lineTo(nx1, ny1); ctx.stroke();
+            ctx.fillStyle = '#8D6E63'; roundRect(nx0 - 22, ny0 - 12, 44, 16, 6); ctx.fill(); roundRect(fx0 - 18, fy0 - 10, 36, 13, 5); ctx.fill();
+            this.parts.forEach(p => { const k = this.bannerLane(p); this.drawParticle(p.x, k.y, k.pass ? 0.75 : 1); });
+            if (B.torn) text('RIIIP!', 690, 230, { size: 34, color: '#C62828', font: "'Fredoka One', cursive", weight: 400 });
+            gauge(110, 120, 48, push / BANNER_HOLD * 0.75, 'PUSH', fmtPa(B.torn ? 0 : push));
+            text('tears in the red zone', 110, 222, { size: 11, color: '#607D8B' });
+            const msg = B.torn ? 'Ripped! With no holes, all the wind pushes on the banner and the frame tips over.'
+                : this.holes ? 'With holes, air passes through, so the pressure difference across the banner stays small.'
+                : this.v >= 60 ? 'No holes: the wind cannot get through, so high pressure in front and low pressure behind push hard.'
+                : 'Turn up the storm and watch the banner bulge.';
+            pill(msg, 450, 520, { size: 13, color: B.torn ? '#C62828' : '#37474F' });
+            setText('s-l2', 'Push on banner'); setText('s-l3', 'Holes'); setText('s-l4', 'Bulge'); setText('s-l5', 'Banner');
+            setText('s-drop', fmtPa(push)); setText('s-in', this.holes ? 'yes' : 'no'); setText('s-net', Math.round(B.bulge / 4) + ' cm');
+            setText('s-st', B.torn ? 'RIPPED!' : push >= BANNER_HOLD * 0.8 ? 'straining!' : 'holding');
+        },
+        draw() {
+            this.drawSky();
+            if (this.scene === 'roof') this.drawRoofScene(); else this.drawBannerScene();
+            setText('s-wv', this.v + ' km/h');
+        },
+    };
+
+    // ================= Predictions =================
+    const predicts = {
+        balloon: makePredict('predict-balloon',
+            'A full balloon and a flat balloon are joined by a straw. When the clip opens, what happens?',
+            ['The full balloon gets even bigger', 'Air flows into the flat balloon until both are about the same size', 'Nothing happens'], 1,
+            'Air moves from <strong>HIGH pressure</strong> (the full balloon) to <strong>LOW pressure</strong> (the flat one). The flow stops when the pressures become equal. Air moving from high to low pressure is <strong>wind</strong>.'),
+        breeze: makePredict('predict-breeze',
+            'In the afternoon on a sunny beach, which way will the palm trees lean?',
+            ['Towards the sea', 'Towards the land (inland)', 'They will stand straight'], 1,
+            'By afternoon the land is much hotter than the sea. Warm air over the land rises and leaves <strong>LOW pressure</strong>; the cooler air over the sea is at <strong>HIGH pressure</strong>, so a <strong>sea breeze</strong> blows inland and pushes trees, flags and kites towards the land.'),
+        fast: makePredict('predict-fast',
+            'You blow air into the gap between two hanging balloons. What will they do?',
+            ['Move apart', 'Move towards each other', 'Stay where they are'], 1,
+            'Fast-moving air between the balloons has <strong>LOW pressure</strong>. The still air outside has higher pressure and pushes the balloons together. Blow harder and they come together faster.'),
+        storm: makePredict('predict-storm',
+            'A strong storm is coming. Is a light roof safer with the windows and doors…',
+            ['Closed tight', 'Open', 'It makes no difference'], 1,
+            'Fast wind over the roof lowers the pressure above it. With windows closed, the normal pressure inside pushes the roof up and off. With windows open, wind flows through the house too, the inside pressure drops as well, and the small difference cannot lift the roof.'),
+    };
+
+    // ================= Controls =================
+    $('b-blow').addEventListener('input', e => { balloon.blow = +e.target.value; $('b-blow-val').textContent = balloon.blow + (balloon.blow === 1 ? ' puff' : ' puffs'); balloon.reset(); });
+    $('b-release').addEventListener('click', () => balloon.release());
+    $('b-reset').addEventListener('click', () => balloon.reset());
+
+    $('br-time').addEventListener('input', e => { breeze.setPlaying(false); breeze.setTime(+e.target.value, true); });
+    $('br-play').addEventListener('click', () => { breeze.touched = true; breeze.setPlaying(!breeze.playing); });
+    $('br-go-pm').addEventListener('click', () => { breeze.setPlaying(false); breeze.setTime(14, true); });
+    $('br-go-am').addEventListener('click', () => { breeze.setPlaying(false); breeze.setTime(2, true); });
+    [['br-p', 'showP'], ['br-t', 'showT'], ['br-l', 'showLoop']].forEach(([id, key]) => $(id).addEventListener('click', e => {
+        breeze[key] = !breeze[key]; e.currentTarget.classList.toggle('on', breeze[key]);
+    }));
+    canvas.addEventListener('pointerdown', e => {
+        if (active !== 'breeze') return;
+        const p = ptr(e);
+        if (Math.hypot(p.x - DIAL.x, p.y - DIAL.y) < DIAL.r + 26) { breeze.dragging = true; try { canvas.setPointerCapture(e.pointerId); } catch (err) {} breeze.dragTo(p); }
+    });
+    canvas.addEventListener('pointermove', e => { if (breeze.dragging) breeze.dragTo(ptr(e)); });
+    ['pointerup', 'pointercancel'].forEach(ev => canvas.addEventListener(ev, () => { breeze.dragging = false; }));
+
+    function fastScene(sc) { fast.scene = sc; $('f-s-b').classList.toggle('on', sc === 'balloons'); $('f-s-p').classList.toggle('on', sc === 'strip'); }
+    $('f-s-b').addEventListener('click', () => fastScene('balloons'));
+    $('f-s-p').addEventListener('click', () => fastScene('strip'));
+    $('f-str').addEventListener('input', e => { fast.strength = +e.target.value; $('f-str-val').textContent = fast.strength; });
+    $('f-blow').addEventListener('click', () => fast.blow());
+
+    function stormUI() {
+        const roofScene = storm.scene === 'roof';
+        $('s-s-r').classList.toggle('on', roofScene); $('s-s-b').classList.toggle('on', !roofScene);
+        $('s-open').style.display = roofScene ? '' : 'none'; $('s-holes').style.display = roofScene ? 'none' : '';
+        $('s-open').innerHTML = '&#x1FA9F; Windows &amp; doors: ' + (storm.open ? 'OPEN' : 'CLOSED'); $('s-open').classList.toggle('on', storm.open);
+        $('s-holes').innerHTML = '&#x1F573;&#xFE0F; Holes in banner: ' + (storm.holes ? 'YES' : 'NO'); $('s-holes').classList.toggle('on', storm.holes);
+        $('s-hint').textContent = roofScene ? 'Try a strong storm with the windows closed, then repair the roof and try again with them open.'
+            : 'Try a strong storm on a banner with no holes, then repair it and switch the holes on.';
+    }
+    $('s-s-r').addEventListener('click', () => { storm.scene = 'roof'; stormUI(); });
+    $('s-s-b').addEventListener('click', () => { storm.scene = 'banner'; stormUI(); });
+    $('s-v').addEventListener('input', e => { storm.v = +e.target.value; $('s-v-val').textContent = storm.v + ' km/h'; });
+    $('s-open').addEventListener('click', () => { storm.open = !storm.open; stormUI(); });
+    $('s-holes').addEventListener('click', () => { storm.holes = !storm.holes; stormUI(); });
+    $('s-reset').addEventListener('click', () => storm.repair());
+
+    // ================= Tabs + loop =================
+    const sims = { balloon, breeze, fast, storm };
+    let active = 'balloon';
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => {
+        active = btn.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + active));
+        document.querySelectorAll('.info-display').forEach(i => i.classList.toggle('active', i.id === 'info-' + active));
+    }));
+    $('info-balloon').classList.add('active');
+
+    buildChallenge('challenge-root', [
+        { q: 'True or false: air moves from a region of high air pressure to a region of low air pressure.',
+          opts: ['True', 'False'], correct: 0,
+          explain: 'True. That is why air rushed from the full balloon into the flat one, and why wind blows from H to L. The bigger the difference, the faster the wind.' },
+        { q: 'On a summer afternoon, the trees along a sea coast are bent towards side B. Which side is land: A or B?',
+          opts: ['Side A', 'Side B', 'You cannot tell from the trees'], correct: 1,
+          explain: 'On a summer afternoon the land is hotter, so low pressure forms over the land and the sea breeze blows from the sea to the land. The wind bends the trees towards the land: side B.' },
+        { q: 'Keeping doors and windows open in a storm, and cutting holes in banners and hoardings, both help because…',
+          opts: ['They make the wind slower everywhere', 'They let air pass through, so the pressure difference between the two sides stays small', 'They make the roof and the banner heavier'], correct: 1,
+          explain: 'Air flowing through the house or through the holes keeps the pressure on both sides nearly the same, so the push is small and the roof or banner is not blown away or torn.' },
+    ], 'wind', 'badge-banner');
+
+    balloon.reset();
+    breeze.setTime(8, false);
+    breeze.wind = breeze.target();
+    stormUI();
+    let last = performance.now();
+    function frame(now) {
+        const dt = Math.min((now - last) / 1000, 0.033); last = now;
+        const sim = sims[active];
+        sim.update(dt);
+        ctx.setTransform(viewScale, 0, 0, viewScale, 0, 0);
+        sim.draw();
+        requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+    window.WIND = { balloon, breeze, fast, storm, predicts, sims, ROOF_HOLD, BANNER_HOLD };
+    </script>
+</body>
+</html>
