@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clouds, Storms and Lightning - Pressure, Winds &amp; Storms - Science Lab</title>
+    <meta name="description" content="Watch the storm engine build a thundercloud, charge it up until lightning strikes, protect a building with a lightning conductor and learn where to stay safe.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x26C8;</text></svg>">
+    <style>
+        /* ===== Shared "Pressure, Winds & Storms" sim-page styles — light, projector-friendly (accent set per page) ===== */
+        :root {
+            --accent: #5E35B1;
+            --accent-soft: rgba(94, 53, 177, 0.13);
+            --accent-border: rgba(94, 53, 177, 0.55);
+            --good: #4CAF50;
+            --bad: #E53935;
+            --ink: #2D2D2D;
+            --panel-bg: rgba(255, 255, 255, 0.92);
+            --panel-border: rgba(0, 0, 0, 0.08);
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Nunito', sans-serif; background: #F5F0FF; color: var(--ink); min-height: 100vh; -webkit-tap-highlight-color: transparent; }
+        a { color: inherit; text-decoration: none; }
+        .top-bar { display: flex; align-items: center; justify-content: space-between; padding: 0.9rem 1.2rem; gap: 0.6rem; flex-wrap: wrap; }
+        .back-btn {
+            background: #fff; border: 1px solid rgba(0,0,0,0.12); color: #444; padding: 0.5rem 1rem; border-radius: 50px;
+            font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem;
+            transition: background 0.3s; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .back-btn:hover { background: #F0EAFB; }
+        .exp-title { font-family: 'Fredoka One', cursive; font-size: 1.5rem; text-align: center; color: #6B3FA0; }
+        .big-idea { text-align: center; opacity: 0.85; max-width: 760px; margin: 0.2rem auto 0.8rem; padding: 0 1.2rem; font-size: 0.98rem; }
+        .big-idea strong { color: var(--accent); }
+        .tabs { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; padding: 0 1rem; margin-bottom: 0.9rem; }
+        .tab-btn {
+            background: #fff; border: 1px solid rgba(0,0,0,0.12); color: #444; padding: 0.5rem 1rem; border-radius: 50px;
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.85rem; cursor: pointer;
+            transition: background 0.25s, border-color 0.25s, transform 0.15s;
+        }
+        .tab-btn:hover { transform: translateY(-1px); }
+        .tab-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+        .stage-wrap { position: relative; max-width: 960px; margin: 0 auto; padding: 0 0.8rem; }
+        #sim-canvas { display: block; width: 100%; background: #FBFAFF; border-radius: 16px; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 4px 18px rgba(0,0,0,0.07); touch-action: none; }
+        .info-display {
+            position: absolute; top: 0.7rem; right: 1.4rem; background: var(--panel-bg);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--panel-border); border-radius: 14px; padding: 0.7rem 0.9rem; font-size: 0.8rem; min-width: 170px; display: none;
+        }
+        .info-display.active { display: block; }
+        .info-row { display: flex; justify-content: space-between; gap: 0.9rem; padding: 0.12rem 0; }
+        .info-label { opacity: 0.6; }
+        .info-val { font-weight: 800; color: var(--accent); }
+        .panels { max-width: 960px; margin: 0 auto; padding: 0 0.8rem 2rem; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+        .predict-bar { background: var(--accent-soft); border: 1px solid var(--accent-border); border-radius: 14px; padding: 0.85rem 1rem; margin: 0.9rem 0 0.6rem; }
+        .predict-q { font-weight: 800; font-size: 0.95rem; margin-bottom: 0.55rem; }
+        .predict-q .tag { background: var(--accent); color: #fff; border-radius: 50px; font-size: 0.7rem; padding: 0.1rem 0.6rem; margin-right: 0.45rem; text-transform: uppercase; letter-spacing: 0.5px; vertical-align: middle; }
+        .predict-opts { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .predict-opt {
+            background: #fff; border: 1px solid rgba(0,0,0,0.15); color: #333; border-radius: 50px; padding: 0.42rem 0.95rem;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.83rem; cursor: pointer; transition: background 0.2s, border-color 0.2s;
+        }
+        .predict-opt:hover { background: rgba(0,0,0,0.05); }
+        .predict-opt.chosen { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+        .predict-opt.right { border-color: var(--good); background: rgba(76,175,80,0.14); color: #2E7D32; }
+        .predict-opt.wrong { border-color: var(--bad); background: rgba(229,57,53,0.12); color: #C62828; }
+        .predict-reveal { margin-top: 0.55rem; font-size: 0.88rem; display: none; }
+        .predict-reveal.show { display: block; animation: popIn 0.3s ease; }
+        .control-panel {
+            background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 18px; padding: 1rem 1.3rem;
+            display: flex; align-items: center; gap: 1.3rem; flex-wrap: wrap; justify-content: center; margin-top: 0.7rem;
+        }
+        .control-group { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+        .control-label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
+        .control-value { font-family: 'Fredoka One', cursive; font-size: 1rem; color: var(--accent); }
+        input[type="range"] { -webkit-appearance: none; appearance: none; width: 130px; height: 8px; border-radius: 4px; background: rgba(0,0,0,0.12); outline: none; cursor: pointer; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; cursor: pointer; }
+        input[type="range"]::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; cursor: pointer; }
+        select, .num-in {
+            background: #fff; color: #333; border: 1px solid rgba(0,0,0,0.2); border-radius: 10px;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.85rem; padding: 0.4rem 0.6rem; cursor: pointer;
+        }
+        .num-in { width: 7rem; cursor: text; }
+        .action-btn {
+            background: var(--accent); color: #fff; border: none; border-radius: 50px; padding: 0.55rem 1.3rem;
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.9rem; cursor: pointer; transition: transform 0.15s, filter 0.2s;
+        }
+        .action-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        .action-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+        .ghost-btn {
+            background: #fff; color: #444; border: 1px solid rgba(0,0,0,0.15); border-radius: 50px; padding: 0.55rem 1.1rem;
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.85rem; cursor: pointer; transition: background 0.2s;
+        }
+        .ghost-btn:hover { background: #F3EFFA; }
+        .ghost-btn.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+        .hint { text-align: center; font-size: 0.8rem; opacity: 0.55; margin-top: 0.5rem; }
+        .section-card { background: #fff; border: 1px solid rgba(0,0,0,0.06); border-radius: 18px; padding: 1.3rem 1.4rem; margin-top: 1.6rem; box-shadow: 0 4px 15px rgba(0,0,0,0.06); }
+        .section-card h2 { font-family: 'Fredoka One', cursive; font-size: 1.25rem; color: var(--accent); margin-bottom: 0.6rem; }
+        .section-card p, .section-card li { font-size: 0.93rem; opacity: 0.9; line-height: 1.65; }
+        .section-card ul { padding-left: 1.3rem; margin: 0.4rem 0; }
+        .callout-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.7rem; }
+        .callout-chip { background: #F6F2FE; border: 1px solid rgba(0,0,0,0.08); border-radius: 50px; padding: 0.35rem 0.85rem; font-size: 0.8rem; font-weight: 700; }
+        .quiz-q { margin-top: 1rem; }
+        .quiz-q .q-text { font-weight: 800; font-size: 0.95rem; margin-bottom: 0.5rem; }
+        .quiz-opts { display: flex; flex-direction: column; gap: 0.45rem; }
+        .quiz-opt {
+            text-align: left; background: #FBFAFF; border: 1px solid rgba(0,0,0,0.14); color: #333; border-radius: 12px; padding: 0.55rem 0.9rem;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: background 0.2s, border-color 0.2s;
+        }
+        .quiz-opt:hover { background: #F1ECFA; }
+        .quiz-opt.right { border-color: var(--good); background: rgba(76,175,80,0.14); }
+        .quiz-opt.wrong { border-color: var(--bad); background: rgba(229,57,53,0.12); }
+        .quiz-explain { display: none; font-size: 0.85rem; margin-top: 0.4rem; color: #2E7D32; }
+        .quiz-explain.show { display: block; animation: popIn 0.3s ease; }
+        .badge-banner { display: none; text-align: center; margin-top: 1.2rem; background: linear-gradient(135deg, #FFF8E1, #FFECB3); border: 1px solid #F0C24B; border-radius: 16px; padding: 1rem; }
+        .badge-banner.show { display: block; animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .badge-banner .big { font-family: 'Fredoka One', cursive; font-size: 1.3rem; color: #B8860B; }
+        .page-footer { text-align: center; padding: 1.2rem; font-size: 0.8rem; opacity: 0.5; }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.92); } 100% { opacity: 1; transform: scale(1); } }
+        @media (max-width: 600px) {
+            .exp-title { font-size: 1.15rem; }
+            .top-bar { padding: 0.7rem 0.8rem; }
+            .info-display { position: static; display: none; margin: 0.6rem 0 0; width: 100%; }
+            .info-display.active { display: flex; flex-wrap: wrap; gap: 0.1rem 1.2rem; }
+            .info-display .info-row { flex: 1 1 40%; }
+            .control-panel { padding: 0.8rem; gap: 0.9rem; }
+            input[type="range"] { width: 105px; }
+        }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="index.html" class="back-btn">&larr; Pressure &amp; Weather</a>
+        <div class="exp-title">&#x26C8;&#xFE0F; Clouds, Storms &amp; Lightning</div>
+        <a href="../../index.html" class="back-btn">&#x1F3E0; Lab</a>
+    </div>
+    <p class="big-idea">Hot land + moist air make a <strong>storm engine</strong>: warm air rises, cools and builds giant clouds.
+        Inside, winds rub ice and water until the cloud is <strong>charged</strong>, and then the air gives way in a flash of <strong>lightning</strong>.</p>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="engine">&#x2600;&#xFE0F; Storm Engine</button>
+        <button class="tab-btn" data-tab="charge">&#x26A1; Charging the Cloud</button>
+        <button class="tab-btn" data-tab="rod">&#x1F3E2; Lightning Conductor</button>
+        <button class="tab-btn" data-tab="safe">&#x1F9CD; Stay Safe!</button>
+    </div>
+
+    <div class="stage-wrap">
+        <canvas id="sim-canvas"></canvas>
+        <div class="info-display" id="info-engine">
+            <div class="info-row"><span class="info-label">Stage</span><span class="info-val" id="en-i-stage">-</span></div>
+            <div class="info-row"><span class="info-label">Ground</span><span class="info-val" id="en-i-ground">-</span></div>
+            <div class="info-row"><span class="info-label">Cloud top</span><span class="info-val" id="en-i-top">-</span></div>
+            <div class="info-row"><span class="info-label">Falling</span><span class="info-val" id="en-i-rain">-</span></div>
+        </div>
+        <div class="info-display" id="info-charge">
+            <div class="info-row"><span class="info-label">Charge</span><span class="info-val" id="ch-i-q">-</span></div>
+            <div class="info-row"><span class="info-label">Air</span><span class="info-val" id="ch-i-air">-</span></div>
+            <div class="info-row"><span class="info-label">Flashes</span><span class="info-val" id="ch-i-n">-</span></div>
+            <div class="info-row"><span class="info-label">Flash &rarr; bang</span><span class="info-val" id="ch-i-fb">-</span></div>
+        </div>
+        <div class="info-display" id="info-rod">
+            <div class="info-row"><span class="info-label">Mode</span><span class="info-val" id="rd-i-mode">-</span></div>
+            <div class="info-row"><span class="info-label">Highest point</span><span class="info-val" id="rd-i-high">-</span></div>
+            <div class="info-row"><span class="info-label">Earthed?</span><span class="info-val" id="rd-i-earth">-</span></div>
+            <div class="info-row"><span class="info-label">Result</span><span class="info-val" id="rd-i-res">-</span></div>
+        </div>
+        <div class="info-display" id="info-safe">
+            <div class="info-row"><span class="info-label">Spots tested</span><span class="info-val" id="sf-i-n">-</span></div>
+            <div class="info-row"><span class="info-label">Safe spots found</span><span class="info-val" id="sf-i-safe">-</span></div>
+            <div class="info-row"><span class="info-label">Verdict</span><span class="info-val" id="sf-i-v">-</span></div>
+        </div>
+    </div>
+
+    <div class="panels">
+        <div class="tab-panel active" id="panel-engine">
+            <div class="predict-bar" id="predict-engine"></div>
+            <div class="control-panel">
+                <div class="control-group">
+                    <span class="control-label">Sun strength</span><span class="control-value" id="en-sun-val">Strong</span>
+                    <input type="range" id="en-sun" min="1" max="10" step="1" value="8">
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Moisture in the air</span><span class="control-value" id="en-moist-val">80%</span>
+                    <input type="range" id="en-moist" min="0" max="100" step="5" value="80">
+                </div>
+                <button class="action-btn" id="en-play">&#x25B6; Play</button>
+                <button class="ghost-btn" id="en-skip">&#x23ED; Next stage</button>
+                <button class="ghost-btn" id="en-reset">&#x1F504; Reset</button>
+            </div>
+            <p class="hint">Follow the numbered circle: each step lights up as it happens. Try a weak sun or dry air: does the storm still grow?</p>
+        </div>
+
+        <div class="tab-panel" id="panel-charge">
+            <div class="predict-bar" id="predict-charge"></div>
+            <div class="control-panel">
+                <div class="control-group">
+                    <span class="control-label">Up &amp; down winds</span><span class="control-value" id="ch-str-val">Strong</span>
+                    <input type="range" id="ch-str" min="1" max="10" step="1" value="6">
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Lightning goes</span>
+                    <select id="ch-type">
+                        <option value="ground">Cloud &rarr; ground</option>
+                        <option value="intra">Inside the cloud</option>
+                        <option value="cloud">Cloud &rarr; cloud</option>
+                        <option value="random">Surprise me</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Storm is this far away</span><span class="control-value" id="ch-dist-val">2.0 km</span>
+                    <input type="range" id="ch-dist" min="0.5" max="6" step="0.5" value="2">
+                </div>
+                <button class="ghost-btn" id="ch-cond">&#x1F50C; What if air &amp; clouds were good conductors?</button>
+                <button class="ghost-btn" id="ch-reset">&#x1F504; Reset</button>
+            </div>
+            <p class="hint">Every rub between an ice crystal and a water droplet adds charge. Watch the meter. When the bolt flashes, count the seconds until the BOOM!</p>
+        </div>
+
+        <div class="tab-panel" id="panel-rod">
+            <div class="predict-bar" id="predict-rod"></div>
+            <div class="control-panel">
+                <button class="ghost-btn on" data-mode="none">A: No conductor</button>
+                <button class="ghost-btn" data-mode="with">B: With conductor</button>
+                <button class="ghost-btn" data-mode="build">&#x1F527; Build it yourself</button>
+                <button class="ghost-btn" data-mode="diagram">&#x1F4D0; Labelled diagram</button>
+                <button class="action-btn" id="rd-strike">&#x26A1; Strike!</button>
+                <button class="ghost-btn" id="rd-reset">&#x1F504; Reset</button>
+            </div>
+            <p class="hint" id="rd-hint">Press Strike! in A, then in B. Then build your own: drag the rod, the copper strip and the plate out of the parts box.</p>
+        </div>
+
+        <div class="tab-panel" id="panel-safe">
+            <div class="predict-bar" id="predict-safe"></div>
+            <div class="control-panel">
+                <button class="ghost-btn" id="sf-reset">&#x1F504; Start again</button>
+            </div>
+            <p class="hint">Drag the person to a spot, or just tap a spot. Can you find all 3 safe places?</p>
+        </div>
+
+        <div class="section-card">
+            <h2>&#x1F4A1; What did we discover?</h2>
+            <ul>
+                <li><strong>The storm engine:</strong> when land gets heated, warm moist air rises and makes a <strong>low-pressure</strong> area. Cooler air from the surrounding <strong>high-pressure</strong> areas flows in, gets heated and rises too, so the wind keeps circulating.</li>
+                <li>Rising air expands and cools, and its moisture condenses into water droplets that make <strong>clouds</strong>. The droplets merge into heavier drops that fall as <strong>rain, hail or snow</strong>. Warm air can rise so high that the cold turns droplets into <strong>ice particles</strong>.</li>
+                <li>Strong winds blowing up and down rub ice particles and water droplets together, so <strong>charges</strong> build up. Light &oplus; ice particles go to the top of the cloud, heavy &ominus; droplets stay at the bottom, and the ground, trees and buildings below become &oplus;.</li>
+                <li>Air is normally an <strong>insulator</strong>. When the charge build-up becomes very large, the air breaks down and a sudden flow of charges makes <strong>lightning</strong>: within a cloud, between clouds, or between a cloud and the ground. The heated air expands with a loud sound: <strong>thunder</strong>. Light reaches you almost at once, but sound covers only about 1 km every 3 seconds.</li>
+                <li><strong>Stay safe:</strong> keep away from tall objects, crouch down low in a low-lying open area and do not lie flat. Avoid umbrellas with a metal rod, get out of water, and remember that a car, a bus or a building is safer.</li>
+                <li>A <strong>lightning conductor</strong> is a metal rod with a pointed end kept higher than the highest point of the building. Its other end is buried deep in the ground, giving the charges an easy path into the earth.</li>
+            </ul>
+            <p style="margin-top:0.6rem"><strong>Storms with local names in India.</strong> Short local thunderstorms come before the monsoon and help the kharif crops grow.</p>
+            <div class="callout-chips">
+                <span class="callout-chip">&#x1F329;&#xFE0F; Kalboishakhi: West Bengal, Bihar, Jharkhand</span>
+                <span class="callout-chip">&#x26C8;&#xFE0F; Bordoisila: Assam</span>
+                <span class="callout-chip">&#x1F96D; Mango showers: Kerala, Karnataka, Tamil Nadu (they help mangoes ripen)</span>
+                <span class="callout-chip">&#x2615; Local storms in Karnataka help coffee plants grow</span>
+                <span class="callout-chip">&#x1F33E; Pre-monsoon rain for kharif crops</span>
+                <span class="callout-chip">&#x1F4E1; The India Meteorological Department (IMD) watches thunderstorms</span>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2>&#x1F3C6; Storm Challenge</h2>
+            <p>Answer all four correctly to earn the <strong>Storm badge</strong>!</p>
+            <div id="challenge-root"></div>
+            <div class="badge-banner" id="badge-banner">
+                <div class="big">&#x1F396;&#xFE0F; Storm Badge earned!</div>
+                <p>Head back to <a href="index.html" style="text-decoration: underline;">Pressure &amp; Weather</a> to see your progress.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="page-footer">Pressure, Winds &amp; Storms &bull; Made by Megha Ananthi B &bull; Simplified model for learning &mdash; values are illustrative</footer>
+
+    <script>
+    'use strict';
+
+    // ================= Shared helpers (same in every page of this module) =================
+    const PROGRESS_KEY = 'pressure-lab-progress';
+    function setBadge(name) {
+        let p = {};
+        try { p = JSON.parse(localStorage.getItem(PROGRESS_KEY)) || {}; } catch (e) {}
+        p[name] = true;
+        try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); } catch (e) {}
+    }
+    const canvas = document.getElementById('sim-canvas');
+    const ctx = canvas.getContext('2d');
+    const W = 900, H = 560;
+    let viewScale = 1;
+    function fitCanvas() {
+        const cssW = canvas.getBoundingClientRect().width || canvas.parentElement.clientWidth;
+        canvas.style.height = Math.round(cssW * H / W) + 'px';
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(cssW * dpr);
+        canvas.height = Math.round(cssW * H / W * dpr);
+        viewScale = canvas.width / W;
+    }
+    window.addEventListener('resize', fitCanvas);
+    fitCanvas();
+    function ptr(e) {
+        const r = canvas.getBoundingClientRect();
+        return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height };
+    }
+    function drawArrow(x1, y1, x2, y2, color, width, label, labelSide) {
+        const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
+        if (len < 2) return;
+        const ang = Math.atan2(dy, dx), head = Math.min(14, 6 + width * 1.4);
+        ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = width; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2 - Math.cos(ang) * head * 0.7, y2 - Math.sin(ang) * head * 0.7); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - Math.cos(ang - 0.45) * head, y2 - Math.sin(ang - 0.45) * head);
+        ctx.lineTo(x2 - Math.cos(ang + 0.45) * head, y2 - Math.sin(ang + 0.45) * head);
+        ctx.closePath(); ctx.fill();
+        if (label) {
+            ctx.font = '800 15px Nunito, sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText(label, (x1 + x2) / 2, (y1 + y2) / 2 + (labelSide === 'below' ? 24 : -12));
+        }
+    }
+    function emoji(txt, x, y, size) {
+        ctx.font = size + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(txt, x, y); ctx.textBaseline = 'alphabetic';
+    }
+    function text(str, x, y, o) {
+        o = o || {};
+        ctx.font = (o.weight || 800) + ' ' + (o.size || 14) + 'px ' + (o.font || 'Nunito, sans-serif');
+        ctx.fillStyle = o.color || '#2D2D2D'; ctx.textAlign = o.align || 'center'; ctx.textBaseline = o.base || 'alphabetic';
+        ctx.fillText(str, x, y); ctx.textBaseline = 'alphabetic';
+    }
+    function roundRect(x, y, w, h, r) {
+        ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+    }
+    /* Round needle gauge. frac 0..1 maps to the dial; zones coloured green → amber → red. */
+    function gauge(cx, cy, r, frac, label, valueText) {
+        frac = Math.max(0, Math.min(1, frac));
+        const a0 = Math.PI * 0.8, a1 = Math.PI * 2.2;
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy, r + 8, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 2; ctx.stroke();
+        [['#66BB6A', 0, 0.45], ['#FFB300', 0.45, 0.75], ['#E53935', 0.75, 1]].forEach(([c, f0, f1]) => {
+            ctx.strokeStyle = c; ctx.lineWidth = 9; ctx.beginPath(); ctx.arc(cx, cy, r - 4, a0 + (a1 - a0) * f0, a0 + (a1 - a0) * f1); ctx.stroke();
+        });
+        const a = a0 + (a1 - a0) * frac;
+        ctx.strokeStyle = '#263238'; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * (r - 10), cy + Math.sin(a) * (r - 10)); ctx.stroke();
+        ctx.fillStyle = '#263238'; ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI * 2); ctx.fill();
+        text(label, cx, cy + r * 0.5, { size: 11, color: '#607D8B' });
+        if (valueText) text(valueText, cx, cy + r + 26, { size: 15, color: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#F4511E' });
+    }
+    function setText(id, txt) { const el = document.getElementById(id); if (el && el.textContent !== txt) el.textContent = txt; }
+    function makePredict(rootId, question, options, correctIdx, revealText) {
+        const root = document.getElementById(rootId);
+        root.innerHTML = '<div class="predict-q"><span class="tag">Predict first!</span>' + question + '</div><div class="predict-opts"></div><div class="predict-reveal"></div>';
+        const optsEl = root.querySelector('.predict-opts'), revealEl = root.querySelector('.predict-reveal');
+        const state = { chosen: null, revealed: false, reveal() {
+            if (state.revealed) return;
+            state.revealed = true;
+            btns[correctIdx].classList.add('right');
+            let verdict = '🔍 ';
+            if (state.chosen === correctIdx) verdict = '🎉 Your prediction was right! ';
+            else if (state.chosen !== null) { btns[state.chosen].classList.add('wrong'); verdict = '🤯 Surprised? '; }
+            revealEl.innerHTML = verdict + revealText; revealEl.classList.add('show');
+        } };
+        const btns = options.map((o, i) => {
+            const b = document.createElement('button'); b.className = 'predict-opt'; b.textContent = o;
+            b.addEventListener('click', () => { if (state.revealed) return; state.chosen = i; btns.forEach(x => x.classList.remove('chosen')); b.classList.add('chosen'); });
+            optsEl.appendChild(b); return b;
+        });
+        return state;
+    }
+    function buildChallenge(rootId, questions, badgeName, bannerId) {
+        const root = document.getElementById(rootId), solved = new Set();
+        questions.forEach((q, qi) => {
+            const qEl = document.createElement('div'); qEl.className = 'quiz-q';
+            qEl.innerHTML = '<div class="q-text">' + (qi + 1) + '. ' + q.q + '</div>';
+            const opts = document.createElement('div'); opts.className = 'quiz-opts';
+            const explain = document.createElement('div'); explain.className = 'quiz-explain';
+            q.opts.forEach((o, oi) => {
+                const b = document.createElement('button'); b.className = 'quiz-opt'; b.textContent = o;
+                b.addEventListener('click', () => {
+                    if (solved.has(qi)) return;
+                    if (oi === q.correct) {
+                        b.classList.add('right'); explain.textContent = '✅ ' + q.explain; explain.classList.add('show'); solved.add(qi);
+                        if (solved.size === questions.length) { setBadge(badgeName); document.getElementById(bannerId).classList.add('show'); }
+                    } else { b.classList.add('wrong'); setTimeout(() => b.classList.remove('wrong'), 900); }
+                });
+                opts.appendChild(b);
+            });
+            qEl.appendChild(opts); qEl.appendChild(explain); root.appendChild(qEl);
+        });
+    }
+    function drawBackdrop(color) {
+        ctx.fillStyle = color || '#FBFAFF'; ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = 'rgba(0,0,0,0.035)';
+        for (let x = 0; x < W; x += 45) ctx.fillRect(x, 0, 1, H);
+        for (let y = 0; y < H; y += 45) ctx.fillRect(0, y, W, 1);
+    }
+    const $ = (id) => document.getElementById(id);
+
+    // ================= Page helpers =================
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    function hex2rgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+    function mixColor(a, b, t) { const A = hex2rgb(a), B = hex2rgb(b); t = clamp(t, 0, 1); return 'rgb(' + A.map((v, i) => Math.round(v + (B[i] - v) * t)).join(',') + ')'; }
+    /* text with a halo so it stays readable on light or dark skies */
+    function htext(str, x, y, o) {
+        o = o || {};
+        ctx.font = (o.weight || 800) + ' ' + (o.size || 14) + 'px ' + (o.font || 'Nunito, sans-serif');
+        ctx.textAlign = o.align || 'center'; ctx.textBaseline = o.base || 'alphabetic';
+        ctx.lineJoin = 'round'; ctx.lineWidth = o.halo || 4; ctx.strokeStyle = o.haloColor || 'rgba(255,255,255,0.92)';
+        ctx.strokeText(str, x, y); ctx.fillStyle = o.color || '#2D2D2D'; ctx.fillText(str, x, y); ctx.textBaseline = 'alphabetic';
+    }
+    const DARK_HALO = 'rgba(20,24,40,0.85)';
+    function wtext(str, x, y, o) { o = Object.assign({ color: '#fff', haloColor: DARK_HALO, halo: 4 }, o || {}); htext(str, x, y, o); }
+    function wrapLines(str, maxW, size, weight) {
+        ctx.font = (weight || 700) + ' ' + size + 'px Nunito, sans-serif';
+        const words = str.split(' '), lines = []; let line = '';
+        words.forEach(w => { const t = line ? line + ' ' + w : w; if (ctx.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t; });
+        if (line) lines.push(line);
+        return lines;
+    }
+    /* + charge = red ⊕, − charge = blue ⊖ */
+    function chargeSym(x, y, sign, r, alpha) {
+        r = r || 8; ctx.save(); ctx.globalAlpha = alpha == null ? 1 : alpha;
+        const c = sign > 0 ? '#E53935' : '#1E88E5';
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = c; ctx.lineWidth = Math.max(1.6, r * 0.28); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x - r * 0.55, y); ctx.lineTo(x + r * 0.55, y);
+        if (sign > 0) { ctx.moveTo(x, y - r * 0.55); ctx.lineTo(x, y + r * 0.55); }
+        ctx.stroke(); ctx.restore();
+    }
+    function bigLetter(ch, x, y, size, alpha) {
+        if (alpha <= 0.01) return;
+        ctx.save(); ctx.globalAlpha = Math.min(1, alpha);
+        const c = ch === 'H' ? '#E53935' : '#1E88E5';
+        htext(ch, x, y, { size, color: c, font: "'Fredoka One', cursive", weight: 400, halo: 7 });
+        htext(ch === 'H' ? 'HIGH' : 'LOW', x, y + 15, { size: 12, color: c, halo: 4 });
+        ctx.restore();
+    }
+    function dropShape(x, y, r, color) {
+        ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(x, y - r * 1.8);
+        ctx.bezierCurveTo(x + r * 0.4, y - r, x + r, y - r * 0.4, x + r, y);
+        ctx.arc(x, y, r, 0, Math.PI);
+        ctx.bezierCurveTo(x - r, y - r * 0.4, x - r * 0.4, y - r, x, y - r * 1.8); ctx.fill();
+    }
+    function iceShape(x, y, r, color, back) {
+        ctx.lineCap = 'round';
+        const arms = () => { ctx.beginPath(); for (let k = 0; k < 3; k++) { const a = k * Math.PI / 3 + 0.3; ctx.moveTo(x - Math.cos(a) * r, y - Math.sin(a) * r); ctx.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r); } ctx.stroke(); };
+        if (back) { ctx.strokeStyle = back; ctx.lineWidth = 4.5; arms(); }
+        ctx.strokeStyle = color; ctx.lineWidth = 2.2; arms();
+    }
+    /* cartoon cloud from overlapping circles */
+    function puffCloud(cx, cy, w, h, fill, edge) {
+        const P = [[-0.36, 0.12, 0.34], [-0.18, -0.12, 0.46], [0.06, -0.24, 0.52], [0.28, -0.06, 0.44], [0.4, 0.14, 0.32], [0, 0.16, 0.4], [-0.44, 0.22, 0.24], [0.46, 0.24, 0.22]];
+        const shapes = (grow) => {
+            P.forEach(([fx, fy, fr]) => { ctx.beginPath(); ctx.arc(cx + fx * w, cy + fy * h, fr * h + grow, 0, Math.PI * 2); ctx.fill(); });
+            roundRect(cx - w * 0.46 - grow, cy - grow, w * 0.92 + grow * 2, h * 0.42 + grow * 2, h * 0.2); ctx.fill();
+        };
+        if (edge) { ctx.fillStyle = edge; shapes(3); }
+        ctx.fillStyle = fill; shapes(0);
+    }
+    /* Procedural branching lightning bolt — midpoint displacement, different every time */
+    function boltPath(ax, ay, bx, by, rough, depth) {
+        let pts = [[ax, ay], [bx, by]], disp = Math.hypot(bx - ax, by - ay) * rough;
+        for (let it = 0; it < depth; it++) {
+            const np = [];
+            for (let i = 0; i < pts.length - 1; i++) {
+                const [px, py] = pts[i], [qx, qy] = pts[i + 1], len = Math.hypot(qx - px, qy - py) || 1;
+                np.push(pts[i]);
+                const off = (Math.random() * 2 - 1) * disp;
+                np.push([(px + qx) / 2 - (qy - py) / len * off, (py + qy) / 2 + (qx - px) / len * off]);
+            }
+            np.push(pts[pts.length - 1]); pts = np; disp *= 0.55;
+        }
+        return pts;
+    }
+    function makeBolt(x1, y1, x2, y2, nBranch) {
+        const main = boltPath(x1, y1, x2, y2, 0.2, 6), total = Math.hypot(x2 - x1, y2 - y1), base = Math.atan2(y2 - y1, x2 - x1);
+        const branches = [], nb = (nBranch == null ? 2 : nBranch) + Math.floor(Math.random() * 3);
+        for (let k = 0; k < nb; k++) {
+            const s = main[2 + Math.floor(Math.random() * (main.length * 0.6))];
+            const a = base + (Math.random() < 0.5 ? -1 : 1) * rnd(0.35, 0.95), L = total * rnd(0.12, 0.32);
+            branches.push(boltPath(s[0], s[1], s[0] + Math.cos(a) * L, s[1] + Math.sin(a) * L, 0.3, 4));
+        }
+        return { main, branches, from: [x1, y1], to: [x2, y2] };
+    }
+    function strokePts(pts) { ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]); ctx.stroke(); }
+    function drawBolt(b, a) {
+        if (!b || a <= 0.01) return;
+        ctx.save(); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+        ctx.globalAlpha = a * 0.55; ctx.strokeStyle = '#B388FF'; ctx.lineWidth = 14; strokePts(b.main);
+        ctx.lineWidth = 6; b.branches.forEach(strokePts);
+        ctx.globalAlpha = a; ctx.strokeStyle = '#FFF59D'; ctx.lineWidth = 5.5; strokePts(b.main);
+        ctx.lineWidth = 2.5; b.branches.forEach(strokePts);
+        ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 2.4; strokePts(b.main);
+        ctx.restore();
+    }
+    /* ONE bright flash that fades (no strobing): alpha only ever goes down after a strike */
+    function flashOverlay(t) {
+        if (t < 0 || t > 0.45) return;
+        ctx.fillStyle = 'rgba(255,255,255,' + (0.6 * Math.pow(1 - t / 0.45, 2)).toFixed(3) + ')'; ctx.fillRect(0, 0, W, H);
+    }
+    const boltAlpha = (t) => t < 0.15 ? 1 : Math.max(0, 1 - (t - 0.15) / 0.9);
+    function pathLen(path) { let L = 0; for (let i = 1; i < path.length; i++) L += Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1]); return L; }
+    function alongPath(path, s) {
+        let target = clamp(s, 0, 1) * pathLen(path);
+        for (let i = 1; i < path.length; i++) {
+            const seg = Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1]);
+            if (target <= seg || i === path.length - 1) { const f = seg ? Math.min(1, target / seg) : 0; return [path[i - 1][0] + (path[i][0] - path[i - 1][0]) * f, path[i - 1][1] + (path[i][1] - path[i - 1][1]) * f]; }
+            target -= seg;
+        }
+        return path[path.length - 1];
+    }
+    function flames(x, y, size, t) {
+        for (let k = 0; k < 5; k++) {
+            const fx = x + (k - 2) * size * 0.32, h = size * (0.8 + 0.4 * Math.sin(t * 9 + k * 1.7)) * (k === 2 ? 1.3 : 1);
+            ctx.fillStyle = k % 2 ? '#FF7043' : '#FFA726';
+            ctx.beginPath(); ctx.moveTo(fx - size * 0.22, y); ctx.quadraticCurveTo(fx - size * 0.2, y - h * 0.6, fx + Math.sin(t * 7 + k) * 4, y - h); ctx.quadraticCurveTo(fx + size * 0.2, y - h * 0.6, fx + size * 0.22, y); ctx.fill();
+        }
+        ctx.fillStyle = '#FFEE58'; ctx.beginPath(); ctx.ellipse(x, y - size * 0.25, size * 0.3, size * 0.35, 0, 0, Math.PI * 2); ctx.fill();
+        for (let k = 0; k < 4; k++) { const f = (t * 0.6 + k / 4) % 1; ctx.fillStyle = 'rgba(84,84,84,' + (0.45 * (1 - f)).toFixed(2) + ')'; ctx.beginPath(); ctx.arc(x + Math.sin(k * 2 + t) * 10, y - size * 1.3 - f * 70, 8 + f * 16, 0, Math.PI * 2); ctx.fill(); }
+    }
+    function head(x, y, r) {
+        r = r || 10;
+        ctx.fillStyle = '#FFCC80'; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#4E342E'; ctx.beginPath(); ctx.arc(x, y - 1, r + 0.5, Math.PI * 1.05, Math.PI * 1.95); ctx.fill();
+    }
+    /* a person drawn in different poses; (x, y) = feet on the ground */
+    function person(x, y, pose) {
+        const shirt = '#7E57C2', pants = '#37474F', skin = '#FFCC80';
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        if (pose === 'stand' || pose === 'umbrella') {
+            ctx.strokeStyle = pants; ctx.lineWidth = 7;
+            ctx.beginPath(); ctx.moveTo(x - 6, y); ctx.lineTo(x - 3, y - 28); ctx.moveTo(x + 6, y); ctx.lineTo(x + 3, y - 28); ctx.stroke();
+            ctx.fillStyle = shirt; roundRect(x - 10, y - 54, 20, 30, 7); ctx.fill();
+            ctx.strokeStyle = skin; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(x - 9, y - 50); ctx.lineTo(x - 15, y - 30);
+            if (pose === 'umbrella') { ctx.moveTo(x + 9, y - 50); ctx.lineTo(x + 16, y - 60); } else { ctx.moveTo(x + 9, y - 50); ctx.lineTo(x + 15, y - 30); }
+            ctx.stroke();
+            head(x, y - 65);
+            if (pose === 'umbrella') {
+                ctx.strokeStyle = '#90A4AE'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x + 16, y - 58); ctx.lineTo(x + 16, y - 132); ctx.stroke();
+                ctx.fillStyle = '#E53935'; ctx.beginPath(); ctx.arc(x + 16, y - 92, 34, Math.PI, Math.PI * 2); ctx.closePath(); ctx.fill();
+                ctx.strokeStyle = '#CFD8DC'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x + 16, y - 126); ctx.lineTo(x + 16, y - 140); ctx.stroke();
+            }
+        } else if (pose === 'crouch') {
+            ctx.fillStyle = '#263238'; ctx.beginPath(); ctx.ellipse(x + 2, y - 2, 11, 4, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = pants; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(x + 2, y - 3); ctx.lineTo(x + 10, y - 18); ctx.lineTo(x - 6, y - 16); ctx.stroke();
+            ctx.fillStyle = shirt; ctx.beginPath(); ctx.ellipse(x - 3, y - 27, 9, 13, 0.5, 0, Math.PI * 2); ctx.fill();
+            head(x + 7, y - 40, 9);
+            ctx.strokeStyle = skin; ctx.lineWidth = 4.5; ctx.beginPath(); ctx.moveTo(x - 2, y - 33); ctx.lineTo(x + 12, y - 40); ctx.stroke();
+        } else if (pose === 'lie') {
+            ctx.strokeStyle = pants; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(x - 34, y - 4); ctx.lineTo(x - 8, y - 5); ctx.moveTo(x - 34, y - 10); ctx.lineTo(x - 8, y - 9); ctx.stroke();
+            ctx.fillStyle = shirt; roundRect(x - 10, y - 15, 30, 14, 6); ctx.fill();
+            head(x + 31, y - 9, 9);
+        } else if (pose === 'swim') {
+            ctx.strokeStyle = skin; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(x - 6, y - 2); ctx.lineTo(x - 20, y - 14); ctx.moveTo(x + 6, y - 2); ctx.lineTo(x + 20, y - 14); ctx.stroke();
+            head(x, y - 10, 9);
+        } else { // sit: head and shoulders seen through a window
+            ctx.fillStyle = shirt; roundRect(x - 12, y - 14, 24, 16, 7); ctx.fill();
+            head(x, y - 22, 9);
+        }
+    }
+
+    // =====================================================
+    // TAB 1 — Storm Engine (the storm as a cycle)
+    // =====================================================
+    const GROUND_Y = 470, CB = 380, FZ = 299, COL_X = 380;
+    const tempAt = (y) => 30 - (GROUND_Y - y) * 0.175;          // air temperature falls with height
+    const STAGES = [
+        { short: 'Heat', cap: '1. The sun heats the land', sub: 'The hot land warms the air just above it.' },
+        { short: 'Rise', cap: '2. Warm, moist air rises', sub: 'Warm air is lighter, so it rises and leaves LOW pressure (L) below.' },
+        { short: 'Rush in', cap: '3. Cool air rushes in from the sides', sub: 'Cooler air from HIGH pressure (H) flows in, gets heated and rises too.' },
+        { short: 'Cloud', cap: '4. Rising air expands, cools and condenses', sub: 'Vapour turns into droplets. Higher up it is so cold they become ice.' },
+        { short: 'Rain', cap: '5. Big drops fall as rain or hail', sub: 'Droplets merge into heavy drops that fall. Then the land heats again...' },
+    ];
+    const engine = {
+        playing: false, everPlayed: false, stage: 0, t: 0, loops: 0, sun: 8, moist: 80,
+        land: 0, grow: 0, lA: 0, hA: 0, rainAmt: 0, time: 0, firstIce: false,
+        parts: [], drops: [], sparks: [], marks: [],
+        init() {
+            this.parts = [];
+            for (let i = 0; i < 56; i++) this.parts.push({ x: rnd(90, 675), y: rnd(150, 460), warm: 0, moist: Math.random() < 0.65, rising: false, out: 0 });
+            this.marks = [];
+            for (let i = 0; i < 46; i++) this.marks.push({ fx: Math.random(), fy: Math.random(), ph: Math.random() * 6 });
+        },
+        reset() {
+            Object.assign(this, { playing: false, everPlayed: false, stage: 0, t: 0, loops: 0, land: 0, grow: 0, lA: 0, hA: 0, rainAmt: 0, drops: [], sparks: [] });
+            this.init(); engineUI();
+        },
+        maxGrow() { return clamp((this.moist / 100) * (0.35 + 0.65 * this.sun / 10), 0, 1); },
+        rainy() { return this.maxGrow() >= 0.3; },
+        hail() { return this.sun >= 8 && this.maxGrow() >= 0.6; },
+        stageLen() { return 6 - this.sun * 0.3; },
+        topY() { return CB - 25 - this.grow * 285; },
+        play(on) { this.playing = on == null ? !this.playing : on; if (this.playing) this.everPlayed = true; engineUI(); },
+        next() {
+            this.everPlayed = true;
+            const s = this.stage;
+            if (s === 0) { this.land = 1; this.parts.forEach(p => { if (p.y > GROUND_Y - 60) p.warm = 1; }); }
+            if (s === 1) this.lA = 1;
+            if (s === 2) this.hA = 1;
+            if (s === 3) this.grow = this.maxGrow();
+            this.stage = (s + 1) % 5; this.t = 0;
+            if (this.stage === 0) this.loops++;
+            this.checkIce();
+        },
+        checkIce() {
+            if (!this.firstIce && this.everPlayed && this.grow > 0.03 && this.topY() < FZ) { this.firstIce = true; predicts.engine.reveal(); }
+        },
+        update(dt) {
+            this.time += dt;
+            if (!this.playing) return;
+            this.t += dt;
+            if (this.t >= this.stageLen()) this.next();
+            const s = this.stage, mg = this.maxGrow(), L = this.stageLen(), sunF = this.sun / 10;
+            const ease = (v, target, rate) => v + (target - v) * Math.min(1, dt * rate);
+            if (s === 0) { this.land = ease(this.land, 1, 2.5 / L); this.grow = ease(this.grow, this.loops ? mg * 0.35 : 0, 0.6); this.lA = ease(this.lA, 0.25, 1); this.hA = ease(this.hA, 0.2, 1); }
+            if (s >= 1) this.lA = ease(this.lA, 1, 2);
+            if (s >= 2) this.hA = ease(this.hA, 1, 2);
+            if (s === 3) this.grow = ease(this.grow, mg, 3.2 / L);
+            if (s === 4) { this.grow = ease(this.grow, mg * 0.75, 0.5); this.land = ease(this.land, 0.55, 0.6); }
+            this.rainAmt = ease(this.rainAmt, s === 4 && this.rainy() ? 1 : 0, 3);
+            this.checkIce();
+            // ---- air parcels ----
+            const riseTop = s >= 3 ? Math.max(110, this.topY() + 30) : 210;
+            this.parts.forEach(p => {
+                let vx = rnd(-15, 15), vy = rnd(-15, 15);
+                const dx = p.x - COL_X, inCol = Math.abs(dx) < 95;
+                if (p.y > GROUND_Y - 45 && Math.abs(dx) < 260) p.warm = Math.min(1, p.warm + dt * this.land * (0.5 + sunF));
+                if (s >= 1) {
+                    if (p.rising) {
+                        vy = -(55 + 70 * sunF); vx += -dx * 0.6;
+                        if (p.y < riseTop) { p.rising = false; p.out = Math.sign(dx) || (Math.random() < 0.5 ? -1 : 1); }
+                        if (p.moist && s >= 3 && p.y < CB && this.grow > 0.05) { p.moist = false; this.sparks.push({ x: p.x, y: p.y, t: 0 }); }
+                    } else if (p.out) {
+                        vx = p.out * (80 + 40 * sunF); vy = 22;
+                        if (Math.abs(dx) > 250) p.out = 0;
+                    } else if (inCol && p.warm > 0.5 && p.y > GROUND_Y - 100) {
+                        p.rising = true;
+                    } else if (p.y > GROUND_Y - 110) {
+                        if (s >= 2) vx += -Math.sign(dx) * (60 + 50 * sunF);
+                    } else { vy += 30 + 20 * sunF; vx += Math.sign(dx) * 6; }
+                }
+                if (p.y < GROUND_Y - 130) p.warm = Math.max(0, p.warm - dt * 0.4);
+                if (!p.moist && p.y > GROUND_Y - 40 && Math.random() < dt * this.moist / 100 * 1.5) p.moist = true;
+                p.x = clamp(p.x + vx * dt, 85, 680); p.y = clamp(p.y + vy * dt, 115, GROUND_Y - 8);
+            });
+            this.sparks.forEach(k => k.t += dt); this.sparks = this.sparks.filter(k => k.t < 0.7);
+            // ---- rain & hail ----
+            const wb = 120 + this.grow * 220;
+            const rate = this.rainAmt * (30 + 90 * this.moist / 100);
+            let n = rate * dt; while (n > 0) { if (Math.random() < n) { const hail = this.hail() && Math.random() < 0.3; this.drops.push({ x: COL_X + rnd(-wb / 2 + 15, wb / 2 - 15), y: CB, vy: hail ? 300 : 420, hail }); } n -= 1; }
+            this.drops.forEach(d => d.y += d.vy * dt);
+            this.drops = this.drops.filter(d => d.y < GROUND_Y);
+        },
+        cloudCircles() {
+            const g = this.grow, top = this.topY(), wb = 120 + g * 220, out = [];
+            const r = Math.min(30 + g * 26, wb * 0.3);
+            const yLow = CB - r, yHigh = Math.min(yLow, top + r);
+            const rows = Math.max(1, Math.round(1 + g * 7));
+            for (let i = 0; i <= rows; i++) {
+                const f = i / rows, y = yLow - f * (yLow - yHigh), w = wb * (1 - 0.32 * f);
+                for (let j = 0; j < 3; j++) out.push([COL_X + (j - 1) * (w - r) / 2 + Math.sin(this.time * 0.8 + i * 1.7 + j) * 2.5, y - (j === 1 && i > 0 ? r * 0.2 : 0), r * (j === 1 ? 1.1 : 1)]);
+            }
+            if (g > 0.55) {
+                const a = (g - 0.55) / 0.45, aw = Math.min(285, wb / 2 + a * 230);
+                for (let k = -5; k <= 5; k++) out.push([COL_X + k / 5 * aw * 0.92, top + 20 + Math.abs(k) * 1.2, 20 + (5 - Math.abs(k)) * 2.2]);
+            }
+            return out;
+        },
+        widthAt(y) { const top = this.topY(), wb = 120 + this.grow * 220, f = clamp((CB - y) / Math.max(1, CB - top), 0, 1); return wb * (1 - 0.32 * f); },
+        draw() {
+            const g = this.grow, dark = clamp((g - 0.35) / 0.6, 0, 1), s = this.stage, ep = this.everPlayed;
+            const sky = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+            sky.addColorStop(0, mixColor('#7DB4E6', '#4E5D6C', dark)); sky.addColorStop(1, mixColor('#E6F3FF', '#AAB8C4', dark));
+            ctx.fillStyle = sky; ctx.fillRect(0, 0, W, GROUND_Y);
+            // sun (drawn, not emoji)
+            const sr = 22 + this.sun * 1.6, sx = 140, sy = 64;
+            ctx.save(); ctx.translate(sx, sy); ctx.rotate(this.time * 0.25);
+            ctx.strokeStyle = '#FFB300'; ctx.lineWidth = 4; ctx.lineCap = 'round';
+            for (let k = 0; k < 12; k++) { const a = k * Math.PI / 6; ctx.beginPath(); ctx.moveTo(Math.cos(a) * (sr + 6), Math.sin(a) * (sr + 6)); ctx.lineTo(Math.cos(a) * (sr + 16 + this.sun), Math.sin(a) * (sr + 16 + this.sun)); ctx.stroke(); }
+            ctx.restore();
+            ctx.fillStyle = '#FFCA28'; ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#FFE082'; ctx.beginPath(); ctx.arc(sx - sr * 0.25, sy - sr * 0.25, sr * 0.45, 0, Math.PI * 2); ctx.fill();
+            // heat rays to the land
+            if (ep && (s === 0 || s === 1)) {
+                ctx.save(); ctx.globalAlpha = s === 0 ? 0.9 : 0.35; ctx.strokeStyle = '#FF8F00'; ctx.lineWidth = 3.5; ctx.setLineDash([12, 10]); ctx.lineDashOffset = -this.time * 40;
+                for (let k = 0; k < 4; k++) { ctx.beginPath(); ctx.moveTo(sx + 20 + k * 6, sy + sr + 10); ctx.lineTo(260 + k * 85, GROUND_Y - 6); ctx.stroke(); }
+                ctx.restore();
+            }
+            // temperature scale on the left
+            const tg = ctx.createLinearGradient(0, 110, 0, GROUND_Y);
+            tg.addColorStop(0, '#1565C0'); tg.addColorStop(0.47, '#B3E5FC'); tg.addColorStop(1, '#EF6C00');
+            ctx.fillStyle = '#fff'; roundRect(14, 96, 66, GROUND_Y - 92, 10); ctx.globalAlpha = 0.85; ctx.fill(); ctx.globalAlpha = 1;
+            ctx.fillStyle = tg; roundRect(22, 110, 12, GROUND_Y - 112, 6); ctx.fill();
+            text('°C', 47, 112, { size: 12, color: '#37474F' });
+            [20, 10, 0, -10, -20, -30].forEach(T => {
+                const y = GROUND_Y - (30 - T) / 0.175;
+                ctx.fillStyle = '#37474F'; ctx.fillRect(34, y - 1, 6, 2);
+                text((T > 0 ? '+' : T < 0 ? '−' : '') + Math.abs(T), 58, y + 4, { size: 11, color: T <= 0 ? '#0D47A1' : '#BF360C' });
+            });
+            // freezing level
+            ctx.strokeStyle = '#1565C0'; ctx.lineWidth = 2; ctx.setLineDash([8, 6]);
+            ctx.beginPath(); ctx.moveTo(80, FZ); ctx.lineTo(684, FZ); ctx.stroke(); ctx.setLineDash([]);
+            htext('colder ↑', 47, 92, { size: 11, color: '#0D47A1' });
+            // air parcels
+            this.parts.forEach(p => {
+                ctx.fillStyle = mixColor('#CFD8DC', '#FF9800', p.warm); ctx.strokeStyle = '#546E7A'; ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                if (p.moist) { ctx.fillStyle = '#00838F'; ctx.beginPath(); ctx.arc(p.x, p.y, 2.2, 0, Math.PI * 2); ctx.fill(); }
+            });
+            // cloud
+            if (g > 0.02) {
+                const top = this.topY(), circles = this.cloudCircles();
+                const grad = ctx.createLinearGradient(0, top - 20, 0, CB + 10);
+                grad.addColorStop(0, '#FFFFFF'); grad.addColorStop(0.55, mixColor('#F5F7FA', '#B0BEC5', dark)); grad.addColorStop(1, mixColor('#E3E8EC', '#607D8B', dark));
+                ctx.fillStyle = '#90A4AE'; circles.forEach(([x, y, r]) => { ctx.beginPath(); ctx.arc(x, y, r + 2.5, 0, Math.PI * 2); ctx.fill(); });
+                const wb0 = 120 + g * 220, r0 = circles[0][2];
+                ctx.fillStyle = '#90A4AE'; roundRect(COL_X - wb0 / 2 + r0 * 0.4 - 2.5, CB - r0, wb0 - r0 * 0.8 + 5, r0 + 2.5, 8); ctx.fill();
+                ctx.fillStyle = grad; circles.forEach(([x, y, r]) => { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); });
+                roundRect(COL_X - wb0 / 2 + r0 * 0.4, CB - r0, wb0 - r0 * 0.8, r0, 6); ctx.fill();
+                // inside: droplets below the freezing level, ice crystals above
+                const h = CB - top;
+                this.marks.forEach(m => {
+                    const fy = (m.fy + (this.playing ? this.time : 0) * 0.04 * (0.5 + this.sun / 10)) % 1;
+                    const y = CB - 12 - fy * (h - 24), x = COL_X + (m.fx - 0.5) * this.widthAt(y) * 0.72;
+                    if (y < FZ) iceShape(x, y, 5, '#FFFFFF', '#1E88E5'); else dropShape(x, y, 3.2, '#1E88E5');
+                });
+                if (g > 0.2) {
+                    htext(g > 0.55 ? 'Cumulonimbus: a tall storm cloud' : 'Cumulus cloud growing', COL_X, Math.max(top - 10, 86), { size: 14, color: '#311B92' });
+                    const iy = Math.max(top + 30, 130);
+                    if (iy < FZ - 10) htext('❄ ice crystals', COL_X + this.widthAt(iy) / 2 + 8, iy, { size: 13, color: '#0D47A1', align: 'left' });
+                    htext('💧 water droplets', COL_X + this.widthAt(CB - 25) / 2 + 8, CB - 22, { size: 13, color: '#0D47A1', align: 'left' });
+                }
+            }
+            htext('0 °C line: above it, droplets freeze into ice ❄', 86, FZ - 7, { size: 13, color: '#0D47A1', align: 'left' });
+            this.sparks.forEach(k => { ctx.globalAlpha = 1 - k.t / 0.7; dropShape(k.x, k.y - k.t * 10, 4, '#00ACC1'); ctx.globalAlpha = 1; });
+            // rain shaft + drops
+            if (this.rainAmt > 0.02) {
+                const wb = 120 + g * 220;
+                ctx.fillStyle = 'rgba(69,90,100,' + (0.18 * this.rainAmt).toFixed(2) + ')'; ctx.fillRect(COL_X - wb / 2 + 15, CB, wb - 30, GROUND_Y - CB);
+            }
+            this.drops.forEach(d => {
+                if (d.hail) { ctx.fillStyle = '#fff'; ctx.strokeStyle = '#546E7A'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(d.x, d.y, 4.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke(); }
+                else { ctx.strokeStyle = '#0D47A1'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - 2, d.y + 12); ctx.stroke(); }
+            });
+            // big arrows
+            if (ep && s >= 1) {
+                drawArrow(COL_X, GROUND_Y - 52, COL_X, (s >= 3 ? Math.max(this.topY() + 50, 150) : 230), 'rgba(239,108,0,0.85)', 9, null);
+                htext('warm air rises', COL_X + 16, 262, { size: 14, color: '#E65100', align: 'left' });
+            }
+            if (ep && s >= 2 && this.hA > 0.3) {
+                ctx.globalAlpha = Math.min(1, this.hA);
+                drawArrow(150, GROUND_Y - 22, 315, GROUND_Y - 22, '#37474F', 7, null);
+                drawArrow(615, GROUND_Y - 22, 450, GROUND_Y - 22, '#37474F', 7, null);
+                htext('cool air rushes in', 232, GROUND_Y - 34, { size: 13, color: '#263238' });
+                htext('cool air rushes in', 532, GROUND_Y - 34, { size: 13, color: '#263238' });
+                ctx.globalAlpha = 1;
+            }
+            // ground
+            ctx.fillStyle = '#6D4C41'; ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
+            ctx.fillStyle = mixColor('#7CB342', '#E65100', this.land * 0.85); ctx.fillRect(0, GROUND_Y, W, 12);
+            if (this.land > 0.2) {
+                ctx.save(); ctx.globalAlpha = this.land * 0.55; ctx.strokeStyle = '#FF6F00'; ctx.lineWidth = 2.5;
+                for (let k = 0; k < 7; k++) { const x0 = 230 + k * 50; ctx.beginPath(); for (let y = 0; y < 34; y += 3) { const yy = GROUND_Y - 4 - y - (this.time * 25 % 10); ctx.lineTo(x0 + Math.sin(yy * 0.3 + this.time * 4 + k) * 4, yy); } ctx.stroke(); }
+                ctx.restore();
+            }
+            bigLetter('L', COL_X, GROUND_Y - 62, 42, ep ? this.lA : 0);
+            bigLetter('H', 112, GROUND_Y - 52, 42, ep ? this.hA : 0);
+            bigLetter('H', 652, GROUND_Y - 52, 42, ep ? this.hA : 0);
+            // caption in the ground band
+            const st = STAGES[s];
+            let cap = ep ? st.cap : 'Press ▶ Play to switch on the sun', sub = ep ? st.sub : 'Watch the storm engine run in 5 steps, then loop again!';
+            if (ep && s === 3 && this.maxGrow() < 0.2) sub = 'Dry air: only a small fluffy cloud. Storms need lots of moisture!';
+            if (ep && s === 4 && !this.rainy()) sub = 'Too little moisture: the small cloud cannot make big drops. Add moisture!';
+            if (ep && s === 4 && this.hail()) sub = 'Very strong up-winds keep tossing drops into the icy top: hail falls too!';
+            wtext(cap, 380, 506, { size: 21, font: "'Fredoka One', cursive", weight: 400 });
+            wtext(sub, 380, 534, { size: 14 });
+            if (!this.playing && ep) wtext('⏸ paused', 380, 554, { size: 12 });
+            // legend
+            ctx.fillStyle = mixColor('#CFD8DC', '#FF9800', 1); ctx.beginPath(); ctx.arc(712, 494, 6, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#CFD8DC'; ctx.beginPath(); ctx.arc(712, 516, 6, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#4DD0E1'; ctx.beginPath(); ctx.arc(712, 538, 3, 0, Math.PI * 2); ctx.fill();
+            wtext('warm air', 724, 499, { size: 12, align: 'left' }); wtext('cool air', 724, 521, { size: 12, align: 'left' }); wtext('water vapour', 724, 543, { size: 12, align: 'left' });
+            // the cycle diagram
+            const PX = 690, PY = 200;
+            ctx.fillStyle = 'rgba(255,255,255,0.94)'; roundRect(PX, PY, 196, 262, 16); ctx.fill();
+            ctx.strokeStyle = 'rgba(94,53,177,0.35)'; ctx.lineWidth = 2; ctx.stroke();
+            text('THE STORM CYCLE', PX + 98, PY + 22, { size: 13, color: '#5E35B1' });
+            const ccx = PX + 98, ccy = PY + 146, R = 56;
+            for (let i = 0; i < 5; i++) {
+                const a0 = -Math.PI / 2 + i * 2 * Math.PI / 5 + 0.36, a1 = -Math.PI / 2 + (i + 1) * 2 * Math.PI / 5 - 0.36;
+                const on = ep && i === s;
+                ctx.strokeStyle = on ? '#5E35B1' : '#B0A8C8'; ctx.lineWidth = on ? 4 : 2.5;
+                ctx.beginPath(); ctx.arc(ccx, ccy, R, a0, a1); ctx.stroke();
+                const hx = ccx + Math.cos(a1) * R, hy = ccy + Math.sin(a1) * R, ta = a1 + Math.PI / 2;
+                ctx.fillStyle = ctx.strokeStyle; ctx.beginPath(); ctx.moveTo(hx + Math.cos(ta) * 7, hy + Math.sin(ta) * 7);
+                ctx.lineTo(hx + Math.cos(ta + 2.4) * 7, hy + Math.sin(ta + 2.4) * 7); ctx.lineTo(hx + Math.cos(ta - 2.4) * 7, hy + Math.sin(ta - 2.4) * 7); ctx.fill();
+            }
+            for (let i = 0; i < 5; i++) {
+                const a = -Math.PI / 2 + i * 2 * Math.PI / 5, nx = ccx + Math.cos(a) * R, ny = ccy + Math.sin(a) * R, on = ep && i === s;
+                const rr = on ? 19 + Math.sin(this.time * 5) * 2 : 16;
+                if (on) { ctx.fillStyle = 'rgba(94,53,177,0.22)'; ctx.beginPath(); ctx.arc(nx, ny, rr + 8, 0, Math.PI * 2); ctx.fill(); }
+                ctx.fillStyle = on ? '#5E35B1' : '#EDE7F6'; ctx.beginPath(); ctx.arc(nx, ny, rr, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = '#5E35B1'; ctx.lineWidth = 2; ctx.stroke();
+                text(String(i + 1), nx, ny + 6, { size: 17, color: on ? '#fff' : '#5E35B1', font: "'Fredoka One', cursive", weight: 400 });
+                const ca = Math.cos(a), lr = Math.abs(ca) > 0.3 ? R + 22 : R + 32;
+                text(STAGES[i].short, ccx + ca * lr, ccy + Math.sin(a) * lr + 4, { size: on ? 13 : 11, color: on ? '#311B92' : '#7E7396', align: ca > 0.3 ? 'left' : ca < -0.3 ? 'right' : 'center' });
+            }
+            text('↻ loop', ccx, ccy - 2, { size: 13, color: '#7E57C2' });
+            text('round ' + (this.loops + 1), ccx, ccy + 16, { size: 12, color: '#7E57C2' });
+            if (!ep) {
+                ctx.fillStyle = 'rgba(255,255,255,0.9)'; roundRect(210, 150, 340, 74, 18); ctx.fill(); ctx.strokeStyle = '#5E35B1'; ctx.lineWidth = 2; ctx.stroke();
+                text('▶ Press Play', 380, 184, { size: 24, color: '#5E35B1', font: "'Fredoka One', cursive", weight: 400 });
+                text('and switch on the sun!', 380, 208, { size: 15, color: '#37474F' });
+            }
+            setText('en-i-stage', ep ? (s + 1) + ' · ' + st.short : 'not started');
+            setText('en-i-ground', Math.round(25 + this.land * 13) + ' °C');
+            setText('en-i-top', g > 0.02 ? Math.round(tempAt(this.topY())) + ' °C' : 'no cloud');
+            setText('en-i-rain', this.rainAmt > 0.1 ? (this.hail() ? 'rain + hail' : 'rain') : 'nothing');
+        },
+    };
+
+    // =====================================================
+    // TAB 2 — Charging the cloud
+    // =====================================================
+    const CLX = 340, CLY = 196, G2 = 470;
+    const GROUND_PLUS = [[440, 322], [458, 318], [476, 322], [142, 344], [160, 344], [600, 398], [95, 480], [230, 480], [300, 480], [370, 480], [520, 480], [660, 480], [200, 480], [560, 480], [720, 480], [130, 480]];
+    const charge = {
+        strength: 6, type: 'ground', dist: 2, conductive: false, LIMIT: 30,
+        ice: [], drops: [], sparks: [], leaks: [], time: 0, flashes: 0, lastStrike: -99, rubAcc: 0, leakAcc: 0,
+        bolt: null, boltT: 9, ring: null, thunders: [], lastBang: null, log: [],
+        get thunder() { return this.thunders.length ? this.thunders[this.thunders.length - 1] : null; },
+        init() {
+            this.ice = []; this.drops = [];
+            const mk = (kind) => { const th = Math.random() * Math.PI * 2, k = rnd(0.5, 1.12); return { kind, th, k, x: CLX + 175 * k * Math.cos(th), y: CLY + 92 * k * Math.sin(th), q: 0, fade: 0, bandF: 0, homeX: 0, ph: Math.random() * 6 }; };
+            for (let i = 0; i < 40; i++) { this.ice.push(mk('ice')); this.drops.push(mk('drop')); }
+        },
+        reset() { Object.assign(this, { sparks: [], leaks: [], flashes: 0, lastStrike: -99, rubAcc: 0, leakAcc: 0, bolt: null, boltT: 9, ring: null, thunders: [], lastBang: null }); this.init(); },
+        Q() { let n = 0; this.ice.forEach(p => { if (p.q > 0) n++; }); return n; },
+        rejoin(p) { const ex = (p.x - CLX) / 175, ey = (p.y - CLY) / 92; p.th = Math.atan2(ey, ex); p.k = clamp(Math.hypot(ex, ey), 0.5, 1.12); },
+        rub() {
+            const ni = this.ice.filter(p => p.q === 0), nd = this.drops.filter(p => p.q === 0);
+            if (!ni.length || !nd.length) return false;
+            const a = pick(ni); let b = nd[0], bd = 1e9;
+            nd.forEach(d => { const dd = Math.hypot(d.x - a.x, d.y - a.y); if (dd < bd) { bd = dd; b = d; } });
+            a.q = 1; b.q = -1; a.bandF = Math.random(); b.bandF = Math.random(); a.homeX = rnd(110, 570); b.homeX = rnd(110, 570);
+            this.sparks.push({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, t: 0 });
+            return true;
+        },
+        neutralisePair(showDot) {
+            const ci = this.ice.filter(p => p.q > 0), cd = this.drops.filter(p => p.q < 0);
+            if (!ci.length || !cd.length) return false;
+            const a = pick(ci), b = pick(cd);
+            if (showDot) this.leaks.push({ x1: b.x, y1: b.y, x2: a.x, y2: a.y, t: 0 });
+            a.q = 0; b.q = 0; a.fade = 1; b.fade = -1; this.rejoin(a); this.rejoin(b);
+            return true;
+        },
+        boltActive() { return this.boltT < 1.1; },
+        strike() {
+            if (this.conductive) return false;                       // a conducting sky never builds up enough charge
+            const Q = this.Q();
+            if (Q <= this.LIMIT) return false;                       // lightning ONLY once the build-up passes the limit
+            const type = this.type === 'random' ? pick(['ground', 'ground', 'intra', 'cloud']) : this.type;
+            let x1, y1, x2, y2;
+            if (type === 'ground') {
+                const r = Math.random(), tgt = r < 0.5 ? [458, 330] : r < 0.8 ? [150, 352] : [rnd(240, 380), G2];
+                x2 = tgt[0]; y2 = tgt[1]; x1 = clamp(x2 + rnd(-80, 80), 120, 580); y1 = 318;
+            } else if (type === 'intra') { x1 = rnd(170, 510); y1 = 300; x2 = rnd(170, 510); y2 = 104; }
+            else { x1 = 585; y1 = 292; x2 = 716; y2 = 246; }
+            this.bolt = makeBolt(x1, y1, x2, y2, type === 'ground' ? 2 : 1);
+            this.boltT = 0; this.lastStrike = this.time; this.flashes++;
+            const mid = this.bolt.main[Math.floor(this.bolt.main.length / 2)];
+            this.ring = { x: mid[0], y: mid[1], t: 0 };
+            this.thunders.push({ t: 0, delay: this.dist / 0.34, dist: this.dist, heard: false, boomT: 0 });
+            this.log.push({ Q, limit: this.LIMIT, type, conductive: this.conductive });
+            const keep = Math.round(Q * 0.1);
+            for (let i = 0; i < Q - keep; i++) this.neutralisePair(false);
+            this.lastType = type;
+            predicts.charge.reveal();
+            return true;
+        },
+        update(dt) {
+            this.time += dt;
+            const all = this.ice.concat(this.drops), sp = 0.4 + this.strength * 0.12;
+            all.forEach(p => {
+                if (p.q === 0) {
+                    p.th += dt * (p.kind === 'ice' ? 0.6 : 0.45) * sp;
+                    const tx = CLX + 175 * p.k * Math.cos(p.th), ty = CLY + 92 * p.k * Math.sin(p.th);
+                    p.x += (tx - p.x) * Math.min(1, dt * 4); p.y += (ty - p.y) * Math.min(1, dt * 4);
+                } else {
+                    const ty = p.q > 0 ? 88 + p.bandF * 46 : 262 + p.bandF * 46, tx = p.homeX + Math.sin(this.time * 0.7 + p.ph) * 22;
+                    p.x += (tx - p.x) * Math.min(1, dt * 1.4); p.y += (ty - p.y) * Math.min(1, dt * (p.q > 0 ? 1.8 : 1.3));
+                }
+                if (p.fade) p.fade = Math.sign(p.fade) * Math.max(0, Math.abs(p.fade) - dt * 1.2);
+            });
+            this.rubAcc += dt * this.strength * 0.75;
+            while (this.rubAcc >= 1) { this.rubAcc -= 1; this.rub(); }
+            if (this.conductive) {
+                this.leakAcc += dt * 1.6 * this.Q();
+                while (this.leakAcc >= 1) { this.leakAcc -= 1; this.neutralisePair(true); }
+            } else this.leakAcc = 0;
+            if (!this.conductive && this.Q() > this.LIMIT && this.time - this.lastStrike > 2 && !this.boltActive()) this.strike();
+            this.sparks.forEach(k => k.t += dt); this.sparks = this.sparks.filter(k => k.t < 0.5);
+            this.leaks.forEach(k => k.t += dt); this.leaks = this.leaks.filter(k => k.t < 0.8);
+            this.boltT += dt;
+            if (this.ring) { this.ring.t += dt; if (this.ring.t > 1.6) this.ring = null; }
+            this.thunders.forEach(th => {
+                th.t += dt;
+                if (!th.heard && th.t >= th.delay) { th.heard = true; this.lastBang = { sec: th.delay, km: flashToBang(th.delay), dist: th.dist }; }
+                if (th.heard) th.boomT += dt;
+            });
+            this.thunders = this.thunders.filter(th => !th.heard || th.boomT < 2.2);
+        },
+        draw() {
+            const sky = ctx.createLinearGradient(0, 0, 0, G2);
+            sky.addColorStop(0, '#2E3B4E'); sky.addColorStop(1, '#6B7F92');
+            ctx.fillStyle = sky; ctx.fillRect(0, 0, W, G2);
+            const Q = this.Q(), frac = Q / this.LIMIT;
+            // neighbour cloud
+            puffCloud(792, 250, 190, 86, '#B0BEC5', '#78909C');
+            const nn = Math.round(clamp(frac, 0, 1) * 4);
+            for (let i = 0; i < nn; i++) chargeSym(722 + i * 10, 236 + (i % 2) * 14, 1, 7);
+            for (let i = 0; i < nn; i++) chargeSym(770 + i * 22, 284, -1, 7);
+            // ground, tree, tall building, house, you
+            ctx.fillStyle = '#4E342E'; ctx.fillRect(0, G2, W, H - G2); ctx.fillStyle = '#558B2F'; ctx.fillRect(0, G2, W, 12);
+            ctx.fillStyle = '#6D4C41'; ctx.fillRect(143, 395, 14, 75);
+            ctx.fillStyle = '#2E7D32'; [[150, 378, 28], [132, 392, 20], [168, 392, 20]].forEach(([x, y, r]) => { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); });
+            ctx.fillStyle = '#90A4AE'; ctx.fillRect(428, 330, 60, 140);
+            ctx.fillStyle = '#FFF59D'; for (let r = 0; r < 6; r++) for (let c = 0; c < 3; c++) ctx.fillRect(434 + c * 18, 340 + r * 21, 11, 12);
+            ctx.fillStyle = '#FFE0B2'; ctx.fillRect(570, 432, 66, 38); ctx.fillStyle = '#8D6E63'; ctx.beginPath(); ctx.moveTo(562, 432); ctx.lineTo(603, 404); ctx.lineTo(644, 432); ctx.fill();
+            person(850, G2, 'stand');
+            wtext('you', 850, 392, { size: 13 });
+            // induced + charges on the ground (follow the − charges at the cloud bottom)
+            const np = Math.min(GROUND_PLUS.length, Math.round(Q * 0.55));
+            for (let i = 0; i < np; i++) chargeSym(GROUND_PLUS[i][0], GROUND_PLUS[i][1] - 6, 1, 7);
+            if (np > 3) wtext('ground, trees and buildings become ⊕', 300, 458, { size: 12 });
+            // the cloud, cut open
+            const cg = ctx.createLinearGradient(0, 60, 0, 330);
+            cg.addColorStop(0, '#F5F7FA'); cg.addColorStop(1, '#8FA3AE');
+            const cloudShape = (gr) => {
+                roundRect(70 - gr, 90 - gr, 540 + gr * 2, 236 + gr * 2, 56); ctx.fill();
+                [[110, 104, 40], [180, 92, 46], [260, 86, 42], [340, 92, 48], [420, 86, 44], [500, 94, 42], [570, 106, 38]].forEach(([x, y, r]) => { ctx.beginPath(); ctx.arc(x, y, r + gr, 0, Math.PI * 2); ctx.fill(); });
+            };
+            ctx.fillStyle = '#607D8B'; cloudShape(3); ctx.fillStyle = cg; cloudShape(0);
+            // up- and down-draughts
+            const draught = (x, y1, y2, label) => {
+                const dir = Math.sign(y2 - y1);
+                ctx.fillStyle = 'rgba(255,255,255,0.4)'; roundRect(x - 24, Math.min(y1, y2), 48, Math.abs(y2 - y1), 24); ctx.fill();
+                ctx.strokeStyle = 'rgba(94,53,177,0.75)'; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+                for (let k = 0; k < 4; k++) {
+                    const f = ((k / 4) + this.time * 0.12 * (0.5 + this.strength * 0.15)) % 1, yy = y1 + (y2 - y1) * f;
+                    ctx.beginPath(); ctx.moveTo(x - 14, yy - dir * 8); ctx.lineTo(x, yy + dir * 8); ctx.lineTo(x + 14, yy - dir * 8); ctx.stroke();
+                }
+                htext(label, x, dir < 0 ? y1 + 18 : y2 + 18, { size: 11, color: '#4527A0' });
+            };
+            draught(118, 300, 125, 'UP-WIND');
+            draught(565, 125, 300, 'DOWN-WIND');
+            // particles
+            this.drops.forEach(p => { dropShape(p.x, p.y, 4.5, '#1E88E5'); if (p.q < 0) chargeSym(p.x + 9, p.y - 7, -1, 7); else if (p.fade < 0) chargeSym(p.x + 9, p.y - 7, -1, 7, -p.fade); });
+            this.ice.forEach(p => { iceShape(p.x, p.y, 6, '#FFFFFF', '#37474F'); if (p.q > 0) chargeSym(p.x + 9, p.y - 7, 1, 7); else if (p.fade > 0) chargeSym(p.x + 9, p.y - 7, 1, 7, p.fade); });
+            this.sparks.forEach(k => {
+                const a = 1 - k.t / 0.5; ctx.strokeStyle = 'rgba(255,193,7,' + a.toFixed(2) + ')'; ctx.lineWidth = 3;
+                ctx.beginPath(); for (let j = 0; j < 4; j++) { const an = j * Math.PI / 4; ctx.moveTo(k.x - Math.cos(an) * 9, k.y - Math.sin(an) * 9); ctx.lineTo(k.x + Math.cos(an) * 9, k.y + Math.sin(an) * 9); } ctx.stroke();
+                if (k.t < 0.25) htext('rub!', k.x, k.y - 12, { size: 11, color: '#E65100' });
+            });
+            this.leaks.forEach(k => { const f = k.t / 0.8; ctx.fillStyle = '#FFD600'; ctx.beginPath(); ctx.arc(k.x1 + (k.x2 - k.x1) * f, k.y1 + (k.y2 - k.y1) * f, 4, 0, Math.PI * 2); ctx.fill(); });
+            htext('⊕ top: light ice crystals', 600, 132, { size: 13, color: '#B71C1C', align: 'right' });
+            htext('⊖ bottom: heavy water droplets', 600, 318, { size: 13, color: '#0D47A1', align: 'right' });
+            if (this.conductive) {
+                ctx.save(); ctx.strokeStyle = '#FFD600'; ctx.lineWidth = 2.5; ctx.setLineDash([3, 9]); ctx.lineDashOffset = -this.time * 50;
+                for (let k = 0; k < 6; k++) { const x = 160 + k * 75; ctx.beginPath(); ctx.moveTo(x, 300); ctx.lineTo(x + 10, G2); ctx.stroke(); }
+                ctx.restore();
+                ctx.fillStyle = 'rgba(255,255,255,0.92)'; roundRect(150, 186, 380, 50, 14); ctx.fill();
+                text('Air conducts: charges leak away all the time.', 340, 207, { size: 15, color: '#E65100' });
+                text('No big build-up, so NO lightning!', 340, 227, { size: 14, color: '#37474F' });
+            }
+            // the bolt, shock ring and single flash
+            drawBolt(this.bolt, boltAlpha(this.boltT));
+            if (this.ring) {
+                const t = this.ring.t;
+                for (let k = 0; k < 3; k++) { const rr = (t - k * 0.12) * 190; if (rr <= 0) continue; ctx.strokeStyle = 'rgba(255,255,255,' + Math.max(0, 0.75 * (1 - t / 1.6)).toFixed(2) + ')'; ctx.lineWidth = 4 - k; ctx.beginPath(); ctx.arc(this.ring.x, this.ring.y, rr, 0, Math.PI * 2); ctx.stroke(); }
+                if (t < 1.4) wtext('air heated → expands suddenly → THUNDER', clamp(this.ring.x, 200, 600), clamp(this.ring.y - 20, 150, 440), { size: 14, color: '#FFF59D' });
+            }
+            flashOverlay(this.boltT);
+            // charge meter
+            wtext('⚡ CHARGE BUILD-UP', 20, 37, { size: 15, align: 'left' });
+            ctx.fillStyle = 'rgba(255,255,255,0.9)'; roundRect(200, 18, 360, 24, 12); ctx.fill();
+            const fw = Math.min(1.25, frac) / 1.25 * 356;
+            ctx.fillStyle = frac < 0.6 ? '#66BB6A' : frac <= 1 ? '#FFB300' : '#E53935';
+            if (fw > 2) { roundRect(202, 20, fw, 20, 10); ctx.fill(); }
+            ctx.fillStyle = '#B71C1C'; ctx.fillRect(487, 12, 3, 36);
+            wtext('air breaks down', 488, 60, { size: 11, color: '#FFCDD2' });
+            wtext(Math.round(frac * 100) + '%', 568, 37, { size: 15, align: 'left' });
+            // flash-to-bang strip
+            const RX0 = 70, RX1 = 820, RY = 516;
+            ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 3; ctx.setLineDash([6, 6]); ctx.beginPath(); ctx.moveTo(RX0, RY); ctx.lineTo(RX1, RY); ctx.stroke(); ctx.setLineDash([]);
+            wtext('⚡ storm', RX0 - 8, RY + 5, { size: 13, align: 'right' });
+            wtext('you: ' + this.dist.toFixed(1) + ' km away', RX1 + 6, RY + 5, { size: 13, align: 'left' });
+            const th = this.thunder;
+            let msg = 'Light reaches you almost instantly. Sound travels about 1 km every 3 seconds.';
+            if (th) {
+                const f = Math.min(1, th.t / th.delay), sx = RX0 + (RX1 - RX0) * f;
+                for (let k = 0; k < 3; k++) { ctx.strokeStyle = 'rgba(255,213,79,' + (1 - k * 0.3) + ')'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(sx - k * 9, RY, 10 + k * 5, -0.8, 0.8); ctx.stroke(); }
+                if (!th.heard) msg = '⏱ Flash seen! Counting... ' + th.t.toFixed(1) + ' s (the sound is on its way)';
+            }
+            if (this.lastBang && (!th || th.heard)) { const b = this.lastBang; msg = 'BOOM after ' + b.sec.toFixed(1) + ' s  →  ' + b.sec.toFixed(1) + ' ÷ 3 ≈ ' + (b.sec / 3).toFixed(1) + ' km   (exact: ' + b.sec.toFixed(1) + ' s × 0.34 km/s = ' + b.km.toFixed(1) + ' km)'; }
+            wtext(msg, 450, 548, { size: 14, color: '#FFF59D' });
+            const bt = this.thunders.find(x => x.heard && x.boomT < 1.6);
+            if (bt) {
+                const sh = Math.sin(bt.boomT * 60) * 6 * (1 - bt.boomT / 1.6);
+                htext('BOOM!', 760 + sh, 440, { size: 54, color: '#FFD54F', font: "'Fredoka One', cursive", weight: 400, haloColor: DARK_HALO, halo: 8 });
+            }
+            setText('ch-i-q', Math.round(frac * 100) + '% of limit');
+            setText('ch-i-air', this.conductive ? 'conductor' : frac > 1 ? 'BREAKING DOWN' : 'insulator');
+            setText('ch-i-n', String(this.flashes));
+            setText('ch-i-fb', this.lastBang ? this.lastBang.sec.toFixed(1) + ' s → ' + this.lastBang.km.toFixed(1) + ' km' : '-');
+        },
+    };
+    function flashToBang(seconds) { return seconds * 0.34; }   // sound ≈ 340 m/s = 0.34 km/s; light arrives instantly
+
+    // =====================================================
+    // TAB 3 — Lightning conductor
+    // =====================================================
+    const GY3 = 420, MOIST_Y = 455, DEEP_Y = 470, ROOF = 170, TANK_TOP = 125, TANK_X0 = 426, TANK_X1 = 470, BX0 = 330, BX1 = 470, ROD_LEN = 40, WALLX = 474;
+    const TRAY = { rod: [825, 205], strip: [825, 288], plate: [825, 362] };
+    const MODE_NAMES = { none: 'A: no conductor', with: 'B: with conductor', build: 'Build it', diagram: 'Diagram' };
+    const rod = {
+        mode: 'none', build: { rod: null, rodX: 0, rodY: 0, strip: false, plate: false, plateY: 0 },
+        drag: null, dragP: null, strike: null, time: 0, lastVerdict: null, strikes: 0,
+        setMode(m) { this.mode = m; this.strike = null; this.lastVerdict = null; this.drag = null; },
+        resetBuild() { this.build = { rod: null, rodX: 0, rodY: 0, strip: false, plate: false, plateY: 0 }; this.strike = null; this.lastVerdict = null; },
+        cfg() {
+            if (this.mode === 'none') return { rod: null, strip: false, plate: false, plateY: 0 };
+            if (this.mode === 'build') return this.build;
+            return { rod: 'tank', rodX: (TANK_X0 + TANK_X1) / 2, rodY: TANK_TOP, strip: true, plate: true, plateY: 515 };
+        },
+        /* The conductor protects ONLY if: rod tip is the highest point AND it is connected AND the plate is buried deep */
+        evaluate(c) {
+            if (!c.rod) return { ok: false, hit: 'tank', reason: 'No lightning conductor: the bolt hits the highest point, the water tank!' };
+            const tip = c.rodY - ROD_LEN;
+            if (tip >= TANK_TOP) return { ok: false, hit: 'tank', reason: c.rod === 'roof' ? 'The rod is lower than the water tank, so lightning hits the tank!' : 'The rod is below the top of the building, so lightning hits the water tank!' };
+            if (!c.strip) return { ok: false, hit: 'rod', reason: 'Not connected: no copper strip joins the rod to the ground. The charges have nowhere to go!' };
+            if (!c.plate) return { ok: false, hit: 'rod', reason: 'Not earthed: no plate in the ground, so the charges have nowhere to go!' };
+            if (c.plateY < DEEP_Y) return { ok: false, hit: 'rod', reason: 'The plate is not buried deep in moist earth, so the charges cannot spread away safely!' };
+            return { ok: true, hit: 'rod', reason: 'SAFE! The rod is the highest point, it is connected, and the plate is deep in moist earth.' };
+        },
+        stripPath(c) {
+            const end = c.plate ? c.plateY : GY3 + 4;
+            return [[c.rodX, c.rodY], [WALLX, c.rodY], [WALLX, GY3], [WALLX, end]];
+        },
+        doStrike() {
+            if (this.strike && this.strike.t < 1.5) return null;            // no rapid re-flashing
+            const c = this.cfg(), v = this.evaluate(c);
+            const hit = v.hit === 'rod' ? { x: c.rodX, y: c.rodY - ROD_LEN } : { x: (TANK_X0 + TANK_X1) / 2, y: TANK_TOP };
+            const st = { t: 0, v, hit, c: JSON.parse(JSON.stringify(c)), bolt: makeBolt(hit.x + rnd(-80, 30), 72, hit.x, hit.y, 1), path: v.hit === 'rod' && c.strip ? this.stripPath(c) : null, dots: [], spread: [], sparks: [], cracks: [], spawn: 0 };
+            if (!v.ok) {
+                const fx = v.hit === 'tank' ? hit.x : clamp(c.rodX, BX0 + 20, BX1 - 20), fy = v.hit === 'tank' ? TANK_TOP : ROOF;
+                st.fire = { x: fx, y: fy };
+                for (let k = 0; k < 3; k++) { let x = clamp(fx - 30 + k * 30, BX0 + 8, BX1 - 8), y = ROOF + 4; const pts = [[x, y]]; for (let j = 0; j < 7; j++) { x = clamp(x + rnd(-14, 14), BX0 + 4, BX1 - 4); y += rnd(14, 30); pts.push([x, y]); } st.cracks.push(pts); }
+                for (let k = 0; k < 26; k++) st.sparks.push({ x: fx, y: fy, vx: rnd(-160, 160), vy: rnd(-220, -40), life: rnd(0.6, 1.3) });
+            }
+            this.strike = st; this.lastVerdict = v; this.strikes++;
+            if (v.ok) predicts.rod.reveal();
+            return v;
+        },
+        place(part, p) {
+            const b = this.build;
+            if (part === 'rod') {
+                if (p.x > TANK_X0 - 14 && p.x < TANK_X1 + 14 && p.y > TANK_TOP - 55 && p.y < TANK_TOP + 22) { b.rod = 'tank'; b.rodX = (TANK_X0 + TANK_X1) / 2; b.rodY = TANK_TOP; }
+                else if (p.x > BX0 - 12 && p.x < BX1 + 12 && p.y > ROOF - 60 && p.y < ROOF + 25) { b.rod = 'roof'; b.rodX = clamp(p.x, BX0 + 12, TANK_X0 - 10); b.rodY = ROOF; }
+                else if (p.x > BX0 - 30 && p.x < BX1 + 45 && p.y >= ROOF + 25 && p.y < GY3 - 20) { b.rod = 'wall'; b.rodX = BX1 + 12; b.rodY = p.y; }
+                else b.rod = null;
+            } else if (part === 'strip') b.strip = p.x > BX0 - 30 && p.x < BX1 + 50 && p.y > TANK_TOP - 30 && p.y < GY3 + 15;
+            else if (part === 'plate') {
+                if (p.y > GY3 + 4 && p.y < H && p.x > BX0 - 70 && p.x < BX1 + 110) { b.plate = true; b.plateY = clamp(p.y, GY3 + 12, 540); } else b.plate = false;
+            }
+            this.strike = null; this.lastVerdict = null;
+        },
+        down(p) {
+            if (this.mode !== 'build') return;
+            const b = this.build, near = (q, r) => Math.hypot(p.x - q[0], p.y - q[1]) < r;
+            if (!b.rod && near(TRAY.rod, 36)) this.drag = 'rod';
+            else if (!b.strip && near(TRAY.strip, 36)) this.drag = 'strip';
+            else if (!b.plate && near(TRAY.plate, 36)) this.drag = 'plate';
+            else if (b.rod && Math.hypot(p.x - b.rodX, p.y - (b.rodY - 20)) < 30) { this.drag = 'rod'; b.rod = null; }
+            else if (b.plate && Math.abs(p.x - WALLX) < 45 && Math.abs(p.y - b.plateY) < 22) { this.drag = 'plate'; b.plate = false; }
+            else if (b.strip && Math.abs(p.x - WALLX) < 18 && p.y > TANK_TOP && p.y < GY3) { this.drag = 'strip'; b.strip = false; }
+            if (this.drag) { this.dragP = p; this.strike = null; this.lastVerdict = null; }
+        },
+        move(p) { if (this.drag) this.dragP = p; },
+        up(p) { if (!this.drag) return; this.place(this.drag, p || this.dragP); this.drag = null; },
+        update(dt) {
+            this.time += dt;
+            const st = this.strike; if (!st) return;
+            st.t += dt;
+            if (st.path && st.t > 0.12 && st.t < 1.3) { st.spawn += dt * 40; while (st.spawn >= 1) { st.spawn -= 1; st.dots.push({ s: 0, sp: rnd(1.1, 1.6) }); } }
+            st.dots.forEach(d => {
+                d.s += d.sp * dt;
+                if (d.s >= 1 && !d.done) {
+                    d.done = true; const end = st.path[st.path.length - 1];
+                    if (st.v.ok) { const a = rnd(0.15, Math.PI - 0.15); st.spread.push({ x: end[0], y: end[1], vx: Math.cos(a) * rnd(50, 130), vy: Math.sin(a) * rnd(25, 70), life: rnd(0.8, 1.5) }); }
+                    else if (Math.random() < 0.4) st.sparks.push({ x: end[0], y: end[1] - 6, vx: rnd(-150, -40), vy: rnd(-180, -40), life: rnd(0.4, 0.9) });
+                }
+            });
+            st.dots = st.dots.filter(d => !d.done);
+            st.spread.forEach(q => { q.x += q.vx * dt; q.y = Math.min(552, q.y + q.vy * dt); q.life -= dt; }); st.spread = st.spread.filter(q => q.life > 0);
+            st.sparks.forEach(q => { q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 420 * dt; q.life -= dt; }); st.sparks = st.sparks.filter(q => q.life > 0);
+        },
+        drawRod(x, baseY, tipY) {
+            ctx.fillStyle = '#90A4AE'; ctx.fillRect(x - 2.5, tipY + 10, 5, baseY - tipY - 10);
+            ctx.fillStyle = '#CFD8DC'; ctx.beginPath(); ctx.moveTo(x - 4, tipY + 12); ctx.lineTo(x, tipY); ctx.lineTo(x + 4, tipY + 12); ctx.fill();
+            ctx.fillStyle = '#ECEFF1'; ctx.fillRect(x - 1, tipY + 12, 1.5, baseY - tipY - 14);
+        },
+        drawPlate(x, y) { ctx.fillStyle = '#78909C'; ctx.fillRect(x - 32, y - 5, 64, 10); ctx.strokeStyle = '#37474F'; ctx.lineWidth = 1.5; ctx.strokeRect(x - 32, y - 5, 64, 10); },
+        drawConductor(c) {
+            if (c.strip && c.rod) {
+                const path = this.stripPath(c);
+                ctx.strokeStyle = '#D2691E'; ctx.lineWidth = 6; ctx.lineJoin = 'round'; strokePts(path);
+                ctx.strokeStyle = '#F4A460'; ctx.lineWidth = 1.5; strokePts(path);
+            } else if (c.strip) {
+                ctx.strokeStyle = '#D2691E'; ctx.lineWidth = 6; strokePts([[WALLX, ROOF], [WALLX, GY3 + 4]]);
+            }
+            if (c.rod) this.drawRod(c.rodX, c.rodY, c.rodY - ROD_LEN);
+            if (c.rod === 'wall') { ctx.fillStyle = '#546E7A'; ctx.fillRect(BX1, c.rodY - 3, c.rodX - BX1 + 3, 6); }
+            if (c.plate) this.drawPlate(WALLX, c.plateY);
+        },
+        draw() {
+            const sky = ctx.createLinearGradient(0, 0, 0, GY3);
+            sky.addColorStop(0, '#37474F'); sky.addColorStop(1, '#90A4AE');
+            ctx.fillStyle = sky; ctx.fillRect(0, 0, W, GY3);
+            // storm cloud with − charges
+            for (let k = 0; k < 9; k++) { ctx.fillStyle = '#546E7A'; ctx.beginPath(); ctx.arc(30 + k * 105, 30 + (k % 2) * 10, 62, 0, Math.PI * 2); ctx.fill(); }
+            ctx.fillStyle = '#546E7A'; ctx.fillRect(0, 0, W, 60);
+            for (let k = 0; k < 12; k++) chargeSym(40 + k * 60, 80 + (k % 2) * 4, -1, 7);
+            // soil layers
+            ctx.fillStyle = '#A1887F'; ctx.fillRect(0, GY3, W, MOIST_Y - GY3);
+            ctx.fillStyle = '#4E342E'; ctx.fillRect(0, MOIST_Y, W, H - MOIST_Y);
+            ctx.fillStyle = '#7CB342'; ctx.fillRect(0, GY3, W, 7);
+            for (let i = 0; i < 26; i++) dropShape((i * 137) % 880 + 10, MOIST_Y + 18 + (i * 53) % 85, 2.6, 'rgba(79,195,247,0.7)');
+            wtext('dry topsoil', 14, 446, { size: 12, align: 'left' });
+            wtext('moist earth', 14, 478, { size: 12, align: 'left' });
+            // tree, house
+            ctx.fillStyle = '#6D4C41'; ctx.fillRect(140, 320, 20, 100);
+            ctx.fillStyle = '#388E3C'; [[150, 290, 42], [124, 306, 30], [176, 306, 30]].forEach(([x, y, r]) => { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); });
+            ctx.fillStyle = '#FFE0B2'; ctx.fillRect(610, 362, 100, 58); ctx.fillStyle = '#8D6E63'; ctx.beginPath(); ctx.moveTo(600, 364); ctx.lineTo(660, 322); ctx.lineTo(720, 364); ctx.fill();
+            ctx.fillStyle = '#795548'; ctx.fillRect(650, 390, 20, 30);
+            // building + water tank
+            const st = this.strike, damaged = st && !st.v.ok && st.t > 0.1;
+            ctx.fillStyle = damaged ? '#9EA7AD' : '#B0BEC5'; ctx.fillRect(BX0, ROOF, BX1 - BX0, GY3 - ROOF);
+            ctx.fillStyle = '#78909C'; ctx.fillRect(BX0 - 4, ROOF - 6, BX1 - BX0 + 8, 8);
+            for (let r = 0; r < 7; r++) for (let c = 0; c < 4; c++) { ctx.fillStyle = damaged && (r + c) % 3 === 0 ? '#37474F' : '#FFF59D'; ctx.fillRect(BX0 + 14 + c * 31, ROOF + 16 + r * 31, 18, 18); }
+            ctx.fillStyle = '#5D4037'; ctx.fillRect(388, GY3 - 34, 26, 34);
+            ctx.fillStyle = '#455A64'; ctx.fillRect(TANK_X0, TANK_TOP, TANK_X1 - TANK_X0, ROOF - 6 - TANK_TOP);
+            ctx.fillStyle = '#607D8B'; ctx.beginPath(); ctx.ellipse((TANK_X0 + TANK_X1) / 2, TANK_TOP, (TANK_X1 - TANK_X0) / 2, 5, 0, 0, Math.PI * 2); ctx.fill();
+            wtext('water tank', (TANK_X0 + TANK_X1) / 2, TANK_TOP + 26, { size: 10 });
+            if (damaged) { ctx.strokeStyle = '#263238'; ctx.lineWidth = 2.5; st.cracks.forEach(pts => { const n = Math.min(pts.length, 1 + Math.floor(st.t * 10)); strokePts(pts.slice(0, n)); }); }
+            // conductor
+            const c = this.mode === 'build' ? this.build : this.cfg();
+            this.drawConductor(c);
+            // build mode: drop-target glow, parts box, dragged part
+            if (this.mode === 'build') {
+                if (this.drag) {
+                    ctx.save(); ctx.strokeStyle = '#FFEB3B'; ctx.lineWidth = 3; ctx.setLineDash([6, 5]);
+                    if (this.drag === 'rod') { ctx.strokeRect(TANK_X0 - 6, TANK_TOP - 8, TANK_X1 - TANK_X0 + 12, 16); ctx.strokeRect(BX0, ROOF - 10, TANK_X0 - BX0 - 6, 16); }
+                    if (this.drag === 'strip') ctx.strokeRect(BX1 - 8, TANK_TOP, 20, GY3 - TANK_TOP);
+                    if (this.drag === 'plate') ctx.strokeRect(BX0 - 40, GY3 + 8, 230, 130);
+                    ctx.restore();
+                }
+                ctx.fillStyle = 'rgba(255,255,255,0.94)'; roundRect(762, 140, 126, 272, 14); ctx.fill();
+                text('PARTS BOX', 825, 160, { size: 13, color: '#5E35B1' });
+                const slot = (key, label, drawFn) => {
+                    const [x, y] = TRAY[key], used = key === 'rod' ? !!this.build.rod : this.build[key];
+                    ctx.globalAlpha = used || this.drag === key ? 0.25 : 1; drawFn(x, y); ctx.globalAlpha = 1;
+                    text(used ? '✔ placed' : label, x, y + 36, { size: 12, color: used ? '#2E7D32' : '#37474F' });
+                };
+                slot('rod', 'pointed rod', (x, y) => this.drawRod(x, y + 20, y - 22));
+                slot('strip', 'copper strip', (x, y) => { ctx.strokeStyle = '#D2691E'; ctx.lineWidth = 5; ctx.beginPath(); for (let k = 0; k < 6; k++) ctx.lineTo(x - 25 + k * 10, y + (k % 2 ? -10 : 10)); ctx.stroke(); });
+                slot('plate', 'metal plate', (x, y) => this.drawPlate(x, y));
+                if (this.drag && this.dragP) {
+                    const p = this.dragP;
+                    if (this.drag === 'rod') this.drawRod(p.x, p.y + 20, p.y + 20 - ROD_LEN);
+                    else if (this.drag === 'strip') { ctx.strokeStyle = '#D2691E'; ctx.lineWidth = 5; ctx.beginPath(); for (let k = 0; k < 6; k++) ctx.lineTo(p.x - 25 + k * 10, p.y + (k % 2 ? -10 : 10)); ctx.stroke(); }
+                    else this.drawPlate(p.x, p.y);
+                }
+            }
+            // checklist
+            if (this.mode !== 'diagram') {
+                const cc = this.cfg(), tipOk = !!cc.rod && cc.rodY - ROD_LEN < TANK_TOP;
+                ctx.fillStyle = 'rgba(255,255,255,0.93)'; roundRect(14, 104, 290, 102, 14); ctx.fill();
+                text('Will it protect the building?', 159, 124, { size: 13, color: '#5E35B1' });
+                [[tipOk, 'Rod tip is the highest point'], [!!cc.rod && cc.strip, 'Copper strip joins rod to the ground'], [cc.plate && cc.plateY >= DEEP_Y, 'Plate buried deep in moist earth']].forEach(([ok, lab], i) => {
+                    text(ok ? '✔' : '✘', 30, 148 + i * 22, { size: 15, color: ok ? '#2E7D32' : '#C62828' });
+                    text(lab, 44, 148 + i * 22, { size: 13, color: '#37474F', align: 'left' });
+                });
+            }
+            // diagram labels (labelled-figure style)
+            if (this.mode === 'diagram') {
+                const tipX = (TANK_X0 + TANK_X1) / 2, tipY = TANK_TOP - ROD_LEN;
+                const lead = (x1, y1, x2, y2) => { ctx.strokeStyle = '#FFF59D'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.fillStyle = '#FFF59D'; ctx.beginPath(); ctx.arc(x2, y2, 4, 0, Math.PI * 2); ctx.fill(); };
+                lead(528, 140, tipX + 4, tipY + 4);
+                wtext('1. Pointed metal rod', 532, 136, { size: 15, align: 'left', color: '#FFF59D' });
+                wtext('its tip is HIGHER than the highest point', 532, 155, { size: 12, align: 'left' });
+                lead(528, 236, WALLX + 3, 250);
+                wtext('2. Thick copper strip down the wall', 532, 232, { size: 15, align: 'left', color: '#FFF59D' });
+                wtext('an easy path for the charges', 532, 251, { size: 12, align: 'left' });
+                lead(528, 500, WALLX + 32, 515);
+                wtext('3. Metal plate buried deep', 532, 496, { size: 15, align: 'left', color: '#FFF59D' });
+                wtext('in moist earth: charges spread out', 532, 515, { size: 12, align: 'left' });
+                const demo = makeBoltStatic();
+                drawBolt(demo, 0.9);
+                wtext('Lightning', 300, 150, { size: 15, color: '#FFF59D' });
+                const path = this.stripPath(this.cfg());
+                for (let k = 0; k < 10; k++) { const pnt = alongPath(path, ((this.time * 0.35) + k / 10) % 1); ctx.fillStyle = '#FFEB3B'; ctx.beginPath(); ctx.arc(pnt[0], pnt[1], 4, 0, Math.PI * 2); ctx.fill(); }
+            }
+            // strike animation
+            if (st) {
+                drawBolt(st.bolt, boltAlpha(st.t));
+                if (st.path) st.dots.forEach(d => { const q = alongPath(st.path, d.s); ctx.fillStyle = '#FFEB3B'; ctx.beginPath(); ctx.arc(q[0], q[1], 5, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#F57F17'; ctx.lineWidth = 1.5; ctx.stroke(); });
+                st.spread.forEach(q => { ctx.fillStyle = 'rgba(255,235,59,' + Math.min(1, q.life).toFixed(2) + ')'; ctx.beginPath(); ctx.arc(q.x, q.y, 4, 0, Math.PI * 2); ctx.fill(); });
+                if (st.v.ok && st.t > 0.8 && st.t < 3) { const r = (st.t - 0.8) * 70, end = st.path[st.path.length - 1]; ctx.strokeStyle = 'rgba(255,235,59,' + Math.max(0, 1 - (st.t - 0.8) / 2.2).toFixed(2) + ')'; ctx.lineWidth = 3; ctx.beginPath(); ctx.ellipse(end[0], end[1], r, r * 0.45, 0, 0, Math.PI * 2); ctx.stroke(); }
+                if (st.fire && st.t > 0.1) flames(st.fire.x, st.fire.y, 26, this.time);
+                st.sparks.forEach(q => { ctx.fillStyle = '#FFD54F'; ctx.beginPath(); ctx.arc(q.x, q.y, 3, 0, Math.PI * 2); ctx.fill(); });
+                if (st.t > 0.5) {
+                    const ok = st.v.ok;
+                    ctx.fillStyle = ok ? 'rgba(46,125,50,0.95)' : 'rgba(198,40,40,0.95)'; roundRect(330, 186, 140, 40, 20); ctx.fill();
+                    text(ok ? '✔ SAFE' : '✘ DAMAGED', 400, 213, { size: 20, color: '#fff', font: "'Fredoka One', cursive", weight: 400 });
+                }
+                flashOverlay(st.t);
+            }
+            // result line in the soil
+            let msg = { none: 'Demo A: a tall building with NO lightning conductor. Press Strike!', with: 'Demo B: the same building WITH a lightning conductor. Press Strike!', build: 'Drag the 3 parts out of the box onto the building, then press Strike!', diagram: 'How a lightning conductor is built' }[this.mode];
+            if (this.lastVerdict && st && st.t > 0.4) msg = this.lastVerdict.reason;
+            const lines = wrapLines(msg, 820, 16, 800);
+            lines.forEach((l, i) => wtext(l, 450, 528 + i * 20 - (lines.length - 1) * 10, { size: 16, color: this.lastVerdict && st && st.t > 0.4 ? (this.lastVerdict.ok ? '#B9F6CA' : '#FFCDD2') : '#fff' }));
+            const cc = this.cfg();
+            setText('rd-i-mode', MODE_NAMES[this.mode]);
+            setText('rd-i-high', cc.rod && cc.rodY - ROD_LEN < TANK_TOP ? 'rod tip' : 'water tank');
+            setText('rd-i-earth', cc.rod && cc.strip && cc.plate && cc.plateY >= DEEP_Y ? 'yes' : 'no');
+            setText('rd-i-res', this.lastVerdict ? (this.lastVerdict.ok ? 'SAFE' : 'DAMAGED') : '-');
+        },
+    };
+    let _staticBolt = null;
+    function makeBoltStatic() { if (!_staticBolt) _staticBolt = makeBolt(390, 72, (TANK_X0 + TANK_X1) / 2, TANK_TOP - ROD_LEN, 1); return _staticBolt; }
+
+    // =====================================================
+    // TAB 4 — Stay safe! game
+    // =====================================================
+    const GY4 = 400;
+    const SPOTS = [
+        { id: 'tree', x: 92, label: 'Under a tree', safe: false, pose: 'stand', px: 108, py: GY4, bolt: [70, 205], reason: 'Lightning strikes tall objects. The tree can pass the strike on to you.' },
+        { id: 'field', x: 196, label: 'Open field', safe: false, pose: 'stand', px: 196, py: GY4, bolt: [196, 325], reason: 'Standing tall, you are the highest thing around. Lightning hits tall objects.' },
+        { id: 'umbrella', x: 296, label: 'Metal umbrella', safe: false, pose: 'umbrella', px: 290, py: GY4, bolt: [306, 260], reason: 'Avoid an umbrella with a metallic rod: its metal tip sticks up above you.' },
+        { id: 'pond', x: 405, label: 'Swimming', safe: false, pose: 'swim', px: 405, py: GY4 + 6, bolt: [420, 402], reason: 'If you are in water, get out of it! The strike spreads through the water.' },
+        { id: 'lie', x: 510, label: 'Lying flat', safe: false, pose: 'lie', px: 505, py: GY4, bolt: [470, GY4], reason: 'Do not lie down flat: your whole body touches the ground, so ground currents pass through you.' },
+        { id: 'crouch', x: 612, label: 'Crouching low', safe: true, pose: 'crouch', px: 612, py: GY4 + 18, bolt: null, reason: 'Crouched low in a low-lying open area, with little contact with the ground. Best choice outdoors.' },
+        { id: 'car', x: 722, label: 'In a car/bus', safe: true, pose: 'sit', px: 716, py: 368, bolt: [740, 348], reason: 'Inside a car or bus you are comparatively safer: charges flow over the metal body to the ground.' },
+        { id: 'house', x: 835, label: 'In a building', safe: true, pose: 'sit', px: 835, py: 376, bolt: null, reason: 'Indoors you are safe from a direct strike. Stay inside until the storm passes.' },
+    ];
+    const START = [72, 530];
+    const safe = {
+        pos: null, dragging: false, dragP: null, tested: new Set(), safeFound: new Set(), last: null, time: 0, lastBolt: -9, bolt: null, boltT: 9, effT: 9,
+        reset() { this.pos = null; this.dragging = false; this.tested = new Set(); this.safeFound = new Set(); this.last = null; this.bolt = null; this.boltT = 9; this.effT = 9; },
+        spot(id) { return SPOTS.find(z => z.id === id); },
+        zoneAt(p) { if (p.y < 170 || p.y > 440) return null; let best = null, bd = 56; SPOTS.forEach(z => { const d = Math.abs(p.x - z.x); if (d < bd) { bd = d; best = z; } }); return best; },
+        choose(id) {
+            const s = this.spot(id); if (!s) return null;
+            this.pos = id; this.last = s; this.tested.add(id); if (s.safe) this.safeFound.add(id);
+            this.effT = 0;
+            if (s.bolt && this.time - this.lastBolt > 1.4) { this.bolt = makeBolt(s.bolt[0] + rnd(-60, 60), 60, s.bolt[0], s.bolt[1], 1); this.boltT = 0; this.lastBolt = this.time; }
+            if (id === 'car' || (this.tested.has('tree') && (this.tested.has('pond') || this.tested.has('field')))) predicts.safe.reveal();
+            return s.safe;
+        },
+        verdict(id) { const s = this.spot(id); return s ? (s.safe ? 'SAFE' : 'DANGER') : null; },
+        personAt() { if (this.dragging && this.dragP) return [this.dragP.x, this.dragP.y + 30]; if (!this.pos) return START; const s = this.spot(this.pos); return [s.px, s.py]; },
+        down(p) {
+            const [hx, hy] = this.personAt();
+            if (Math.hypot(p.x - hx, p.y - (hy - 30)) < 46) { this.dragging = true; this.dragP = p; return; }
+            const z = this.zoneAt(p); if (z) this.choose(z.id);
+        },
+        move(p) { if (this.dragging) this.dragP = p; },
+        up(p) {
+            if (!this.dragging) return;
+            this.dragging = false;
+            const z = this.zoneAt(p || this.dragP); if (z) this.choose(z.id);
+        },
+        update(dt) { this.time += dt; this.boltT += dt; this.effT += dt; },
+        draw() {
+            const sky = ctx.createLinearGradient(0, 0, 0, GY4);
+            sky.addColorStop(0, '#3F4D60'); sky.addColorStop(1, '#A3B1C0');
+            ctx.fillStyle = sky; ctx.fillRect(0, 0, W, GY4);
+            for (let k = 0; k < 10; k++) { ctx.fillStyle = '#5D6D7E'; ctx.beginPath(); ctx.arc(k * 100, 20 + (k % 3) * 8, 60, 0, Math.PI * 2); ctx.fill(); }
+            ctx.strokeStyle = 'rgba(225,235,245,0.35)'; ctx.lineWidth = 1.5;
+            for (let i = 0; i < 70; i++) { const x = (i * 131 + this.time * 120) % 940 - 20, y = (i * 57 + this.time * 380) % 330 + 70; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 4, y + 14); ctx.stroke(); }
+            // ground with a dip and a pond
+            ctx.fillStyle = '#558B2F';
+            ctx.beginPath(); ctx.moveTo(0, GY4); ctx.lineTo(572, GY4); ctx.quadraticCurveTo(612, GY4 + 40, 652, GY4); ctx.lineTo(W, GY4); ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = '#4FC3F7'; ctx.beginPath(); ctx.ellipse(405, GY4 + 4, 54, 14, 0, 0, Math.PI * 2); ctx.fill();
+            // tree
+            ctx.fillStyle = '#6D4C41'; ctx.fillRect(61, 290, 18, 110);
+            ctx.fillStyle = '#2E7D32'; [[70, 250, 46], [44, 272, 30], [96, 272, 30]].forEach(([x, y, r]) => { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); });
+            // car
+            ctx.fillStyle = '#EF5350'; ctx.beginPath(); ctx.moveTo(686, 370); ctx.lineTo(700, 346); ctx.lineTo(752, 346); ctx.lineTo(766, 370); ctx.fill();
+            ctx.fillStyle = '#B3E5FC'; ctx.beginPath(); ctx.moveTo(696, 368); ctx.lineTo(706, 352); ctx.lineTo(746, 352); ctx.lineTo(756, 368); ctx.fill();
+            if (this.pos === 'car' && !this.dragging) person(716, 368, 'sit');
+            ctx.fillStyle = '#E53935'; roundRect(668, 366, 108, 26, 8); ctx.fill();
+            ctx.fillStyle = '#263238'; [[692, 394], [752, 394]].forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y, 10, 0, Math.PI * 2); ctx.fill(); });
+            // house
+            ctx.fillStyle = '#FFE0B2'; ctx.fillRect(794, 330, 84, 70);
+            ctx.fillStyle = '#8D6E63'; ctx.beginPath(); ctx.moveTo(786, 332); ctx.lineTo(836, 288); ctx.lineTo(886, 332); ctx.fill();
+            ctx.fillStyle = '#B3E5FC'; ctx.fillRect(815, 345, 40, 32);
+            if (this.pos === 'house' && !this.dragging) person(835, 376, 'sit');
+            ctx.strokeStyle = '#8D6E63'; ctx.lineWidth = 3; ctx.strokeRect(815, 345, 40, 32);
+            // zone highlight + labels
+            const hover = this.dragging && this.dragP ? this.zoneAt(this.dragP) : null;
+            SPOTS.forEach(z => {
+                if (hover === z) { ctx.fillStyle = 'rgba(255,255,255,0.22)'; roundRect(z.x - 50, 170, 100, 262, 14); ctx.fill(); }
+                const tested = this.tested.has(z.id);
+                wtext((tested ? (z.safe ? '✔ ' : '✘ ') : '') + z.label, z.x, 432, { size: 12, color: tested ? (z.safe ? '#B9F6CA' : '#FFCDD2') : '#fff' });
+            });
+            // the person
+            if (this.dragging && this.dragP) person(this.dragP.x, this.dragP.y + 30, 'stand');
+            else if (this.pos && this.pos !== 'car' && this.pos !== 'house') { const s = this.spot(this.pos); person(s.px, s.py, s.pose); }
+            // effects
+            const s = this.last;
+            if (s && this.pos === s.id && !this.dragging) {
+                drawBolt(this.bolt, boltAlpha(this.boltT));
+                if (s.id === 'tree' && this.boltT < 1) { ctx.strokeStyle = 'rgba(255,245,157,' + boltAlpha(this.boltT) + ')'; ctx.lineWidth = 3; strokePts(boltPath(80, 300, s.px - 4, 345, 0.2, 3)); }
+                if (s.id === 'lie' && this.effT < 2) { for (let k = 0; k < 3; k++) { const r = ((this.effT * 80) + k * 25) % 90; ctx.strokeStyle = 'rgba(255,235,59,' + (1 - r / 90).toFixed(2) + ')'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.ellipse(470, GY4 + 2, r, r * 0.25, 0, 0, Math.PI * 2); ctx.stroke(); } }
+                if (s.id === 'car' && this.effT < 2.2) {
+                    const shell = [[740, 348], [752, 346], [766, 370], [776, 380], [760, 392], [752, 404]];
+                    for (let k = 0; k < 6; k++) { const q = alongPath(shell, ((this.effT * 0.8) + k / 6) % 1); ctx.fillStyle = '#FFEB3B'; ctx.beginPath(); ctx.arc(q[0], q[1], 4, 0, Math.PI * 2); ctx.fill(); }
+                }
+                const [bx, by] = [s.px + 26, s.py - 86];
+                const pulse = 1 + 0.08 * Math.sin(this.time * 6);
+                ctx.fillStyle = s.safe ? '#2E7D32' : '#C62828'; ctx.beginPath(); ctx.arc(bx, by, 15 * pulse, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 3.5; ctx.lineCap = 'round'; ctx.beginPath();
+                if (s.safe) { ctx.moveTo(bx - 7, by); ctx.lineTo(bx - 2, by + 6); ctx.lineTo(bx + 8, by - 6); } else { ctx.moveTo(bx - 6, by - 6); ctx.lineTo(bx + 6, by + 6); ctx.moveTo(bx + 6, by - 6); ctx.lineTo(bx - 6, by + 6); }
+                ctx.stroke();
+                if (s.safe) { ctx.strokeStyle = 'rgba(105,240,174,0.8)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(s.px, s.py - 28, 40, 0, Math.PI * 2); ctx.stroke(); }
+                flashOverlay(this.boltT);
+            }
+            // start bubble + verdict card
+            ctx.fillStyle = 'rgba(255,255,255,0.92)'; roundRect(14, 446, 116, 106, 14); ctx.fill();
+            if (!this.pos && !this.dragging) { person(START[0], START[1], 'stand'); text('Drag me!', 72, 466, { size: 13, color: '#5E35B1' }); }
+            else text(this.dragging ? 'Drop me on a spot' : 'Drag me again!', 72, 500, { size: 12, color: '#5E35B1' });
+            ctx.fillStyle = 'rgba(255,255,255,0.95)'; roundRect(140, 446, 746, 106, 14); ctx.fill();
+            text('Spots tested ' + this.tested.size + '/8  ·  Safe spots found ' + this.safeFound.size + '/3', 874, 466, { size: 12, color: '#5E35B1', align: 'right' });
+            if (s) {
+                text(s.safe ? '✅ SAFE' : '❌ DANGER', 158, 496, { size: 28, color: s.safe ? '#2E7D32' : '#C62828', font: "'Fredoka One', cursive", weight: 400, align: 'left' });
+                text(s.label, 158, 522, { size: 13, color: '#607D8B', align: 'left' });
+                wrapLines(s.reason, 520, 15, 700).forEach((l, i) => text(l, 350, 496 + i * 20, { size: 15, weight: 700, color: '#37474F', align: 'left' }));
+            } else text('Where would YOU go when lightning strikes? Drag the person to a spot.', 512, 506, { size: 16, color: '#37474F' });
+            if (this.tested.size === 8) text('🏅 Lightning-safety expert!', 512, 544, { size: 15, color: '#B8860B' });
+            setText('sf-i-n', this.tested.size + ' / 8');
+            setText('sf-i-safe', this.safeFound.size + ' / 3');
+            setText('sf-i-v', s ? (s.safe ? 'SAFE' : 'DANGER') : '-');
+        },
+    };
+
+    // ================= Predictions =================
+    const predicts = {
+        engine: makePredict('predict-engine',
+            'On a hot summer day a storm cloud grows very tall. What is at the TOP of the cloud?',
+            ['Warm water droplets', 'Ice crystals', 'Hot steam'], 1,
+            'Rising air expands and cools: the higher it goes, the colder it gets. Above the 0 °C line the water droplets turn into <strong>ice particles</strong>, even on the hottest day.'),
+        charge: makePredict('predict-charge',
+            'Charges keep building up in the cloud, but air is an insulator. What happens when the build-up becomes very large?',
+            ['Nothing: air never lets charges through', 'The air suddenly breaks down and the charges rush across: lightning!', 'The cloud just bursts into rain instead'], 1,
+            'Normally air keeps the &oplus; and &ominus; charges apart. When the build-up passes a limit, the air <strong>breaks down</strong> and a sudden flow of charges makes a bright flash: <strong>lightning</strong>. The heated air expands with a bang: <strong>thunder</strong>.'),
+        rod: makePredict('predict-rod',
+            'A tall building has a pointed metal rod on top, joined by a copper strip to a plate deep in the ground. Lightning strikes. What happens?',
+            ['The rod pulls in extra lightning and the building burns', 'Lightning hits the rod and the charges flow safely into the ground', 'The rod stops lightning from forming at all'], 1,
+            'The pointed rod is the highest point, so the bolt hits it. The copper strip gives the charges an <strong>easy path</strong> down into the moist earth, so the building is not harmed.'),
+        safe: makePredict('predict-safe',
+            'You are caught outside in a thunderstorm. Which is the safest place to be?',
+            ['Under a big tree, to stay dry', 'Inside a car or bus', 'In the pond: water protects you'], 1,
+            'Trees are tall, so lightning strikes them. Water spreads the strike. Inside a car or bus you are <strong>comparatively safer</strong>.'),
+    };
+
+    // ================= Controls =================
+    function engineUI() {
+        $('en-play').textContent = engine.playing ? '⏸ Pause' : '▶ Play';
+        $('en-sun-val').textContent = engine.sun <= 3 ? 'Weak' : engine.sun <= 6 ? 'Medium' : engine.sun <= 8 ? 'Strong' : 'Fierce';
+        $('en-moist-val').textContent = engine.moist + '%';
+    }
+    $('en-sun').addEventListener('input', e => { engine.sun = +e.target.value; engineUI(); });
+    $('en-moist').addEventListener('input', e => { engine.moist = +e.target.value; engineUI(); });
+    $('en-play').addEventListener('click', () => engine.play());
+    $('en-skip').addEventListener('click', () => { engine.next(); engineUI(); });
+    $('en-reset').addEventListener('click', () => engine.reset());
+
+    function chargeUI() {
+        $('ch-str-val').textContent = charge.strength <= 3 ? 'Gentle' : charge.strength <= 6 ? 'Strong' : 'Violent';
+        $('ch-dist-val').textContent = charge.dist.toFixed(1) + ' km';
+        $('ch-cond').classList.toggle('on', charge.conductive);
+    }
+    $('ch-str').addEventListener('input', e => { charge.strength = +e.target.value; chargeUI(); });
+    $('ch-type').addEventListener('change', e => { charge.type = e.target.value; });
+    $('ch-dist').addEventListener('input', e => { charge.dist = +e.target.value; chargeUI(); });
+    $('ch-cond').addEventListener('click', () => { charge.conductive = !charge.conductive; chargeUI(); });
+    $('ch-reset').addEventListener('click', () => charge.reset());
+
+    const ROD_HINTS = {
+        none: 'Press Strike! to see what lightning does to a building with no protection.',
+        with: 'Press Strike! and follow the glowing charges down the copper strip.',
+        build: 'Drag the rod, the copper strip and the plate onto the building (drag again to move them), then press Strike!',
+        diagram: 'The three parts of a lightning conductor. Press Strike! to test it.',
+    };
+    document.querySelectorAll('#panel-rod [data-mode]').forEach(b => b.addEventListener('click', () => {
+        rod.setMode(b.dataset.mode);
+        document.querySelectorAll('#panel-rod [data-mode]').forEach(x => x.classList.toggle('on', x === b));
+        $('rd-hint').textContent = ROD_HINTS[rod.mode];
+    }));
+    $('rd-strike').addEventListener('click', () => rod.doStrike());
+    $('rd-reset').addEventListener('click', () => { if (rod.mode === 'build') rod.resetBuild(); else { rod.strike = null; rod.lastVerdict = null; } });
+    $('sf-reset').addEventListener('click', () => safe.reset());
+
+    // ================= Tabs + loop =================
+    const sims = { engine, charge, rod, safe };
+    let active = 'engine';
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => {
+        active = btn.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + active));
+        document.querySelectorAll('.info-display').forEach(i => i.classList.toggle('active', i.id === 'info-' + active));
+    }));
+    $('info-engine').classList.add('active');
+
+    canvas.addEventListener('pointerdown', e => { const s = sims[active]; if (s.down) { s.down(ptr(e)); try { canvas.setPointerCapture(e.pointerId); } catch (err) {} } });
+    canvas.addEventListener('pointermove', e => { const s = sims[active]; if (s.move) s.move(ptr(e)); });
+    canvas.addEventListener('pointerup', e => { const s = sims[active]; if (s.up) s.up(ptr(e)); });
+    canvas.addEventListener('pointercancel', () => { const s = sims[active]; if (s.up) s.up(null); });
+
+    buildChallenge('challenge-root', [
+        { q: 'What causes lightning?',
+          opts: ['Clouds bumping into mountains', 'Up and down winds rub ice and water so charges separate; when the build-up is very large, the air breaks down and the charges flow suddenly', 'The sun heating a cloud until it glows'], correct: 1,
+          explain: 'Charge separation in the cloud (⊕ ice on top, ⊖ droplets below) builds up until the insulating air breaks down: a sudden flow of charges.' },
+        { q: 'Would lightning occur if air and clouds were good conductors of electricity?',
+          opts: ['Yes, and there would be even more lightning', 'No: the charges would leak away all the time, so no big build-up and no sudden flash', 'Only at night'], correct: 1,
+          explain: 'Lightning needs a huge build-up that the air holds back until it breaks down. A conductor lets charges flow away gently, so they never build up.' },
+        { q: 'Which is the safest place to be in a thunderstorm?',
+          opts: ['Under a tall tree', 'Inside a car or bus', 'Swimming in a pond', 'Lying flat in an open field'], correct: 1,
+          explain: 'Inside a car or bus you are comparatively safer. Tall trees, water and lying flat are all dangerous.' },
+        { q: 'Why is the rod of a lightning conductor pointed, higher than the building, and buried deep in the ground?',
+          opts: ['So that birds cannot sit on it', 'Its pointed tip is the highest point, so lightning hits it first; the buried end gives the charges an easy path into the ground', 'To store the electricity from lightning for later use'], correct: 1,
+          explain: 'Highest point → it is hit instead of the building. Earthed deep in moist ground → the charges flow safely into the earth.' },
+    ], 'storms', 'badge-banner');
+
+    engine.init();
+    charge.init();
+    engineUI(); chargeUI();
+    let last = performance.now();
+    function frame(now) {
+        const dt = Math.min((now - last) / 1000, 0.033); last = now;
+        const sim = sims[active];
+        sim.update(dt);
+        ctx.setTransform(viewScale, 0, 0, viewScale, 0, 0);
+        sim.draw();
+        requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+    window.STORM = { engine, charge, rod, safe, SPOTS, predicts, makeBolt, flashToBang, sims, get active() { return active; } };
+    </script>
+</body>
+</html>

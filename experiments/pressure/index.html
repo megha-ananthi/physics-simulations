@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pressure, Winds &amp; Storms - Science Lab</title>
+    <meta name="description" content="Interactive simulations on pressure, liquid and air pressure, how winds form, sea and land breezes, thunderstorms, lightning conductors and cyclones.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F300;</text></svg>">
+    <style>
+        :root {
+            --c-area: #F4511E;
+            --c-liquid: #0288D1;
+            --c-air: #00897B;
+            --c-wind: #43A047;
+            --c-storms: #5E35B1;
+            --c-cyclone: #C2185B;
+            --color-bg: #F5F0FF;
+            --color-text: #2D2D2D;
+            --color-text-light: #666;
+            --header-start: #0277BD;
+            --header-end: #3F51B5;
+            --font-heading: 'Fredoka One', cursive;
+            --font-body: 'Nunito', sans-serif;
+            --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.12);
+            --shadow-card-hover: 0 16px 40px rgba(0, 0, 0, 0.18);
+            --bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+        body { font-family: var(--font-body); background: var(--color-bg); color: var(--color-text); line-height: 1.6; min-height: 100vh; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+        a { text-decoration: none; color: inherit; }
+
+        .lab-header {
+            position: relative; overflow: hidden; color: #fff; text-align: center; padding: 2.6rem 1.5rem 2.2rem;
+            background: linear-gradient(135deg, var(--header-start), var(--header-end));
+        }
+        #wind-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+        .lab-header > h1, .lab-header > .tagline { position: relative; }
+        .back-btn {
+            position: absolute; top: 1rem; left: 1rem; z-index: 2; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.3);
+            color: #fff; padding: 0.5rem 1.1rem; border-radius: 50px; font-weight: 700; font-size: 0.85rem; transition: background 0.3s;
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.3); }
+        .lab-header h1 { font-family: var(--font-heading); font-weight: 400; font-size: 2.4rem; letter-spacing: 1px; text-shadow: 2px 2px 6px rgba(0,0,0,0.25); margin-top: 0.4rem; }
+        .lab-header .tagline { font-size: 1.1rem; font-weight: 700; opacity: 0.95; margin-top: 0.3rem; }
+
+        main { max-width: 1120px; margin: 0 auto; padding: 0 1.4rem 3rem; }
+        section h2 { font-family: var(--font-heading); font-weight: 400; font-size: 1.65rem; color: #6B3FA0; text-align: center; margin-bottom: 0.4rem; }
+        .section-sub { text-align: center; color: var(--color-text-light); margin-bottom: 1rem; }
+
+        /* Probe and ponder */
+        .ponder { margin-top: 2.2rem; }
+        .ponder-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0.9rem; }
+        .ponder-card {
+            background: #fff; border-radius: 18px; padding: 1rem 1.1rem; box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+            border-left: 6px solid var(--c); display: flex; gap: 0.7rem; align-items: flex-start;
+            transition: transform 0.3s var(--bounce), box-shadow 0.3s;
+        }
+        .ponder-card:hover { transform: translateY(-4px) rotate(-0.5deg); box-shadow: var(--shadow-card); }
+        .ponder-card .q-emoji { font-size: 1.9rem; line-height: 1; }
+        .ponder-card .q { font-weight: 800; font-size: 0.95rem; }
+        .ponder-card .go { font-size: 0.78rem; font-weight: 800; color: var(--c); margin-top: 0.25rem; }
+
+        /* Journey */
+        .journey { margin-top: 2.6rem; }
+        .journey-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.3rem; margin-top: 1rem; counter-reset: step; }
+        .sim-card {
+            --c: var(--c-area);
+            background: #fff; border-radius: 20px; padding: 1.5rem 1.5rem 1.2rem; position: relative; display: flex; flex-direction: column;
+            box-shadow: var(--shadow-card); border-top: 6px solid var(--c); overflow: hidden;
+            transition: transform 0.35s var(--bounce), box-shadow 0.35s;
+            opacity: 0; transform: translateY(24px); animation: rise 0.6s ease forwards;
+        }
+        .sim-card:nth-child(2) { animation-delay: 0.08s; } .sim-card:nth-child(3) { animation-delay: 0.16s; }
+        .sim-card:nth-child(4) { animation-delay: 0.24s; } .sim-card:nth-child(5) { animation-delay: 0.32s; } .sim-card:nth-child(6) { animation-delay: 0.4s; }
+        .sim-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 10px 34px color-mix(in srgb, var(--c) 35%, transparent), var(--shadow-card-hover); }
+        .sim-card::before {
+            counter-increment: step; content: counter(step);
+            position: absolute; top: 0.9rem; right: 1rem; width: 2rem; height: 2rem; border-radius: 50%;
+            background: var(--c); color: #fff; font-family: var(--font-heading); display: grid; place-items: center; font-size: 1rem;
+        }
+        .sim-card .card-icon { font-size: 3rem; line-height: 1.1; }
+        .sim-card h3 { font-family: var(--font-heading); font-weight: 400; font-size: 1.22rem; margin: 0.5rem 0 0.35rem; }
+        .sim-card p { font-size: 0.9rem; color: var(--color-text-light); flex-grow: 1; }
+        .sim-card .tags { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.7rem; }
+        .sim-card .tag { font-size: 0.72rem; font-weight: 800; background: color-mix(in srgb, var(--c) 12%, #fff); color: var(--c); border-radius: 50px; padding: 0.12rem 0.6rem; }
+        .sim-card .card-cta { margin-top: 0.9rem; font-weight: 800; font-size: 0.9rem; color: var(--c); }
+        .sim-card .done-tag { display: none; margin-top: 0.6rem; align-self: flex-start; font-size: 0.8rem; font-weight: 800; color: #2E7D32; background: #E8F5E9; border-radius: 50px; padding: 0.2rem 0.75rem; }
+        .sim-card.done .done-tag { display: inline-block; }
+        .c-area { --c: var(--c-area); } .c-liquid { --c: var(--c-liquid); } .c-air { --c: var(--c-air); }
+        .c-wind { --c: var(--c-wind); } .c-storms { --c: var(--c-storms); } .c-cyclone { --c: var(--c-cyclone); }
+        .hero-card { grid-column: 1 / -1; }
+        @media (min-width: 760px) { .hero-card { flex-direction: row; gap: 1.4rem; align-items: center; } .hero-card .card-icon { font-size: 5rem; } }
+
+        .progress { text-align: center; margin-top: 1.4rem; font-weight: 800; color: #6B3FA0; }
+        .progress .dots { display: inline-flex; gap: 0.35rem; margin-left: 0.5rem; vertical-align: middle; }
+        .progress .dot { width: 14px; height: 14px; border-radius: 50%; background: #E0D7F2; }
+        .progress .dot.on { background: var(--c); }
+        .wizard {
+            display: none; margin: 1.6rem auto 0; text-align: center; border-radius: 20px; padding: 1.5rem;
+            background: linear-gradient(135deg, #B3E5FC, #E1BEE7); box-shadow: var(--shadow-card);
+        }
+        .wizard.show { display: block; animation: pop 0.5s var(--bounce); }
+        .wizard .big { font-size: 3rem; }
+        .wizard h3 { font-family: var(--font-heading); font-weight: 400; font-size: 1.5rem; color: #4A148C; }
+
+        .lab-footer { background: linear-gradient(135deg, var(--header-start), var(--header-end)); color: #fff; text-align: center; padding: 1.4rem 2rem; font-size: 0.9rem; }
+
+        @keyframes rise { to { opacity: 1; transform: translateY(0); } }
+        @keyframes pop { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
+        @media (max-width: 600px) {
+            .lab-header { padding: 3.4rem 1rem 1.7rem; }
+            .lab-header h1 { font-size: 1.7rem; }
+            main { padding: 0 0.9rem 2rem; }
+            .journey-grid { grid-template-columns: 1fr; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+            .sim-card { opacity: 1; transform: none; }
+        }
+    </style>
+</head>
+<body>
+    <header class="lab-header">
+        <canvas id="wind-canvas" aria-hidden="true"></canvas>
+        <a href="../../index.html" class="back-btn">&larr; Back to Lab</a>
+        <h1>&#x1F300; Pressure, Winds &amp; Storms</h1>
+        <p class="tagline">From a sharp nail to a spinning cyclone &mdash; it is all about pressure!</p>
+    </header>
+
+    <main>
+        <section class="ponder">
+            <h2>&#x1F914; Probe and ponder</h2>
+            <p class="section-sub">Tap a question to find the simulation that answers it.</p>
+            <div class="ponder-grid">
+                <a class="ponder-card c-area" style="--c: var(--c-area)" href="area-pressure.html"><span class="q-emoji">&#x1F392;</span><div><div class="q">Why does a bag with narrow straps hurt more?</div><div class="go">Pressure &amp; area &rarr;</div></div></a>
+                <a class="ponder-card c-liquid" style="--c: var(--c-liquid)" href="liquid-pressure.html"><span class="q-emoji">&#x1F6B0;</span><div><div class="q">Why are water tanks usually placed at a height?</div><div class="go">Liquid pressure &rarr;</div></div></a>
+                <a class="ponder-card c-air" style="--c: var(--c-air)" href="air-pressure.html"><span class="q-emoji">&#x1F4AA;</span><div><div class="q">Can air pressure really crush us?</div><div class="go">Air pressure &rarr;</div></div></a>
+                <a class="ponder-card c-wind" style="--c: var(--c-wind)" href="wind.html"><span class="q-emoji">&#x1F343;</span><div><div class="q">Why are winds stronger on some days than on others?</div><div class="go">How wind forms &rarr;</div></div></a>
+                <a class="ponder-card c-wind" style="--c: var(--c-wind)" href="wind.html"><span class="q-emoji">&#x1F3D6;&#xFE0F;</span><div><div class="q">Why does the breeze blow from the sea by day and from the land at night?</div><div class="go">Sea &amp; land breeze &rarr;</div></div></a>
+                <a class="ponder-card c-storms" style="--c: var(--c-storms)" href="storms-lightning.html"><span class="q-emoji">&#x26A1;</span><div><div class="q">Where does lightning come from, and how does a lightning conductor save a building?</div><div class="go">Storms &amp; lightning &rarr;</div></div></a>
+                <a class="ponder-card c-cyclone" style="--c: var(--c-cyclone)" href="cyclone.html"><span class="q-emoji">&#x1F30D;</span><div><div class="q">If the Earth stopped rotating, would cyclones still form?</div><div class="go">Cyclones &rarr;</div></div></a>
+            </div>
+        </section>
+
+        <section class="journey">
+            <h2>&#x1F680; The journey: from pressure to cyclones</h2>
+            <p class="section-sub">Each step builds on the one before. Finish all six challenges to become a Weather Wizard!</p>
+            <div class="journey-grid">
+                <a class="sim-card c-area" href="area-pressure.html" data-badge="area">
+                    <div class="card-icon">&#x1F9B6;</div>
+                    <h3>Pressure = Force &divide; Area</h3>
+                    <p>Sink into sand standing up, lying down or in high heels. Feel narrow bag straps dig in and see why nails are pointed.</p>
+                    <div class="tags"><span class="tag">Sand pit</span><span class="tag">Bag straps</span><span class="tag">Sharp vs blunt</span></div>
+                    <span class="done-tag">&#x2705; Badge earned</span>
+                    <div class="card-cta">Start &rarr;</div>
+                </a>
+                <a class="sim-card c-liquid" href="liquid-pressure.html" data-badge="liquid">
+                    <div class="card-icon">&#x1F4A7;</div>
+                    <h3>Liquids Exert Pressure</h3>
+                    <p>Fill pipes with balloons, poke holes in a bottle, and see why the ground floor gets the strongest tap and dams have broad bases.</p>
+                    <div class="tags"><span class="tag">Balloon pipes</span><span class="tag">Leaky bottle</span><span class="tag">Water tank</span><span class="tag">Dam</span></div>
+                    <span class="done-tag">&#x2705; Badge earned</span>
+                    <div class="card-cta">Start &rarr;</div>
+                </a>
+                <a class="sim-card c-air" href="air-pressure.html" data-badge="air">
+                    <div class="card-icon">&#x1F388;</div>
+                    <h3>Air Exerts Pressure</h3>
+                    <p>Meet the giant column of air above your head, blow up a balloon, stick a rubber sucker and watch air crush a can.</p>
+                    <div class="tags"><span class="tag">Air column</span><span class="tag">Balloon</span><span class="tag">Sucker</span><span class="tag">Crushing can</span></div>
+                    <span class="done-tag">&#x2705; Badge earned</span>
+                    <div class="card-cta">Start &rarr;</div>
+                </a>
+                <a class="sim-card c-wind" href="wind.html" data-badge="wind">
+                    <div class="card-icon">&#x1F343;</div>
+                    <h3>How Wind Forms</h3>
+                    <p>Air rushes from high to low pressure. Race two balloons, run a day at the beach to see the sea breeze and land breeze, and save a roof from a storm.</p>
+                    <div class="tags"><span class="tag">Balloon race</span><span class="tag">Sea &amp; land breeze</span><span class="tag">Fast air</span><span class="tag">Roofs</span></div>
+                    <span class="done-tag">&#x2705; Badge earned</span>
+                    <div class="card-cta">Start &rarr;</div>
+                </a>
+                <a class="sim-card c-storms" href="storms-lightning.html" data-badge="storms">
+                    <div class="card-icon">&#x26C8;&#xFE0F;</div>
+                    <h3>Clouds, Storms &amp; Lightning</h3>
+                    <p>Grow a thundercloud, charge it up until lightning strikes, time the thunder, build a lightning conductor and learn where you are safe.</p>
+                    <div class="tags"><span class="tag">Storm cycle</span><span class="tag">Lightning</span><span class="tag">Lightning conductor</span><span class="tag">Stay safe</span></div>
+                    <span class="done-tag">&#x2705; Badge earned</span>
+                    <div class="card-cta">Start &rarr;</div>
+                </a>
+                <a class="sim-card c-cyclone hero-card" href="cyclone.html" data-badge="cyclone">
+                    <div class="card-icon">&#x1F300;</div>
+                    <div>
+                        <h3>Cyclones</h3>
+                        <p>Warm the sea, switch on the Earth's spin and watch a cyclone wind itself up. Fly a drone into the calm eye, then steer the cyclone to landfall and see the storm surge.</p>
+                        <div class="tags"><span class="tag">Build a cyclone</span><span class="tag">Inside the eye</span><span class="tag">Landfall</span></div>
+                        <span class="done-tag">&#x2705; Badge earned</span>
+                        <div class="card-cta">Start &rarr;</div>
+                    </div>
+                </a>
+            </div>
+            <div class="progress" id="progress">Badges <span class="dots" id="dots"></span></div>
+            <div class="wizard" id="wizard">
+                <div class="big">&#x1F9D9;&#x26C8;&#xFE0F;</div>
+                <h3>WEATHER WIZARD!</h3>
+                <p>You finished all six challenges &mdash; from pressure to cyclones. Brilliant work, young scientist!</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="lab-footer">Made with &#x1F300; by Megha Ananthi B</footer>
+
+    <script>
+    'use strict';
+    // ---------- badges ----------
+    const PROGRESS_KEY = 'pressure-lab-progress';
+    const ORDER = ['area', 'liquid', 'air', 'wind', 'storms', 'cyclone'];
+    function getProgress() { try { return JSON.parse(localStorage.getItem(PROGRESS_KEY)) || {}; } catch (e) { return {}; } }
+    function refreshBadges() {
+        const p = getProgress();
+        document.querySelectorAll('.sim-card[data-badge]').forEach(c => c.classList.toggle('done', !!p[c.dataset.badge]));
+        document.getElementById('dots').innerHTML = ORDER.map(k => '<span class="dot c-' + k + (p[k] ? ' on' : '') + '" title="' + k + '"></span>').join('');
+        document.getElementById('wizard').classList.toggle('show', ORDER.every(k => p[k]));
+    }
+    refreshBadges();
+    window.addEventListener('pageshow', refreshBadges);
+
+    // ---------- header: wind streaks curling into a little cyclone ----------
+    const cv = document.getElementById('wind-canvas'), cx2 = cv.getContext('2d');
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let Wd = 0, Hd = 0;
+    function fit() { const r = cv.getBoundingClientRect(), d = Math.min(devicePixelRatio || 1, 2); Wd = r.width; Hd = r.height; cv.width = Wd * d; cv.height = Hd * d; cx2.setTransform(d, 0, 0, d, 0, 0); }
+    window.addEventListener('resize', fit); fit();
+    const P = Array.from({ length: 70 }, () => ({ x: Math.random() * 1400, y: Math.random() * 300, s: 0.5 + Math.random() * 1.5 }));
+    function tick() {
+        cx2.clearRect(0, 0, Wd, Hd);
+        const ex = Wd * 0.86, ey = Hd * 0.5;
+        P.forEach(p => {
+            const dx = p.x - ex, dy = p.y - ey, r = Math.hypot(dx, dy) + 1;
+            let vx = 1.6 * p.s, vy = 0;
+            if (r < 140) { vx = -dy / r * 3 * p.s - dx / r * 0.6; vy = dx / r * 3 * p.s - dy / r * 0.6; }
+            const ox = p.x, oy = p.y;
+            p.x += vx; p.y += vy;
+            if (p.x > Wd + 20 || r < 8) { p.x = -20 - Math.random() * 200; p.y = Math.random() * Hd; }
+            cx2.strokeStyle = 'rgba(255,255,255,' + (0.25 + 0.35 * (p.s / 2)) + ')'; cx2.lineWidth = 1.6;
+            cx2.beginPath(); cx2.moveTo(ox - vx * 6, oy - vy * 6); cx2.lineTo(p.x, p.y); cx2.stroke();
+        });
+        if (!reduce) requestAnimationFrame(tick);
+    }
+    tick();
+    </script>
+</body>
+</html>

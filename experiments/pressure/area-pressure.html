@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pressure and Area - Pressure, Winds &amp; Storms - Science Lab</title>
+    <meta name="description" content="Same weight, different area: watch feet sink in sand, bag straps press on shoulders and sharp knives cut — pressure is force per unit area.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F9B6;</text></svg>">
+    <style>
+        /* ===== Shared "Pressure, Winds & Storms" sim-page styles — light, projector-friendly (accent set per page) ===== */
+        :root {
+            --accent: #F4511E;
+            --accent-soft: rgba(244, 81, 30, 0.13);
+            --accent-border: rgba(244, 81, 30, 0.55);
+            --good: #4CAF50;
+            --bad: #E53935;
+            --ink: #2D2D2D;
+            --panel-bg: rgba(255, 255, 255, 0.92);
+            --panel-border: rgba(0, 0, 0, 0.08);
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Nunito', sans-serif; background: #F5F0FF; color: var(--ink); min-height: 100vh; -webkit-tap-highlight-color: transparent; }
+        a { color: inherit; text-decoration: none; }
+        .top-bar { display: flex; align-items: center; justify-content: space-between; padding: 0.9rem 1.2rem; gap: 0.6rem; flex-wrap: wrap; }
+        .back-btn {
+            background: #fff; border: 1px solid rgba(0,0,0,0.12); color: #444; padding: 0.5rem 1rem; border-radius: 50px;
+            font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem;
+            transition: background 0.3s; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .back-btn:hover { background: #F0EAFB; }
+        .exp-title { font-family: 'Fredoka One', cursive; font-size: 1.5rem; text-align: center; color: #6B3FA0; }
+        .big-idea { text-align: center; opacity: 0.85; max-width: 760px; margin: 0.2rem auto 0.8rem; padding: 0 1.2rem; font-size: 0.98rem; }
+        .big-idea strong { color: var(--accent); }
+        .tabs { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; padding: 0 1rem; margin-bottom: 0.9rem; }
+        .tab-btn {
+            background: #fff; border: 1px solid rgba(0,0,0,0.12); color: #444; padding: 0.5rem 1rem; border-radius: 50px;
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.85rem; cursor: pointer;
+            transition: background 0.25s, border-color 0.25s, transform 0.15s;
+        }
+        .tab-btn:hover { transform: translateY(-1px); }
+        .tab-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+        .stage-wrap { position: relative; max-width: 960px; margin: 0 auto; padding: 0 0.8rem; }
+        #sim-canvas { display: block; width: 100%; background: #FBFAFF; border-radius: 16px; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 4px 18px rgba(0,0,0,0.07); touch-action: none; }
+        .info-display {
+            position: absolute; top: 0.7rem; right: 1.4rem; background: var(--panel-bg);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--panel-border); border-radius: 14px; padding: 0.7rem 0.9rem; font-size: 0.8rem; min-width: 170px; display: none;
+        }
+        .info-display.active { display: block; }
+        .info-row { display: flex; justify-content: space-between; gap: 0.9rem; padding: 0.12rem 0; }
+        .info-label { opacity: 0.6; }
+        .info-val { font-weight: 800; color: var(--accent); }
+        .panels { max-width: 960px; margin: 0 auto; padding: 0 0.8rem 2rem; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+        .predict-bar { background: var(--accent-soft); border: 1px solid var(--accent-border); border-radius: 14px; padding: 0.85rem 1rem; margin: 0.9rem 0 0.6rem; }
+        .predict-q { font-weight: 800; font-size: 0.95rem; margin-bottom: 0.55rem; }
+        .predict-q .tag { background: var(--accent); color: #fff; border-radius: 50px; font-size: 0.7rem; padding: 0.1rem 0.6rem; margin-right: 0.45rem; text-transform: uppercase; letter-spacing: 0.5px; vertical-align: middle; }
+        .predict-opts { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .predict-opt {
+            background: #fff; border: 1px solid rgba(0,0,0,0.15); color: #333; border-radius: 50px; padding: 0.42rem 0.95rem;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.83rem; cursor: pointer; transition: background 0.2s, border-color 0.2s;
+        }
+        .predict-opt:hover { background: rgba(0,0,0,0.05); }
+        .predict-opt.chosen { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+        .predict-opt.right { border-color: var(--good); background: rgba(76,175,80,0.14); color: #2E7D32; }
+        .predict-opt.wrong { border-color: var(--bad); background: rgba(229,57,53,0.12); color: #C62828; }
+        .predict-reveal { margin-top: 0.55rem; font-size: 0.88rem; display: none; }
+        .predict-reveal.show { display: block; animation: popIn 0.3s ease; }
+        .control-panel {
+            background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 18px; padding: 1rem 1.3rem;
+            display: flex; align-items: center; gap: 1.3rem; flex-wrap: wrap; justify-content: center; margin-top: 0.7rem;
+        }
+        .control-group { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+        .control-label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
+        .control-value { font-family: 'Fredoka One', cursive; font-size: 1rem; color: var(--accent); }
+        input[type="range"] { -webkit-appearance: none; appearance: none; width: 130px; height: 8px; border-radius: 4px; background: rgba(0,0,0,0.12); outline: none; cursor: pointer; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; cursor: pointer; }
+        input[type="range"]::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; cursor: pointer; }
+        select, .num-in {
+            background: #fff; color: #333; border: 1px solid rgba(0,0,0,0.2); border-radius: 10px;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.85rem; padding: 0.4rem 0.6rem; cursor: pointer;
+        }
+        .num-in { width: 7rem; cursor: text; }
+        .action-btn {
+            background: var(--accent); color: #fff; border: none; border-radius: 50px; padding: 0.55rem 1.3rem;
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.9rem; cursor: pointer; transition: transform 0.15s, filter 0.2s;
+        }
+        .action-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        .action-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+        .ghost-btn {
+            background: #fff; color: #444; border: 1px solid rgba(0,0,0,0.15); border-radius: 50px; padding: 0.55rem 1.1rem;
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.85rem; cursor: pointer; transition: background 0.2s;
+        }
+        .ghost-btn:hover { background: #F3EFFA; }
+        .ghost-btn.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+        .hint { text-align: center; font-size: 0.8rem; opacity: 0.55; margin-top: 0.5rem; }
+        .section-card { background: #fff; border: 1px solid rgba(0,0,0,0.06); border-radius: 18px; padding: 1.3rem 1.4rem; margin-top: 1.6rem; box-shadow: 0 4px 15px rgba(0,0,0,0.06); }
+        .section-card h2 { font-family: 'Fredoka One', cursive; font-size: 1.25rem; color: var(--accent); margin-bottom: 0.6rem; }
+        .section-card p, .section-card li { font-size: 0.93rem; opacity: 0.9; line-height: 1.65; }
+        .section-card ul { padding-left: 1.3rem; margin: 0.4rem 0; }
+        .callout-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.7rem; }
+        .callout-chip { background: #F6F2FE; border: 1px solid rgba(0,0,0,0.08); border-radius: 50px; padding: 0.35rem 0.85rem; font-size: 0.8rem; font-weight: 700; }
+        .quiz-q { margin-top: 1rem; }
+        .quiz-q .q-text { font-weight: 800; font-size: 0.95rem; margin-bottom: 0.5rem; }
+        .quiz-opts { display: flex; flex-direction: column; gap: 0.45rem; }
+        .quiz-opt {
+            text-align: left; background: #FBFAFF; border: 1px solid rgba(0,0,0,0.14); color: #333; border-radius: 12px; padding: 0.55rem 0.9rem;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: background 0.2s, border-color 0.2s;
+        }
+        .quiz-opt:hover { background: #F1ECFA; }
+        .quiz-opt.right { border-color: var(--good); background: rgba(76,175,80,0.14); }
+        .quiz-opt.wrong { border-color: var(--bad); background: rgba(229,57,53,0.12); }
+        .quiz-explain { display: none; font-size: 0.85rem; margin-top: 0.4rem; color: #2E7D32; }
+        .quiz-explain.show { display: block; animation: popIn 0.3s ease; }
+        .badge-banner { display: none; text-align: center; margin-top: 1.2rem; background: linear-gradient(135deg, #FFF8E1, #FFECB3); border: 1px solid #F0C24B; border-radius: 16px; padding: 1rem; }
+        .badge-banner.show { display: block; animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .badge-banner .big { font-family: 'Fredoka One', cursive; font-size: 1.3rem; color: #B8860B; }
+        .page-footer { text-align: center; padding: 1.2rem; font-size: 0.8rem; opacity: 0.5; }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.92); } 100% { opacity: 1; transform: scale(1); } }
+        /* page-specific */
+        .calc-row { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: flex-end; }
+        .calc-out { font-family: 'Fredoka One', cursive; font-size: 1.35rem; color: var(--accent); margin-top: 0.7rem; }
+        .calc-work { font-size: 0.92rem; margin-top: 0.3rem; font-family: 'Times New Roman', Georgia, serif; }
+        .preset-row { display: flex; gap: 0.45rem; flex-wrap: wrap; margin-top: 0.7rem; }
+        @media (max-width: 600px) {
+            .exp-title { font-size: 1.15rem; }
+            .top-bar { padding: 0.7rem 0.8rem; }
+            .info-display { position: static; display: none; margin: 0.6rem 0 0; width: 100%; }
+            .info-display.active { display: flex; flex-wrap: wrap; gap: 0.1rem 1.2rem; }
+            .info-display .info-row { flex: 1 1 40%; }
+            .control-panel { padding: 0.8rem; gap: 0.9rem; }
+            input[type="range"] { width: 105px; }
+        }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="index.html" class="back-btn">&larr; Pressure &amp; Weather</a>
+        <div class="exp-title">&#x1F9B6; Pressure = Force &divide; Area</div>
+        <a href="../../index.html" class="back-btn">&#x1F3E0; Lab</a>
+    </div>
+    <p class="big-idea">The same push can feel gentle or sharp. It depends on the <strong>area</strong> it is spread over.
+        <strong>Pressure = Force &divide; Area</strong>: a small area makes a big pressure, and a big area makes a small one.</p>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="sand">&#x1F3D6;&#xFE0F; Sand Pit</button>
+        <button class="tab-btn" data-tab="straps">&#x1F392; Bag Straps</button>
+        <button class="tab-btn" data-tab="sharp">&#x1F528; Sharp vs Blunt</button>
+    </div>
+
+    <div class="stage-wrap">
+        <canvas id="sim-canvas"></canvas>
+        <div class="info-display" id="info-sand">
+            <div class="info-row"><span class="info-label">Weight (force)</span><span class="info-val" id="sand-f">-</span></div>
+            <div class="info-row"><span class="info-label">Contact area</span><span class="info-val" id="sand-a">-</span></div>
+            <div class="info-row"><span class="info-label">Pressure</span><span class="info-val" id="sand-p">-</span></div>
+            <div class="info-row"><span class="info-label">Sinks</span><span class="info-val" id="sand-d">-</span></div>
+        </div>
+        <div class="info-display" id="info-straps">
+            <div class="info-row"><span class="info-label">Bag weight</span><span class="info-val" id="st-f">-</span></div>
+            <div class="info-row"><span class="info-label">Strap area</span><span class="info-val" id="st-a">-</span></div>
+            <div class="info-row"><span class="info-label">Pressure</span><span class="info-val" id="st-p">-</span></div>
+            <div class="info-row"><span class="info-label">Feels</span><span class="info-val" id="st-feel">-</span></div>
+        </div>
+        <div class="info-display" id="info-sharp">
+            <div class="info-row"><span class="info-label">Your push</span><span class="info-val" id="sh-f">-</span></div>
+            <div class="info-row"><span class="info-label">Tip area</span><span class="info-val" id="sh-a">-</span></div>
+            <div class="info-row"><span class="info-label">Pressure</span><span class="info-val" id="sh-p">-</span></div>
+            <div class="info-row"><span class="info-label">Result</span><span class="info-val" id="sh-r">-</span></div>
+        </div>
+    </div>
+
+    <div class="panels">
+        <div class="tab-panel active" id="panel-sand">
+            <div class="predict-bar" id="predict-sand"></div>
+            <div class="control-panel">
+                <div class="control-group">
+                    <span class="control-label">Who stands in the sand?</span>
+                    <select id="sand-scene">
+                        <option value="standing">&#x1F9CD; Boy standing (500 N)</option>
+                        <option value="lying">&#x1F6CC; Same boy lying down (500 N)</option>
+                        <option value="heels">&#x1F460; Girl in high heels (500 N)</option>
+                        <option value="flats">&#x1F45F; Same girl in flat shoes (500 N)</option>
+                        <option value="elephant">&#x1F418; Elephant (20000 N)</option>
+                        <option value="camel">&#x1F42A; Camel with wide feet (5000 N)</option>
+                        <option value="custom">&#x1F9EA; My own experiment</option>
+                    </select>
+                </div>
+                <div class="control-group" id="g-cf">
+                    <span class="control-label">Force</span><span class="control-value" id="cf-val">500 N</span>
+                    <input type="range" id="cf" min="50" max="20000" step="50" value="500">
+                </div>
+                <div class="control-group" id="g-ca">
+                    <span class="control-label">Contact area</span><span class="control-value" id="ca-val">0.050 m&sup2;</span>
+                    <input type="range" id="ca" min="0" max="100" step="1" value="50">
+                </div>
+                <button class="ghost-btn" id="sand-arrows">&#x2B07;&#xFE0F; Show force on each square</button>
+            </div>
+            <p class="hint">Watch the footprints: the same 500 N pushes deep into the sand when the area is small, and barely dents it when the area is large.</p>
+        </div>
+
+        <div class="tab-panel" id="panel-straps">
+            <div class="predict-bar" id="predict-straps"></div>
+            <div class="control-panel">
+                <div class="control-group">
+                    <span class="control-label">Carrying</span>
+                    <select id="st-thing">
+                        <option value="bag">&#x1F392; School bag (60 N)</option>
+                        <option value="bucket">&#x1FAA3; Bucket of water (100 N)</option>
+                        <option value="head">&#x1F9FA; Basket on the head (150 N)</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <span class="control-label" id="st-wlab">Strap width</span><span class="control-value" id="st-w-val">1 cm</span>
+                    <input type="range" id="st-w" min="0.5" max="8" step="0.5" value="1">
+                </div>
+                <button class="ghost-btn" id="st-pawan">&#x1F466; Pawan (narrow)</button>
+                <button class="ghost-btn" id="st-megha">&#x1F467; Megha (broad)</button>
+            </div>
+            <p class="hint">The red glow on the shoulder shows how hard each square centimetre is pressed.</p>
+        </div>
+
+        <div class="tab-panel" id="panel-sharp">
+            <div class="predict-bar" id="predict-sharp"></div>
+            <div class="control-panel">
+                <div class="control-group">
+                    <span class="control-label">Tool</span>
+                    <select id="sh-tool">
+                        <option value="nail">&#x1F529; Nail into wood</option>
+                        <option value="knife">&#x1F52A; Knife into an apple</option>
+                        <option value="pin">&#x1F4CC; Drawing pin into a board</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Which end?</span>
+                    <select id="sh-end">
+                        <option value="sharp">Sharp / pointed end</option>
+                        <option value="blunt">Blunt / flat end</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Push</span><span class="control-value" id="sh-push-val">40 N</span>
+                    <input type="range" id="sh-push" min="10" max="100" step="5" value="40">
+                </div>
+                <button class="action-btn" id="sh-go">&#x1F4A5; Push!</button>
+                <button class="ghost-btn" id="sh-reset">&#x1F504; Reset</button>
+            </div>
+            <p class="hint">Same push, two ends. Only a big enough pressure breaks into the material.</p>
+        </div>
+
+        <div class="section-card">
+            <h2>&#x1F9EE; Pressure calculator</h2>
+            <p>Pressure = Force &divide; Area. Force is in newton (N), area in square metres (m&sup2;), and pressure in N/m&sup2;, also called <strong>pascal (Pa)</strong>.</p>
+            <div class="calc-row" style="margin-top:0.7rem">
+                <div class="control-group" style="align-items:flex-start"><span class="control-label">Force (N)</span><input class="num-in" id="calc-f" type="number" min="0" step="any" value="100"></div>
+                <div class="control-group" style="align-items:flex-start"><span class="control-label">Area (m&sup2;)</span><input class="num-in" id="calc-a" type="number" min="0" step="any" value="2"></div>
+            </div>
+            <div class="calc-out" id="calc-out"></div>
+            <div class="calc-work" id="calc-work"></div>
+            <div class="preset-row">
+                <button class="ghost-btn" data-f="100" data-a="2">Book example: 100 N on 2 m&sup2;</button>
+                <button class="ghost-btn" data-f="20000" data-a="1">Elephant: 20000 N on 4 &times; 0.25 m&sup2;</button>
+                <button class="ghost-btn" data-f="3500" data-a="7">Boat A: 5 &times; 700 N on 7 m&sup2;</button>
+                <button class="ghost-btn" data-f="2100" data-a="3.5">Boat B: 3 &times; 700 N on 3.5 m&sup2;</button>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2>&#x1F4A1; What did we discover?</h2>
+            <ul>
+                <li><strong>Pressure is the force acting on each unit of area.</strong> Pressure = Force &divide; Area, measured in N/m&sup2; = pascal (Pa).</li>
+                <li><strong>Same force, smaller area &rArr; bigger pressure.</strong> That is why a nail is pointed, a knife is sharp and high heels sink into sand.</li>
+                <li><strong>Same force, bigger area &rArr; smaller pressure.</strong> That is why bags have broad straps, buckets have broad handles, and people place a round cloth under a load on their head.</li>
+                <li>Lying down on soft sand spreads your weight over a large area, so you sink less than when you stand.</li>
+            </ul>
+            <div class="callout-chips">
+                <span class="callout-chip">&#x1F392; Broad bag straps</span>
+                <span class="callout-chip">&#x1FAA3; Broad bucket handle</span>
+                <span class="callout-chip">&#x1F9FA; Cloth ring under a head load</span>
+                <span class="callout-chip">&#x1F529; Pointed nails</span>
+                <span class="callout-chip">&#x1F52A; Sharp knives</span>
+                <span class="callout-chip">&#x1F69C; Wide tractor tyres on soft soil</span>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2>&#x1F3C6; Pressure Challenge</h2>
+            <p>Answer all three correctly to earn the <strong>Pressure badge</strong>!</p>
+            <div id="challenge-root"></div>
+            <div class="badge-banner" id="badge-banner">
+                <div class="big">&#x1F396;&#xFE0F; Pressure Badge earned!</div>
+                <p>Head back to <a href="index.html" style="text-decoration: underline;">Pressure &amp; Weather</a> to see your progress.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="page-footer">Pressure, Winds &amp; Storms &bull; Made by Megha Ananthi B &bull; Simplified model for learning &mdash; values are illustrative</footer>
+
+    <script>
+    'use strict';
+
+    // ================= Shared helpers (same in every page of this module) =================
+    const PROGRESS_KEY = 'pressure-lab-progress';
+    function setBadge(name) {
+        let p = {};
+        try { p = JSON.parse(localStorage.getItem(PROGRESS_KEY)) || {}; } catch (e) {}
+        p[name] = true;
+        try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); } catch (e) {}
+    }
+    const canvas = document.getElementById('sim-canvas');
+    const ctx = canvas.getContext('2d');
+    const W = 900, H = 560;
+    let viewScale = 1;
+    function fitCanvas() {
+        const cssW = canvas.getBoundingClientRect().width || canvas.parentElement.clientWidth;
+        canvas.style.height = Math.round(cssW * H / W) + 'px';
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(cssW * dpr);
+        canvas.height = Math.round(cssW * H / W * dpr);
+        viewScale = canvas.width / W;
+    }
+    window.addEventListener('resize', fitCanvas);
+    fitCanvas();
+    function ptr(e) {
+        const r = canvas.getBoundingClientRect();
+        return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height };
+    }
+    function drawArrow(x1, y1, x2, y2, color, width, label, labelSide) {
+        const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
+        if (len < 2) return;
+        const ang = Math.atan2(dy, dx), head = Math.min(14, 6 + width * 1.4);
+        ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = width; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2 - Math.cos(ang) * head * 0.7, y2 - Math.sin(ang) * head * 0.7); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - Math.cos(ang - 0.45) * head, y2 - Math.sin(ang - 0.45) * head);
+        ctx.lineTo(x2 - Math.cos(ang + 0.45) * head, y2 - Math.sin(ang + 0.45) * head);
+        ctx.closePath(); ctx.fill();
+        if (label) {
+            ctx.font = '800 15px Nunito, sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText(label, (x1 + x2) / 2, (y1 + y2) / 2 + (labelSide === 'below' ? 24 : -12));
+        }
+    }
+    function emoji(txt, x, y, size) {
+        ctx.font = size + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(txt, x, y); ctx.textBaseline = 'alphabetic';
+    }
+    function text(str, x, y, o) {
+        o = o || {};
+        ctx.font = (o.weight || 800) + ' ' + (o.size || 14) + 'px ' + (o.font || 'Nunito, sans-serif');
+        ctx.fillStyle = o.color || '#2D2D2D'; ctx.textAlign = o.align || 'center'; ctx.textBaseline = o.base || 'alphabetic';
+        ctx.fillText(str, x, y); ctx.textBaseline = 'alphabetic';
+    }
+    function roundRect(x, y, w, h, r) {
+        ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+    }
+    /* Round needle gauge. frac 0..1 maps to the dial; zones coloured green → amber → red. */
+    function gauge(cx, cy, r, frac, label, valueText) {
+        frac = Math.max(0, Math.min(1, frac));
+        const a0 = Math.PI * 0.8, a1 = Math.PI * 2.2;
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy, r + 8, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 2; ctx.stroke();
+        [['#66BB6A', 0, 0.45], ['#FFB300', 0.45, 0.75], ['#E53935', 0.75, 1]].forEach(([c, f0, f1]) => {
+            ctx.strokeStyle = c; ctx.lineWidth = 9; ctx.beginPath(); ctx.arc(cx, cy, r - 4, a0 + (a1 - a0) * f0, a0 + (a1 - a0) * f1); ctx.stroke();
+        });
+        const a = a0 + (a1 - a0) * frac;
+        ctx.strokeStyle = '#263238'; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * (r - 10), cy + Math.sin(a) * (r - 10)); ctx.stroke();
+        ctx.fillStyle = '#263238'; ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI * 2); ctx.fill();
+        text(label, cx, cy + r * 0.5, { size: 11, color: '#607D8B' });
+        if (valueText) text(valueText, cx, cy + r + 26, { size: 15, color: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#F4511E' });
+    }
+    function setText(id, txt) { const el = document.getElementById(id); if (el && el.textContent !== txt) el.textContent = txt; }
+    function makePredict(rootId, question, options, correctIdx, revealText) {
+        const root = document.getElementById(rootId);
+        root.innerHTML = '<div class="predict-q"><span class="tag">Predict first!</span>' + question + '</div><div class="predict-opts"></div><div class="predict-reveal"></div>';
+        const optsEl = root.querySelector('.predict-opts'), revealEl = root.querySelector('.predict-reveal');
+        const state = { chosen: null, revealed: false, reveal() {
+            if (state.revealed) return;
+            state.revealed = true;
+            btns[correctIdx].classList.add('right');
+            let verdict = '🔍 ';
+            if (state.chosen === correctIdx) verdict = '🎉 Your prediction was right! ';
+            else if (state.chosen !== null) { btns[state.chosen].classList.add('wrong'); verdict = '🤯 Surprised? '; }
+            revealEl.innerHTML = verdict + revealText; revealEl.classList.add('show');
+        } };
+        const btns = options.map((o, i) => {
+            const b = document.createElement('button'); b.className = 'predict-opt'; b.textContent = o;
+            b.addEventListener('click', () => { if (state.revealed) return; state.chosen = i; btns.forEach(x => x.classList.remove('chosen')); b.classList.add('chosen'); });
+            optsEl.appendChild(b); return b;
+        });
+        return state;
+    }
+    function buildChallenge(rootId, questions, badgeName, bannerId) {
+        const root = document.getElementById(rootId), solved = new Set();
+        questions.forEach((q, qi) => {
+            const qEl = document.createElement('div'); qEl.className = 'quiz-q';
+            qEl.innerHTML = '<div class="q-text">' + (qi + 1) + '. ' + q.q + '</div>';
+            const opts = document.createElement('div'); opts.className = 'quiz-opts';
+            const explain = document.createElement('div'); explain.className = 'quiz-explain';
+            q.opts.forEach((o, oi) => {
+                const b = document.createElement('button'); b.className = 'quiz-opt'; b.textContent = o;
+                b.addEventListener('click', () => {
+                    if (solved.has(qi)) return;
+                    if (oi === q.correct) {
+                        b.classList.add('right'); explain.textContent = '✅ ' + q.explain; explain.classList.add('show'); solved.add(qi);
+                        if (solved.size === questions.length) { setBadge(badgeName); document.getElementById(bannerId).classList.add('show'); }
+                    } else { b.classList.add('wrong'); setTimeout(() => b.classList.remove('wrong'), 900); }
+                });
+                opts.appendChild(b);
+            });
+            qEl.appendChild(opts); qEl.appendChild(explain); root.appendChild(qEl);
+        });
+    }
+    function drawBackdrop(color) {
+        ctx.fillStyle = color || '#FBFAFF'; ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = 'rgba(0,0,0,0.035)';
+        for (let x = 0; x < W; x += 45) ctx.fillRect(x, 0, 1, H);
+        for (let y = 0; y < H; y += 45) ctx.fillRect(0, y, W, 1);
+    }
+    const $ = (id) => document.getElementById(id);
+    const fmtP = (p) => p >= 1e6 ? (p / 1e6).toFixed(p >= 1e7 ? 0 : 1) + ' million Pa' : p >= 10000 ? Math.round(p).toLocaleString('en-IN') + ' Pa' : (Math.round(p * 10) / 10).toLocaleString('en-IN') + ' Pa';
+    const fmtA = (a) => a >= 0.1 ? a.toFixed(2) + ' m²' : a >= 0.001 ? a.toFixed(3) + ' m²' : a >= 1e-5 ? (a * 1e4).toFixed(2) + ' cm²' : (a * 1e6).toFixed(2) + ' mm²';
+    /* pressure → 0..1 on a log scale from 1 kPa to 100 MPa (for gauges and sinking) */
+    const pFrac = (p) => Math.max(0, Math.min(1, (Math.log10(Math.max(p, 1)) - 3) / 5));
+
+    // =====================================================
+    // TAB 1 — Sand pit
+    // =====================================================
+    const SCENES = {
+        standing: { name: 'Boy standing', F: 500, A: 0.04, who: '🧍', shape: 'two-feet', note: 'Two small shoe soles carry all 500 N.' },
+        lying:    { name: 'Boy lying down', F: 500, A: 0.5, who: '🛌', shape: 'body', note: 'The same 500 N spread over his whole back.' },
+        heels:    { name: 'High heels', F: 500, A: 0.004, who: '👠', shape: 'heels', note: 'Tiny heel tips: huge pressure!' },
+        flats:    { name: 'Flat shoes', F: 500, A: 0.04, who: '👟', shape: 'two-feet', note: 'Flat soles spread the weight.' },
+        elephant: { name: 'Elephant', F: 20000, A: 1.0, who: '🐘', shape: 'four-feet', note: '4 feet × 0.25 m² = 1 m² for 20000 N.' },
+        camel:    { name: 'Camel', F: 5000, A: 0.32, who: '🐪', shape: 'four-feet', note: 'Wide padded feet stop camels sinking in desert sand.' },
+        custom:   { name: 'My own experiment', F: 500, A: 0.05, who: '📦', shape: 'block', note: 'Change the force and the area and watch the sand.' },
+    };
+    const areaFromSlider = (v) => Math.pow(10, -4 + 4 * v / 100);   // 0.0001 m² … 1 m², log
+    const sliderFromArea = (a) => Math.round((Math.log10(a) + 4) / 4 * 100);
+    const sand = {
+        key: 'standing', F: 500, A: 0.04, depth: 0, target: 0, arrows: false, seen: new Set(),
+        set(key) {
+            this.key = key;
+            const s = SCENES[key];
+            if (key !== 'custom') { this.F = s.F; this.A = s.A; }
+            $('g-cf').style.opacity = key === 'custom' ? 1 : 0.45;
+            $('g-ca').style.opacity = key === 'custom' ? 1 : 0.45;
+            $('cf').disabled = $('ca').disabled = key !== 'custom';
+            $('cf').value = this.F; $('ca').value = sliderFromArea(this.A);
+            $('cf-val').textContent = this.F.toLocaleString('en-IN') + ' N';
+            $('ca-val').textContent = fmtA(this.A);
+            this.seen.add(key);
+            if (this.seen.has('standing') && this.seen.has('lying')) predicts.sand.reveal();
+        },
+        pressure() { return this.F / this.A; },
+        update(dt) {
+            this.target = 6 + 124 * Math.max(0, Math.min(1, Math.log10(this.pressure() / 500) / 3));   // sand: 500 Pa → barely, 500 kPa → deep
+            this.depth += (this.target - this.depth) * Math.min(1, dt * 4);
+        },
+        footprint(cx, top, d) {
+            // returns array of rects (x, w) for the contact patches, in px; height of print = d
+            const s = SCENES[this.key];
+            const shape = s.shape;
+            if (shape === 'body') return [[cx - 170, 340]];
+            if (shape === 'heels') return [[cx - 66, 8], [cx + 30, 8], [cx - 40, 30], [cx + 56, 30]];
+            if (shape === 'two-feet') return [[cx - 70, 56], [cx + 14, 56]];
+            if (shape === 'four-feet') return [[cx - 170, 54], [cx - 90, 54], [cx + 40, 54], [cx + 120, 54]];
+            const w = Math.max(6, Math.min(340, 340 * Math.sqrt(this.A)));
+            return [[cx - w / 2, w]];
+        },
+        draw() {
+            const sky = ctx.createLinearGradient(0, 0, 0, 300);
+            sky.addColorStop(0, '#CDE9FF'); sky.addColorStop(1, '#F4FAFF');
+            ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+            emoji('☀️', 560, 70, 46);
+            const groundY = 330, cx = 380, d = this.depth;
+            const prints = this.footprint(cx, groundY, d);
+            // sand body
+            ctx.fillStyle = '#F2D59B'; ctx.fillRect(0, groundY, W, H - groundY);
+            ctx.fillStyle = 'rgba(160,120,60,0.18)';
+            for (let i = 0; i < 160; i++) { const x = (i * 97) % W, y = groundY + 12 + ((i * 53) % (H - groundY - 16)); ctx.fillRect(x, y, 3, 2); }
+            // dents (draw as darker hollows cut into the sand surface)
+            prints.forEach(([x, w]) => {
+                const g = ctx.createLinearGradient(0, groundY, 0, groundY + d);
+                g.addColorStop(0, '#C9A160'); g.addColorStop(1, '#B58A45');
+                ctx.fillStyle = g;
+                ctx.beginPath(); ctx.moveTo(x - 6, groundY); ctx.lineTo(x, groundY + d); ctx.lineTo(x + w, groundY + d); ctx.lineTo(x + w + 6, groundY); ctx.closePath(); ctx.fill();
+            });
+            ctx.strokeStyle = '#B58A45'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, groundY); ctx.lineTo(W, groundY); ctx.stroke();
+            // the load / person sitting in the dent
+            const s = SCENES[this.key];
+            const baseY = groundY + d;
+            if (s.shape === 'body') {
+                ctx.fillStyle = '#4FC3F7'; roundRect(cx - 170, baseY - 46, 340, 46, 22); ctx.fill();
+                ctx.fillStyle = '#FFCC80'; ctx.beginPath(); ctx.arc(cx + 196, baseY - 26, 26, 0, Math.PI * 2); ctx.fill();
+                text('😊', cx + 196, baseY - 18, { size: 26, weight: 400 });
+            } else if (s.shape === 'block') {
+                const [x, w] = prints[0];
+                const h = 150;
+                ctx.fillStyle = '#A1887F'; ctx.fillRect(x, baseY - h, w, h);
+                ctx.strokeStyle = '#6D4C41'; ctx.strokeRect(x, baseY - h, w, h);
+                text(this.F.toLocaleString('en-IN') + ' N', x + w / 2, baseY - h - 10, { size: 14 });
+            } else if (s.shape === 'four-feet') {
+                // simple animal: legs standing in each dent, body on top, emoji face at the front
+                const el = this.key === 'elephant';
+                const legC = el ? '#90A4AE' : '#D7B377', bodyC = el ? '#B0BEC5' : '#E6C48A';
+                prints.forEach(([x, w]) => { ctx.fillStyle = legC; roundRect(x + 4, baseY - 120, w - 8, 120, 10); ctx.fill(); });
+                ctx.fillStyle = bodyC; ctx.beginPath(); ctx.ellipse(cx - 8, baseY - 150, 200, 78, 0, 0, Math.PI * 2); ctx.fill();
+                if (!el) { ctx.beginPath(); ctx.ellipse(cx - 30, baseY - 228, 50, 38, 0, 0, Math.PI * 2); ctx.fill(); }
+                emoji(s.who, cx + 200, baseY - 210, 110);
+            } else {
+                // simple person: two legs ending in shoes inside the dents
+                const heels = s.shape === 'heels';
+                const feet = heels ? [[prints[2][0], 36, prints[0]], [prints[3][0], 36, prints[1]]] : prints.map(r => [r[0], r[1], null]);
+                const hipY = baseY - 108, hipL = cx - 20, hipR = cx + 20;
+                feet.forEach(([x, w, heel], i) => {
+                    const fx = x + w / 2;
+                    ctx.strokeStyle = '#5C6BC0'; ctx.lineWidth = 20; ctx.lineCap = 'round';
+                    ctx.beginPath(); ctx.moveTo(i ? hipR : hipL, hipY); ctx.lineTo(fx, baseY - (heels ? 34 : 14)); ctx.stroke();
+                    ctx.fillStyle = heels ? '#E91E63' : '#5D4037';
+                    if (heels) {
+                        ctx.beginPath(); ctx.moveTo(x, baseY - 36); ctx.lineTo(x + w, baseY - 36); ctx.lineTo(x + w + 4, baseY - 22); ctx.lineTo(x, baseY - 22); ctx.closePath(); ctx.fill();
+                        ctx.fillRect(heel[0], baseY - 24, heel[1], 24);           // the thin heel spike
+                        ctx.fillRect(x + w - 8, baseY - 22, 12, 22);             // the toe
+                    } else { roundRect(x, baseY - 16, w, 16, 6); ctx.fill(); }
+                });
+                ctx.fillStyle = heels ? '#EC407A' : '#4FC3F7'; roundRect(cx - 40, hipY - 92, 80, 102, 22); ctx.fill();
+                ctx.strokeStyle = '#FFCC80'; ctx.lineWidth = 16;
+                ctx.beginPath(); ctx.moveTo(cx - 36, hipY - 76); ctx.lineTo(cx - 58, hipY - 20); ctx.moveTo(cx + 36, hipY - 76); ctx.lineTo(cx + 58, hipY - 20); ctx.stroke();
+                ctx.fillStyle = '#FFCC80'; ctx.beginPath(); ctx.arc(cx, hipY - 122, 30, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#4E342E'; ctx.beginPath(); ctx.arc(cx, hipY - 128, 31, Math.PI, Math.PI * 2); ctx.fill();
+                emoji(this.pressure() > 50000 ? '😬' : '🙂', cx, hipY - 116, 30);
+            }
+            // force-per-square arrows (pressure visual)
+            if (this.arrows) {
+                const p = this.pressure(), len = 18 + 70 * pFrac(p);
+                prints.forEach(([x, w]) => {
+                    const n = Math.max(1, Math.round(w / 22));
+                    for (let i = 0; i < n; i++) {
+                        const ax = x + (i + 0.5) * w / n;
+                        drawArrow(ax, baseY + 6, ax, baseY + 6 + len, '#E53935', 3, null);
+                    }
+                });
+                text('Each red arrow = the push on one patch of sand. Longer arrows = more pressure.', W / 2, H - 14, { size: 13, color: '#C62828' });
+            }
+            // depth ruler
+            ctx.strokeStyle = '#6D4C41'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 4]);
+            ctx.beginPath(); ctx.moveTo(cx - 230, groundY); ctx.lineTo(cx - 230, baseY); ctx.stroke(); ctx.setLineDash([]);
+            text('sinks ' + (d / 10).toFixed(1) + ' cm', cx - 236, groundY + Math.max(18, d / 2 + 5), { size: 13, align: 'right', color: '#5D4037' });
+            // gauge
+            const p = this.pressure();
+            gauge(110, 165, 64, pFrac(p), 'PRESSURE', fmtP(p));
+            text(s.name, 110, 72, { size: 16, color: '#6B3FA0' });
+            text(s.note, W / 2, 56, { size: 15, color: '#37474F' });
+            text('Pressure = ' + this.F.toLocaleString('en-IN') + ' N ÷ ' + fmtA(this.A) + ' = ' + fmtP(p), W / 2, 28, { size: 17, color: '#F4511E' });
+            setText('sand-f', this.F.toLocaleString('en-IN') + ' N');
+            setText('sand-a', fmtA(this.A));
+            setText('sand-p', fmtP(p));
+            setText('sand-d', (d / 10).toFixed(1) + ' cm');
+        },
+    };
+
+    // =====================================================
+    // TAB 2 — Bag straps
+    // =====================================================
+    const CARRY = {
+        bag:    { name: 'School bag', F: 60, len: 0.10, lab: 'Strap width' },
+        bucket: { name: 'Bucket of water', F: 100, len: 0.09, lab: 'Handle width' },
+        head:   { name: 'Basket on the head', F: 150, len: 0.10, lab: 'Cloth ring width' },
+    };
+    const straps = {
+        thing: 'bag', w: 1, tried: new Set(),
+        area() { const c = CARRY[this.thing]; return (this.w / 100) * c.len * (this.thing === 'bag' ? 2 : 1); },
+        pressure() { return CARRY[this.thing].F / this.area(); },
+        update() {},
+        draw() {
+            drawBackdrop();
+            const c = CARRY[this.thing], p = this.pressure(), f = pFrac(p);
+            const comfy = p < 4000 ? 2 : p < 15000 ? 1 : 0;
+            const face = ['😣', '😐', '😊'][comfy];
+            const heat = 'rgba(229,57,53,' + (0.15 + 0.75 * Math.min(1, (p - 1500) / 40000)).toFixed(2) + ')';
+            const cx = 330, top = 120, sw = 4 + this.w * 7;
+            // body
+            ctx.fillStyle = '#FFCC80'; ctx.beginPath(); ctx.arc(cx, top, 46, 0, Math.PI * 2); ctx.fill();
+            text(face, cx, top + 16, { size: 50, weight: 400 });
+            ctx.fillStyle = '#7986CB'; roundRect(cx - 80, top + 52, 160, 190, 30); ctx.fill();
+            ctx.fillStyle = '#5C6BC0'; ctx.fillRect(cx - 60, top + 242, 50, 130); ctx.fillRect(cx + 10, top + 242, 50, 130);
+            if (this.thing === 'bag') {
+                // backpack behind + straps over both shoulders
+                ctx.fillStyle = '#FF8A65'; roundRect(cx + 70, top + 70, 110, 150, 22); ctx.fill();
+                text('60 N', cx + 125, top + 150, { size: 18, color: '#fff' });
+                [cx - 52, cx + 30].forEach(sx => {
+                    ctx.fillStyle = '#5D4037'; ctx.fillRect(sx - sw / 2 + 11, top + 50, sw, 120);
+                    ctx.fillStyle = heat; ctx.beginPath(); ctx.ellipse(sx + 11, top + 56, sw * 0.9 + 6, 14, 0, 0, Math.PI * 2); ctx.fill();
+                });
+            } else if (this.thing === 'bucket') {
+                // arm down holding a bucket by its handle
+                ctx.fillStyle = '#FFCC80'; ctx.fillRect(cx + 80, top + 70, 26, 150);
+                ctx.fillStyle = heat; ctx.beginPath(); ctx.ellipse(cx + 93, top + 232, 24, sw * 0.5 + 6, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.strokeStyle = '#455A64'; ctx.lineWidth = sw; ctx.beginPath(); ctx.arc(cx + 93, top + 290, 50, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke();
+                ctx.fillStyle = '#90A4AE'; ctx.beginPath(); ctx.moveTo(cx + 40, top + 280); ctx.lineTo(cx + 146, top + 280); ctx.lineTo(cx + 132, top + 380); ctx.lineTo(cx + 54, top + 380); ctx.closePath(); ctx.fill();
+                ctx.fillStyle = '#4FC3F7'; ctx.fillRect(cx + 46, top + 292, 94, 18);
+                text('100 N', cx + 93, top + 345, { size: 16, color: '#fff' });
+            } else {
+                // basket on head with a cloth ring
+                ctx.fillStyle = heat; ctx.beginPath(); ctx.ellipse(cx, top - 44, 18 + sw * 1.4, 10, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#E57373'; ctx.beginPath(); ctx.ellipse(cx, top - 52, 10 + sw * 1.4, 8, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#A1887F'; ctx.beginPath(); ctx.moveTo(cx - 90, top - 130); ctx.lineTo(cx + 90, top - 130); ctx.lineTo(cx + 60, top - 58); ctx.lineTo(cx - 60, top - 58); ctx.closePath(); ctx.fill();
+                text('🥭🍌🥥', cx, top - 102, { size: 28, weight: 400 });
+                text('150 N', cx, top - 140, { size: 15 });
+            }
+            // pressure "heat" scale + gauge
+            gauge(700, 270, 72, f, 'PRESSURE', fmtP(p));
+            text(c.name, 700, 170, { size: 16, color: '#6B3FA0' });
+            const msg = ['Ouch! A narrow strip digs in — large pressure.', 'Bearable, but you would feel it after a while.', 'Comfortable — the weight is spread over a big area.'][comfy];
+            text(msg, W / 2, 520, { size: 16, color: comfy ? '#2E7D32' : '#C62828' });
+            text('Same weight every time — only the area changes.', W / 2, 546, { size: 13, color: '#607D8B' });
+            setText('st-f', c.F + ' N');
+            setText('st-a', (this.area() * 1e4).toFixed(0) + ' cm²');
+            setText('st-p', fmtP(p));
+            setText('st-feel', ['OUCH', 'OK', 'COMFY'][comfy]);
+        },
+    };
+
+    // =====================================================
+    // TAB 3 — Sharp vs blunt
+    // =====================================================
+    const TOOLS = {
+        nail:  { name: 'Iron nail', into: 'wood', sharpA: 0.5e-6, bluntA: 50e-6, strength: 2.5e6, color: '#8D6E63' },
+        knife: { name: 'Knife', into: 'apple', sharpA: 2e-6, bluntA: 60e-6, strength: 0.9e6, color: '#E53935' },
+        pin:   { name: 'Drawing pin', into: 'board', sharpA: 0.3e-6, bluntA: 80e-6, strength: 1.6e6, color: '#B0BEC5' },
+    };
+    const sharp = {
+        tool: 'nail', end: 'sharp', push: 40, t: 0, running: false, depth: 0, result: '', tried: new Set(),
+        area() { const t = TOOLS[this.tool]; return this.end === 'sharp' ? t.sharpA : t.bluntA; },
+        pressure() { return this.push / this.area(); },
+        reset() { this.t = 0; this.running = false; this.depth = 0; this.result = ''; },
+        go() {
+            this.reset(); this.running = true;
+            this.tried.add(this.end);
+            if (this.tried.has('sharp') && this.tried.has('blunt')) setTimeout(() => predicts.sharp.reveal(), 900);
+        },
+        update(dt) {
+            if (!this.running) return;
+            this.t += dt;
+            const t = TOOLS[this.tool], p = this.pressure(), goes = p > t.strength;
+            const maxD = goes ? Math.min(150, 40 + 110 * (p / t.strength - 1) / 4) : 4;
+            this.depth = Math.min(maxD, this.depth + dt * 260);
+            if (this.t > 0.7) {
+                this.running = false;
+                this.result = goes ? (this.tool === 'knife' ? 'Cuts in easily!' : 'Goes in easily!') : 'Hardly a dent — not enough pressure.';
+            }
+        },
+        draw() {
+            drawBackdrop();
+            const t = TOOLS[this.tool], p = this.pressure();
+            const surfY = 330, cx = 360;
+            // material
+            if (t.into === 'apple') {
+                ctx.fillStyle = '#E53935'; ctx.beginPath(); ctx.arc(cx, surfY + 110, 120, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#FFF59D'; ctx.beginPath(); ctx.arc(cx, surfY + 110, 104, Math.PI * 1.05, Math.PI * 1.95); ctx.fill();
+                ctx.fillStyle = '#6D4C41'; ctx.fillRect(cx - 4, surfY - 22, 8, 22);
+                ctx.fillStyle = '#66BB6A'; ctx.beginPath(); ctx.ellipse(cx + 24, surfY - 14, 22, 9, -0.4, 0, Math.PI * 2); ctx.fill();
+            } else {
+                ctx.fillStyle = t.into === 'wood' ? '#BC8A5F' : '#D7CCC8'; ctx.fillRect(cx - 230, surfY, 460, 200);
+                ctx.strokeStyle = 'rgba(0,0,0,0.12)'; ctx.lineWidth = 2;
+                for (let i = 0; i < 6; i++) { ctx.beginPath(); ctx.moveTo(cx - 230, surfY + 30 + i * 30); ctx.bezierCurveTo(cx - 80, surfY + 20 + i * 30, cx + 80, surfY + 40 + i * 30, cx + 230, surfY + 28 + i * 30); ctx.stroke(); }
+                text(t.into === 'wood' ? 'Wooden block' : 'Soft board', cx, surfY + 190, { size: 13, color: '#4E342E' });
+            }
+            // tool
+            const tipY = surfY + this.depth - (this.running ? 0 : 0);
+            const lift = this.running || this.depth > 0 ? 0 : 60;
+            const y0 = tipY - lift;
+            if (this.tool === 'knife') {
+                const edgeW = this.end === 'sharp' ? 2 : 14;
+                ctx.fillStyle = '#CFD8DC'; ctx.beginPath(); ctx.moveTo(cx - 120, y0 - 70); ctx.lineTo(cx + 60, y0 - 70); ctx.lineTo(cx + 60, y0); ctx.lineTo(cx - 120, y0 - (this.end === 'sharp' ? 0 : 0)); ctx.closePath(); ctx.fill();
+                ctx.fillStyle = '#90A4AE'; ctx.fillRect(cx - 120, y0 - edgeW, 180, edgeW);
+                ctx.fillStyle = '#5D4037'; roundRect(cx + 60, y0 - 70, 120, 34, 8); ctx.fill();
+                text(this.end === 'sharp' ? 'sharp edge down' : 'blunt back down', cx - 30, y0 - 84, { size: 13 });
+            } else {
+                const len = this.tool === 'nail' ? 180 : 40;
+                const headW = this.tool === 'nail' ? 40 : 70;
+                const shaftX = cx;
+                if (this.end === 'sharp') {
+                    ctx.fillStyle = t.color; ctx.fillRect(shaftX - 5, y0 - len, 10, len - 16);
+                    ctx.beginPath(); ctx.moveTo(shaftX - 5, y0 - 16); ctx.lineTo(shaftX + 5, y0 - 16); ctx.lineTo(shaftX, y0); ctx.closePath(); ctx.fill();
+                    ctx.fillStyle = this.tool === 'pin' ? '#E53935' : '#6D4C41'; roundRect(shaftX - headW / 2, y0 - len - 10, headW, 12, 4); ctx.fill();
+                } else {
+                    ctx.fillStyle = this.tool === 'pin' ? '#E53935' : '#6D4C41'; roundRect(shaftX - headW / 2, y0 - 12, headW, 12, 4); ctx.fill();
+                    ctx.fillStyle = t.color; ctx.fillRect(shaftX - 5, y0 - len - 12, 10, len - 16);
+                    ctx.beginPath(); ctx.moveTo(shaftX - 5, y0 - len - 28 + 16); ctx.lineTo(shaftX + 5, y0 - len - 28 + 16); ctx.lineTo(shaftX, y0 - len - 28); ctx.closePath(); ctx.fill();
+                }
+                emoji('✊', shaftX, y0 - len - 52, 46);
+            }
+            drawArrow(cx + 150, 60, cx + 150, 60 + 40 + this.push * 1.3, '#43A047', 6, null);
+            text('push ' + this.push + ' N', cx + 162, 80, { size: 14, align: 'left', color: '#2E7D32' });
+            // tip zoom inset
+            ctx.fillStyle = '#fff'; roundRect(640, 318, 230, 200, 14); ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,0.12)'; ctx.stroke();
+            text('🔍 Zoom on the tip', 755, 342, { size: 13, color: '#607D8B' });
+            const zw = Math.max(4, Math.min(170, Math.sqrt(this.area() / 1e-6) * 22));
+            ctx.fillStyle = '#90A4AE'; ctx.fillRect(755 - zw / 2, 366, zw, 80);
+            const n = Math.max(1, Math.round(zw / 18));
+            const al = 16 + 60 * pFrac(p);
+            for (let i = 0; i < n; i++) { const ax = 755 - zw / 2 + (i + 0.5) * zw / n; drawArrow(ax, 448, ax, 448 + al * 0.6, '#E53935', 2.5, null); }
+            text('contact area ' + fmtA(this.area()), 755, 508, { size: 12, color: '#455A64' });
+            gauge(755, 205, 60, pFrac(p), 'PRESSURE', fmtP(p));
+            const strongEnough = p > t.strength;
+            text('Needs about ' + fmtP(t.strength) + ' to break into the ' + t.into, 755, 304, { size: 12, color: '#607D8B' });
+            if (this.result) text(this.result, cx, 50, { size: 20, color: strongEnough ? '#2E7D32' : '#C62828', font: "'Fredoka One', cursive", weight: 400 });
+            setText('sh-f', this.push + ' N');
+            setText('sh-a', fmtA(this.area()));
+            setText('sh-p', fmtP(p));
+            setText('sh-r', this.result ? (strongEnough ? 'GOES IN' : 'NO DENT') : '-');
+        },
+    };
+
+    // ================= Predictions =================
+    const predicts = {
+        sand: makePredict('predict-sand',
+            'The boy weighs the same whether he stands or lies down. Where does he sink deeper into soft sand?',
+            ['Standing', 'Lying down', 'The same — his weight has not changed'], 0,
+            'Standing puts all 500 N on two small soles, so the <strong>pressure</strong> is about 12 times bigger than when lying down. Same force, smaller area, bigger pressure.'),
+        straps: makePredict('predict-straps',
+            'Megha and Pawan carry identical 60 N bags. Pawan\'s straps are narrow. Whose shoulders hurt more?',
+            ['Megha\'s (broad straps)', 'Pawan\'s (narrow straps)', 'Neither — the bags weigh the same'], 1,
+            'Narrow straps put the same weight on a smaller area of the shoulder, so the pressure is larger and it hurts. Broad straps spread the force out.'),
+        sharp: makePredict('predict-sharp',
+            'You push a nail with the same force: once with its point, once with its flat head. Which goes into the wood?',
+            ['The pointed end', 'The flat head', 'Both go in equally'], 0,
+            'The point touches only a tiny area, so the same push makes an enormous pressure that breaks into the wood. That is why nails are pointed and knives are sharp.'),
+    };
+
+    // ================= Controls =================
+    $('sand-scene').addEventListener('change', e => sand.set(e.target.value));
+    $('cf').addEventListener('input', e => { sand.F = +e.target.value; $('cf-val').textContent = sand.F.toLocaleString('en-IN') + ' N'; });
+    $('ca').addEventListener('input', e => { sand.A = areaFromSlider(+e.target.value); $('ca-val').textContent = fmtA(sand.A); });
+    $('sand-arrows').addEventListener('click', e => { sand.arrows = !sand.arrows; e.currentTarget.classList.toggle('on', sand.arrows); });
+    function strapsUI() {
+        $('st-w-val').textContent = straps.w + ' cm';
+        $('st-w').value = straps.w;
+        $('st-wlab').textContent = CARRY[straps.thing].lab;
+        straps.tried.add(straps.w <= 1.5 ? 'narrow' : straps.w >= 5 ? 'broad' : 'mid');
+        if (straps.tried.has('narrow') && straps.tried.has('broad')) predicts.straps.reveal();
+    }
+    $('st-thing').addEventListener('change', e => { straps.thing = e.target.value; strapsUI(); });
+    $('st-w').addEventListener('input', e => { straps.w = +e.target.value; strapsUI(); });
+    $('st-pawan').addEventListener('click', () => { straps.thing = 'bag'; $('st-thing').value = 'bag'; straps.w = 1; strapsUI(); });
+    $('st-megha').addEventListener('click', () => { straps.thing = 'bag'; $('st-thing').value = 'bag'; straps.w = 6; strapsUI(); });
+    $('sh-tool').addEventListener('change', e => { sharp.tool = e.target.value; sharp.reset(); });
+    $('sh-end').addEventListener('change', e => { sharp.end = e.target.value; sharp.reset(); });
+    $('sh-push').addEventListener('input', e => { sharp.push = +e.target.value; $('sh-push-val').textContent = sharp.push + ' N'; sharp.reset(); });
+    $('sh-go').addEventListener('click', () => sharp.go());
+    $('sh-reset').addEventListener('click', () => sharp.reset());
+
+    function calc() {
+        const f = parseFloat($('calc-f').value), a = parseFloat($('calc-a').value);
+        if (!(f >= 0) || !(a > 0)) { $('calc-out').textContent = 'Enter a force and an area bigger than zero.'; $('calc-work').textContent = ''; return; }
+        const p = f / a;
+        $('calc-out').textContent = 'Pressure = ' + (Math.round(p * 1000) / 1000).toLocaleString('en-IN') + ' N/m² (Pa)';
+        $('calc-work').textContent = 'Pressure = Force ÷ Area = ' + f + ' N ÷ ' + a + ' m² = ' + (Math.round(p * 1000) / 1000) + ' N/m²';
+    }
+    $('calc-f').addEventListener('input', calc);
+    $('calc-a').addEventListener('input', calc);
+    document.querySelectorAll('.preset-row .ghost-btn').forEach(b => b.addEventListener('click', () => { $('calc-f').value = b.dataset.f; $('calc-a').value = b.dataset.a; calc(); }));
+    calc();
+
+    // ================= Tabs + loop =================
+    const sims = { sand, straps, sharp };
+    let active = 'sand';
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => {
+        active = btn.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + active));
+        document.querySelectorAll('.info-display').forEach(i => i.classList.toggle('active', i.id === 'info-' + active));
+    }));
+    $('info-sand').classList.add('active');
+
+    buildChallenge('challenge-root', [
+        { q: 'An elephant weighs 20000 N and each of its 4 feet covers 0.25 m². What pressure does it exert on the ground?',
+          opts: ['5000 Pa', '20000 Pa', '80000 Pa'], correct: 1,
+          explain: 'Total area = 4 × 0.25 = 1 m². Pressure = 20000 N ÷ 1 m² = 20000 Pa.' },
+        { q: 'Why is it easier to cut an apple with the sharp edge of a knife?',
+          opts: ['The sharp edge is heavier', 'The sharp edge has a smaller area, so the pressure is larger', 'The sharp edge is made of stronger metal'], correct: 1,
+          explain: 'Same push on a much smaller area gives a much bigger pressure.' },
+        { q: 'Boat A: 5 people of 700 N on a 7 m² base. Boat B: 3 people of 700 N on a 3.5 m² base. Which base feels more pressure?',
+          opts: ['Boat A (500 Pa)', 'Boat B (600 Pa)', 'Both the same'], correct: 1,
+          explain: 'A: 3500 ÷ 7 = 500 Pa. B: 2100 ÷ 3.5 = 600 Pa. Boat B, by 100 Pa.' },
+    ], 'area', 'badge-banner');
+
+    sand.set('standing');
+    strapsUI();
+    let last = performance.now();
+    function frame(now) {
+        const dt = Math.min((now - last) / 1000, 0.033); last = now;
+        const sim = sims[active];
+        sim.update(dt);
+        ctx.setTransform(viewScale, 0, 0, viewScale, 0, 0);
+        sim.draw();
+        requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+    window.PLAB = { sand, straps, sharp, SCENES };
+    </script>
+</body>
+</html>

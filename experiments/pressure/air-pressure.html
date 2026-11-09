@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Exerts Pressure - Pressure, Winds &amp; Storms - Science Lab</title>
+    <meta name="description" content="Air particles everywhere: feel the weight of the air column above you, blow up and release a balloon, stick a rubber sucker on glass and brick, and crush a can with air pressure.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F388;</text></svg>">
+    <style>
+        /* ===== Shared "Pressure, Winds & Storms" sim-page styles — light, projector-friendly (accent set per page) ===== */
+        :root {
+            --accent: #00897B;
+            --accent-soft: rgba(0, 137, 123, 0.13);
+            --accent-border: rgba(0, 137, 123, 0.55);
+            --good: #4CAF50;
+            --bad: #E53935;
+            --ink: #2D2D2D;
+            --panel-bg: rgba(255, 255, 255, 0.92);
+            --panel-border: rgba(0, 0, 0, 0.08);
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Nunito', sans-serif; background: #F5F0FF; color: var(--ink); min-height: 100vh; -webkit-tap-highlight-color: transparent; }
+        a { color: inherit; text-decoration: none; }
+        .top-bar { display: flex; align-items: center; justify-content: space-between; padding: 0.9rem 1.2rem; gap: 0.6rem; flex-wrap: wrap; }
+        .back-btn {
+            background: #fff; border: 1px solid rgba(0,0,0,0.12); color: #444; padding: 0.5rem 1rem; border-radius: 50px;
+            font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem;
+            transition: background 0.3s; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .back-btn:hover { background: #F0EAFB; }
+        .exp-title { font-family: 'Fredoka One', cursive; font-size: 1.5rem; text-align: center; color: #6B3FA0; }
+        .big-idea { text-align: center; opacity: 0.85; max-width: 760px; margin: 0.2rem auto 0.8rem; padding: 0 1.2rem; font-size: 0.98rem; }
+        .big-idea strong { color: var(--accent); }
+        .tabs { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; padding: 0 1rem; margin-bottom: 0.9rem; }
+        .tab-btn {
+            background: #fff; border: 1px solid rgba(0,0,0,0.12); color: #444; padding: 0.5rem 1rem; border-radius: 50px;
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.85rem; cursor: pointer;
+            transition: background 0.25s, border-color 0.25s, transform 0.15s;
+        }
+        .tab-btn:hover { transform: translateY(-1px); }
+        .tab-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+        .stage-wrap { position: relative; max-width: 960px; margin: 0 auto; padding: 0 0.8rem; }
+        #sim-canvas { display: block; width: 100%; background: #FBFAFF; border-radius: 16px; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 4px 18px rgba(0,0,0,0.07); touch-action: none; }
+        .info-display {
+            position: absolute; top: 0.7rem; right: 1.4rem; background: var(--panel-bg);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--panel-border); border-radius: 14px; padding: 0.7rem 0.9rem; font-size: 0.8rem; min-width: 170px; display: none;
+        }
+        .info-display.active { display: block; }
+        .info-row { display: flex; justify-content: space-between; gap: 0.9rem; padding: 0.12rem 0; }
+        .info-label { opacity: 0.6; }
+        .info-val { font-weight: 800; color: var(--accent); }
+        .panels { max-width: 960px; margin: 0 auto; padding: 0 0.8rem 2rem; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+        .predict-bar { background: var(--accent-soft); border: 1px solid var(--accent-border); border-radius: 14px; padding: 0.85rem 1rem; margin: 0.9rem 0 0.6rem; }
+        .predict-q { font-weight: 800; font-size: 0.95rem; margin-bottom: 0.55rem; }
+        .predict-q .tag { background: var(--accent); color: #fff; border-radius: 50px; font-size: 0.7rem; padding: 0.1rem 0.6rem; margin-right: 0.45rem; text-transform: uppercase; letter-spacing: 0.5px; vertical-align: middle; }
+        .predict-opts { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .predict-opt {
+            background: #fff; border: 1px solid rgba(0,0,0,0.15); color: #333; border-radius: 50px; padding: 0.42rem 0.95rem;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.83rem; cursor: pointer; transition: background 0.2s, border-color 0.2s;
+        }
+        .predict-opt:hover { background: rgba(0,0,0,0.05); }
+        .predict-opt.chosen { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+        .predict-opt.right { border-color: var(--good); background: rgba(76,175,80,0.14); color: #2E7D32; }
+        .predict-opt.wrong { border-color: var(--bad); background: rgba(229,57,53,0.12); color: #C62828; }
+        .predict-reveal { margin-top: 0.55rem; font-size: 0.88rem; display: none; }
+        .predict-reveal.show { display: block; animation: popIn 0.3s ease; }
+        .control-panel {
+            background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 18px; padding: 1rem 1.3rem;
+            display: flex; align-items: center; gap: 1.3rem; flex-wrap: wrap; justify-content: center; margin-top: 0.7rem;
+        }
+        .control-group { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+        .control-label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
+        .control-value { font-family: 'Fredoka One', cursive; font-size: 1rem; color: var(--accent); }
+        input[type="range"] { -webkit-appearance: none; appearance: none; width: 130px; height: 8px; border-radius: 4px; background: rgba(0,0,0,0.12); outline: none; cursor: pointer; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; cursor: pointer; }
+        input[type="range"]::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; cursor: pointer; }
+        select, .num-in {
+            background: #fff; color: #333; border: 1px solid rgba(0,0,0,0.2); border-radius: 10px;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.85rem; padding: 0.4rem 0.6rem; cursor: pointer;
+        }
+        .num-in { width: 7rem; cursor: text; }
+        .action-btn {
+            background: var(--accent); color: #fff; border: none; border-radius: 50px; padding: 0.55rem 1.3rem;
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.9rem; cursor: pointer; transition: transform 0.15s, filter 0.2s;
+        }
+        .action-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        .action-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+        .ghost-btn {
+            background: #fff; color: #444; border: 1px solid rgba(0,0,0,0.15); border-radius: 50px; padding: 0.55rem 1.1rem;
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.85rem; cursor: pointer; transition: background 0.2s;
+        }
+        .ghost-btn:hover { background: #F3EFFA; }
+        .ghost-btn.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+        .hint { text-align: center; font-size: 0.8rem; opacity: 0.55; margin-top: 0.5rem; }
+        .section-card { background: #fff; border: 1px solid rgba(0,0,0,0.06); border-radius: 18px; padding: 1.3rem 1.4rem; margin-top: 1.6rem; box-shadow: 0 4px 15px rgba(0,0,0,0.06); }
+        .section-card h2 { font-family: 'Fredoka One', cursive; font-size: 1.25rem; color: var(--accent); margin-bottom: 0.6rem; }
+        .section-card p, .section-card li { font-size: 0.93rem; opacity: 0.9; line-height: 1.65; }
+        .section-card ul { padding-left: 1.3rem; margin: 0.4rem 0; }
+        .callout-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.7rem; }
+        .callout-chip { background: #F6F2FE; border: 1px solid rgba(0,0,0,0.08); border-radius: 50px; padding: 0.35rem 0.85rem; font-size: 0.8rem; font-weight: 700; }
+        .quiz-q { margin-top: 1rem; }
+        .quiz-q .q-text { font-weight: 800; font-size: 0.95rem; margin-bottom: 0.5rem; }
+        .quiz-opts { display: flex; flex-direction: column; gap: 0.45rem; }
+        .quiz-opt {
+            text-align: left; background: #FBFAFF; border: 1px solid rgba(0,0,0,0.14); color: #333; border-radius: 12px; padding: 0.55rem 0.9rem;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: background 0.2s, border-color 0.2s;
+        }
+        .quiz-opt:hover { background: #F1ECFA; }
+        .quiz-opt.right { border-color: var(--good); background: rgba(76,175,80,0.14); }
+        .quiz-opt.wrong { border-color: var(--bad); background: rgba(229,57,53,0.12); }
+        .quiz-explain { display: none; font-size: 0.85rem; margin-top: 0.4rem; color: #2E7D32; }
+        .quiz-explain.show { display: block; animation: popIn 0.3s ease; }
+        .badge-banner { display: none; text-align: center; margin-top: 1.2rem; background: linear-gradient(135deg, #FFF8E1, #FFECB3); border: 1px solid #F0C24B; border-radius: 16px; padding: 1rem; }
+        .badge-banner.show { display: block; animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .badge-banner .big { font-family: 'Fredoka One', cursive; font-size: 1.3rem; color: #B8860B; }
+        .page-footer { text-align: center; padding: 1.2rem; font-size: 0.8rem; opacity: 0.5; }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.92); } 100% { opacity: 1; transform: scale(1); } }
+        /* page-specific */
+        .calc-row { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: flex-end; }
+        .calc-out { font-family: 'Fredoka One', cursive; font-size: 1.35rem; color: var(--accent); margin-top: 0.7rem; }
+        .calc-work { font-size: 0.92rem; margin-top: 0.3rem; font-family: 'Times New Roman', Georgia, serif; }
+        .preset-row { display: flex; gap: 0.45rem; flex-wrap: wrap; margin-top: 0.7rem; }
+        @media (max-width: 600px) {
+            .exp-title { font-size: 1.15rem; }
+            .top-bar { padding: 0.7rem 0.8rem; }
+            .info-display { position: static; display: none; margin: 0.6rem 0 0; width: 100%; }
+            .info-display.active { display: flex; flex-wrap: wrap; gap: 0.1rem 1.2rem; }
+            .info-display .info-row { flex: 1 1 40%; }
+            .control-panel { padding: 0.8rem; gap: 0.9rem; }
+            input[type="range"] { width: 105px; }
+        }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="index.html" class="back-btn">&larr; Pressure &amp; Weather</a>
+        <div class="exp-title">&#x1F32C;&#xFE0F; Air Exerts Pressure</div>
+        <a href="../../index.html" class="back-btn">&#x1F3E0; Lab</a>
+    </div>
+    <p class="big-idea">Air is made of tiny particles that zoom about and keep hitting every surface. Those hits are <strong>air pressure</strong>.
+        More particles in a space means more hits &mdash; <strong>higher pressure</strong>. And air always rushes from high pressure to low pressure.</p>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="column">&#x1F30D; Air Column Above You</button>
+        <button class="tab-btn" data-tab="balloon">&#x1F388; Balloon</button>
+        <button class="tab-btn" data-tab="sucker">&#x1FAA0; Rubber Sucker</button>
+        <button class="tab-btn" data-tab="can">&#x1F96B; Crushing Can</button>
+    </div>
+
+    <div class="stage-wrap">
+        <canvas id="sim-canvas"></canvas>
+        <div class="info-display" id="info-column">
+            <div class="info-row"><span class="info-label">Air counted up to</span><span class="info-val" id="co-h">-</span></div>
+            <div class="info-row"><span class="info-label">Force on 15 &times; 15 cm</span><span class="info-val" id="co-f">-</span></div>
+            <div class="info-row"><span class="info-label">Like a load of</span><span class="info-val" id="co-m">-</span></div>
+            <div class="info-row"><span class="info-label">Air pressure here</span><span class="info-val" id="co-p">-</span></div>
+        </div>
+        <div class="info-display" id="info-balloon">
+            <div class="info-row"><span class="info-label">Air particles inside</span><span class="info-val" id="ba-n">-</span></div>
+            <div class="info-row"><span class="info-label">Balloon width</span><span class="info-val" id="ba-d">-</span></div>
+            <div class="info-row"><span class="info-label">Inside vs outside</span><span class="info-val" id="ba-p">-</span></div>
+            <div class="info-row"><span class="info-label">Status</span><span class="info-val" id="ba-s">-</span></div>
+        </div>
+        <div class="info-display" id="info-sucker">
+            <div class="info-row"><span class="info-label">Surface</span><span class="info-val" id="su-s">-</span></div>
+            <div class="info-row"><span class="info-label">Air inside cup</span><span class="info-val" id="su-in">-</span></div>
+            <div class="info-row"><span class="info-label">Air holds it with</span><span class="info-val" id="su-h">-</span></div>
+            <div class="info-row"><span class="info-label">Your pull</span><span class="info-val" id="su-p">-</span></div>
+        </div>
+        <div class="info-display" id="info-can">
+            <div class="info-row"><span class="info-label">Air particles inside</span><span class="info-val" id="ca-a">-</span></div>
+            <div class="info-row"><span class="info-label">Steam inside</span><span class="info-val" id="ca-s">-</span></div>
+            <div class="info-row"><span class="info-label">Inside pressure</span><span class="info-val" id="ca-p">-</span></div>
+            <div class="info-row"><span class="info-label">Can</span><span class="info-val" id="ca-c">-</span></div>
+        </div>
+    </div>
+
+    <div class="panels">
+        <div class="tab-panel active" id="panel-column">
+            <div class="predict-bar" id="predict-column"></div>
+            <div class="control-panel">
+                <div class="control-group">
+                    <span class="control-label">Count the air up to</span><span class="control-value" id="ch-val">0 km</span>
+                    <input type="range" id="ch" min="0" max="100" step="1" value="0">
+                </div>
+                <button class="ghost-btn" id="co-all">&#x1F680; All the way to space</button>
+                <button class="action-btn" id="co-why">&#x1F914; Why aren't we crushed?</button>
+            </div>
+            <p class="hint">Slide up: every kilometre of air above the square adds more weight. Notice how the particles thin out as you go higher.</p>
+        </div>
+
+        <div class="tab-panel" id="panel-balloon">
+            <div class="predict-bar" id="predict-balloon"></div>
+            <div class="control-panel">
+                <button class="action-btn" id="ba-blow">&#x1F4A8; Blow air in</button>
+                <button class="ghost-btn" id="ba-go">&#x1F590;&#xFE0F; Let go!</button>
+                <button class="ghost-btn" id="ba-reset">&#x1F504; New balloon</button>
+            </div>
+            <p class="hint">Each blow pushes more particles inside. Watch where they hit the rubber &mdash; then let go of the open mouth.</p>
+        </div>
+
+        <div class="tab-panel" id="panel-sucker">
+            <div class="predict-bar" id="predict-sucker"></div>
+            <div class="control-panel">
+                <div class="control-group">
+                    <span class="control-label">Surface</span>
+                    <select id="su-surf">
+                        <option value="glass">Smooth glass</option>
+                        <option value="brick">Rough brick</option>
+                    </select>
+                </div>
+                <button class="action-btn" id="su-press">&#x1F447; Press the sucker on</button>
+                <div class="control-group">
+                    <span class="control-label">Pull</span><span class="control-value" id="sp-val">0 N</span>
+                    <input type="range" id="sp" min="0" max="400" step="5" value="0">
+                </div>
+                <button class="ghost-btn" id="su-reset">&#x1F504; Take it off</button>
+            </div>
+            <p class="hint">Pressing squeezes the air out from under the cup. Then pull &mdash; on glass and on brick.</p>
+        </div>
+
+        <div class="tab-panel" id="panel-can">
+            <div class="predict-bar" id="predict-can"></div>
+            <div class="control-panel">
+                <button class="action-btn" id="ca-heat">&#x1F525; Heat the can</button>
+                <button class="action-btn" id="ca-flip">&#x1F9E4; Flip into cold water</button>
+                <button class="ghost-btn" id="ca-reset">&#x1F504; New can</button>
+            </div>
+            <p class="hint">&#x26A0;&#xFE0F; Teacher demo only &mdash; hot can and steam. Use tongs. Try flipping a can that was NOT heated too.</p>
+        </div>
+
+        <div class="section-card">
+            <h2>&#x1F4A1; What did we discover?</h2>
+            <ul>
+                <li><strong>Air exerts pressure on everything</strong> &mdash; the pressure of the air around us is called <strong>atmospheric pressure</strong>.</li>
+                <li>The air column above a 15 cm &times; 15 cm patch pushes with about <strong>2250 N</strong> &mdash; like a 225 kg load. We are not crushed because the <strong>pressure inside our body</strong> is equal and balances it.</li>
+                <li><strong>Air pushes in all directions</strong>, so a balloon grows equally all round.</li>
+                <li><strong>Air moves from high pressure to low pressure</strong> &mdash; air rushes out of an open balloon or a punctured cycle tube.</li>
+                <li>A sucker sticks when the air under it is pushed out: the higher pressure outside holds it on. On a rough surface air leaks back in and it falls off.</li>
+                <li>Practical unit of air pressure: the <strong>millibar (mb)</strong> = 100 Pa, also written as <strong>hectopascal (hPa)</strong>. Air pressure at sea level is about 1013 mb.</li>
+            </ul>
+            <div class="callout-chips">
+                <span class="callout-chip">&#x1FA9D; Sucker hooks on bathroom tiles</span>
+                <span class="callout-chip">&#x1F6B2; Air hissing out of a punctured cycle tube</span>
+                <span class="callout-chip">&#x1F388; Balloon seller at the mela</span>
+                <span class="callout-chip">&#x1F964; Sipping nimbu pani with a straw</span>
+                <span class="callout-chip">&#x1F58B;&#xFE0F; Filling a fountain pen with a dropper</span>
+                <span class="callout-chip">&#x1F4FA; Weather report: pressure in hPa / mb</span>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2>&#x1F3C6; Air Pressure Challenge</h2>
+            <p>Answer all three correctly to earn the <strong>Air Pressure badge</strong>!</p>
+            <div id="challenge-root"></div>
+            <div class="badge-banner" id="badge-banner">
+                <div class="big">&#x1F396;&#xFE0F; Air Pressure Badge earned!</div>
+                <p>Head back to <a href="index.html" style="text-decoration: underline;">Pressure &amp; Weather</a> to see your progress.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="page-footer">Pressure, Winds &amp; Storms &bull; Made by Megha Ananthi B &bull; Simplified model for learning &mdash; values are illustrative</footer>
+
+    <script>
+    'use strict';
+
+    // ================= Shared helpers (same in every page of this module) =================
+    const PROGRESS_KEY = 'pressure-lab-progress';
+    function setBadge(name) {
+        let p = {};
+        try { p = JSON.parse(localStorage.getItem(PROGRESS_KEY)) || {}; } catch (e) {}
+        p[name] = true;
+        try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); } catch (e) {}
+    }
+    const canvas = document.getElementById('sim-canvas');
+    const ctx = canvas.getContext('2d');
+    const W = 900, H = 560;
+    let viewScale = 1;
+    function fitCanvas() {
+        const cssW = canvas.getBoundingClientRect().width || canvas.parentElement.clientWidth;
+        canvas.style.height = Math.round(cssW * H / W) + 'px';
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(cssW * dpr);
+        canvas.height = Math.round(cssW * H / W * dpr);
+        viewScale = canvas.width / W;
+    }
+    window.addEventListener('resize', fitCanvas);
+    fitCanvas();
+    function ptr(e) {
+        const r = canvas.getBoundingClientRect();
+        return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height };
+    }
+    function drawArrow(x1, y1, x2, y2, color, width, label, labelSide) {
+        const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
+        if (len < 2) return;
+        const ang = Math.atan2(dy, dx), head = Math.min(14, 6 + width * 1.4);
+        ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = width; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2 - Math.cos(ang) * head * 0.7, y2 - Math.sin(ang) * head * 0.7); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - Math.cos(ang - 0.45) * head, y2 - Math.sin(ang - 0.45) * head);
+        ctx.lineTo(x2 - Math.cos(ang + 0.45) * head, y2 - Math.sin(ang + 0.45) * head);
+        ctx.closePath(); ctx.fill();
+        if (label) {
+            ctx.font = '800 15px Nunito, sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText(label, (x1 + x2) / 2, (y1 + y2) / 2 + (labelSide === 'below' ? 24 : -12));
+        }
+    }
+    function emoji(txt, x, y, size) {
+        ctx.font = size + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(txt, x, y); ctx.textBaseline = 'alphabetic';
+    }
+    function text(str, x, y, o) {
+        o = o || {};
+        ctx.font = (o.weight || 800) + ' ' + (o.size || 14) + 'px ' + (o.font || 'Nunito, sans-serif');
+        ctx.fillStyle = o.color || '#2D2D2D'; ctx.textAlign = o.align || 'center'; ctx.textBaseline = o.base || 'alphabetic';
+        ctx.fillText(str, x, y); ctx.textBaseline = 'alphabetic';
+    }
+    function roundRect(x, y, w, h, r) {
+        ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+    }
+    /* Round needle gauge. frac 0..1 maps to the dial; zones coloured green → amber → red. */
+    function gauge(cx, cy, r, frac, label, valueText) {
+        frac = Math.max(0, Math.min(1, frac));
+        const a0 = Math.PI * 0.8, a1 = Math.PI * 2.2;
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy, r + 8, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 2; ctx.stroke();
+        [['#66BB6A', 0, 0.45], ['#FFB300', 0.45, 0.75], ['#E53935', 0.75, 1]].forEach(([c, f0, f1]) => {
+            ctx.strokeStyle = c; ctx.lineWidth = 9; ctx.beginPath(); ctx.arc(cx, cy, r - 4, a0 + (a1 - a0) * f0, a0 + (a1 - a0) * f1); ctx.stroke();
+        });
+        const a = a0 + (a1 - a0) * frac;
+        ctx.strokeStyle = '#263238'; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * (r - 10), cy + Math.sin(a) * (r - 10)); ctx.stroke();
+        ctx.fillStyle = '#263238'; ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI * 2); ctx.fill();
+        text(label, cx, cy + r * 0.5, { size: 11, color: '#607D8B' });
+        if (valueText) text(valueText, cx, cy + r + 26, { size: 15, color: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#F4511E' });
+    }
+    function setText(id, txt) { const el = document.getElementById(id); if (el && el.textContent !== txt) el.textContent = txt; }
+    function makePredict(rootId, question, options, correctIdx, revealText) {
+        const root = document.getElementById(rootId);
+        root.innerHTML = '<div class="predict-q"><span class="tag">Predict first!</span>' + question + '</div><div class="predict-opts"></div><div class="predict-reveal"></div>';
+        const optsEl = root.querySelector('.predict-opts'), revealEl = root.querySelector('.predict-reveal');
+        const state = { chosen: null, revealed: false, reveal() {
+            if (state.revealed) return;
+            state.revealed = true;
+            btns[correctIdx].classList.add('right');
+            let verdict = '🔍 ';
+            if (state.chosen === correctIdx) verdict = '🎉 Your prediction was right! ';
+            else if (state.chosen !== null) { btns[state.chosen].classList.add('wrong'); verdict = '🤯 Surprised? '; }
+            revealEl.innerHTML = verdict + revealText; revealEl.classList.add('show');
+        } };
+        const btns = options.map((o, i) => {
+            const b = document.createElement('button'); b.className = 'predict-opt'; b.textContent = o;
+            b.addEventListener('click', () => { if (state.revealed) return; state.chosen = i; btns.forEach(x => x.classList.remove('chosen')); b.classList.add('chosen'); });
+            optsEl.appendChild(b); return b;
+        });
+        return state;
+    }
+    function buildChallenge(rootId, questions, badgeName, bannerId) {
+        const root = document.getElementById(rootId), solved = new Set();
+        questions.forEach((q, qi) => {
+            const qEl = document.createElement('div'); qEl.className = 'quiz-q';
+            qEl.innerHTML = '<div class="q-text">' + (qi + 1) + '. ' + q.q + '</div>';
+            const opts = document.createElement('div'); opts.className = 'quiz-opts';
+            const explain = document.createElement('div'); explain.className = 'quiz-explain';
+            q.opts.forEach((o, oi) => {
+                const b = document.createElement('button'); b.className = 'quiz-opt'; b.textContent = o;
+                b.addEventListener('click', () => {
+                    if (solved.has(qi)) return;
+                    if (oi === q.correct) {
+                        b.classList.add('right'); explain.textContent = '✅ ' + q.explain; explain.classList.add('show'); solved.add(qi);
+                        if (solved.size === questions.length) { setBadge(badgeName); document.getElementById(bannerId).classList.add('show'); }
+                    } else { b.classList.add('wrong'); setTimeout(() => b.classList.remove('wrong'), 900); }
+                });
+                opts.appendChild(b);
+            });
+            qEl.appendChild(opts); qEl.appendChild(explain); root.appendChild(qEl);
+        });
+    }
+    function drawBackdrop(color) {
+        ctx.fillStyle = color || '#FBFAFF'; ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = 'rgba(0,0,0,0.035)';
+        for (let x = 0; x < W; x += 45) ctx.fillRect(x, 0, 1, H);
+        for (let y = 0; y < H; y += 45) ctx.fillRect(0, y, W, 1);
+    }
+    const $ = (id) => document.getElementById(id);
+
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const AIR = '#5C6BC0', STEAM = '#ECEFF1', P0 = 101325;
+    function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+    const rng = mulberry32(2024);
+    function dot(x, y, r, c, stroke) {
+        ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+        if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1.2; ctx.stroke(); }
+    }
+    /* a free air particle that bounces around inside a box */
+    function makeGas(n, x0, y0, x1, y1, speed) {
+        const a = [];
+        for (let i = 0; i < n; i++) { const ang = rng() * Math.PI * 2, s = speed * (0.6 + rng() * 0.8); a.push({ x: x0 + rng() * (x1 - x0), y: y0 + rng() * (y1 - y0), vx: Math.cos(ang) * s, vy: Math.sin(ang) * s }); }
+        return a;
+    }
+    function moveGas(list, dt, x0, y0, x1, y1) {
+        for (const p of list) {
+            p.x += p.vx * dt; p.y += p.vy * dt;
+            if (p.x < x0) { p.x = x0; p.vx = Math.abs(p.vx); } else if (p.x > x1) { p.x = x1; p.vx = -Math.abs(p.vx); }
+            if (p.y < y0) { p.y = y0; p.vy = Math.abs(p.vy); } else if (p.y > y1) { p.y = y1; p.vy = -Math.abs(p.vy); }
+        }
+    }
+
+    // =====================================================
+    // TAB 1 — Air column above you
+    // =====================================================
+    const COL = { palmY: 396, x0: 238, x1: 286, top: 14, ground: 530 };
+    const altY = (km) => COL.palmY - (COL.palmY - COL.top) * Math.sqrt(km / 100);   // stretched height scale (not to scale)
+    const kmOfY = (y) => y >= COL.palmY ? 0 : 100 * Math.pow((COL.palmY - y) / (COL.palmY - COL.top), 2);
+    const skyDots = [];
+    while (skyDots.length < 420) {
+        const x = 80 + rng() * 600, y = COL.top + rng() * (COL.ground - 4 - COL.top);
+        if (rng() < Math.exp(-kmOfY(y) / 7)) skyDots.push({ hx: x, hy: y, ph: rng() * 6.28, f: 2 + rng() * 3 });
+    }
+    const KG_PER_BLOCK = 25;
+    const column = {
+        h: 0, why: false, t: 0,
+        force() { return 2250 * (1 - Math.exp(-this.h / 8)) / (1 - Math.exp(-100 / 8)); },   // N on 15 cm × 15 cm
+        setH(v) { this.h = clamp(v, 0, 100); $('ch').value = this.h; $('ch-val').textContent = this.h + ' km'; },
+        toggleWhy() { this.why = !this.why; $('co-why').classList.toggle('on', this.why); if (this.why) predicts.column.reveal(); },
+        update(dt) { this.t += dt; },
+        draw() {
+            const sky = ctx.createLinearGradient(0, 0, 0, COL.ground);
+            sky.addColorStop(0, '#0D1B3E'); sky.addColorStop(0.25, '#3F6FB5'); sky.addColorStop(0.6, '#A9D4FF'); sky.addColorStop(1, '#EAF6FF');
+            ctx.fillStyle = sky; ctx.fillRect(0, 0, W, COL.ground);
+            for (let i = 0; i < 40; i++) dot((i * 211) % 680 + 80, (i * 37) % 90 + 8, 1.2, 'rgba(255,255,255,0.8)');
+            // mountain, clouds, plane
+            ctx.fillStyle = '#B0BEC5'; ctx.beginPath(); ctx.moveTo(420, COL.ground); ctx.lineTo(560, altY(8.8)); ctx.lineTo(690, COL.ground); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(560, altY(8.8)); ctx.lineTo(540, altY(8.8) + 34); ctx.lineTo(566, altY(8.8) + 26); ctx.lineTo(582, altY(8.8) + 38); ctx.closePath(); ctx.fill();
+            text('Mount Everest 8.8 km', 548, altY(8.8) + 4, { size: 12, color: '#fff', align: 'right' });
+            [[140, altY(3)], [360, altY(2.5)], [620, altY(3.4)]].forEach(([x, y]) => { ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.beginPath(); ctx.ellipse(x, y, 46, 13, 0, 0, Math.PI * 2); ctx.ellipse(x + 26, y - 9, 26, 12, 0, 0, Math.PI * 2); ctx.fill(); });
+            emoji('✈️', 112, altY(11), 20); text('aeroplanes 11 km', 126, altY(11) + 5, { size: 12, color: '#fff', align: 'left' });
+            text('\u{1F680} Space — almost no air left', 470, 34, { size: 14, color: '#fff' });
+            // ground
+            ctx.fillStyle = '#8BC34A'; ctx.fillRect(0, COL.ground, W, H - COL.ground);
+            // height axis
+            ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(70, COL.top); ctx.lineTo(70, COL.palmY); ctx.stroke();
+            [[100, '100 km'], [25, '25 km'], [11, '11 km'], [3, '3 km'], [0, '0 km']].forEach(([km, l]) => {
+                const y = altY(km); ctx.fillStyle = '#fff'; ctx.fillRect(64, y - 1, 12, 2);
+                text(l, 60, y + 4, { size: 11, align: 'right', color: km > 20 ? '#fff' : '#263238' });
+            });
+            // the air column above the square
+            const topY = altY(this.h);
+            ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 5]); ctx.strokeRect(COL.x0, COL.top, COL.x1 - COL.x0, COL.palmY - COL.top); ctx.setLineDash([]);
+            if (this.h > 0) {
+                ctx.fillStyle = 'rgba(0,137,123,0.35)'; ctx.fillRect(COL.x0, topY, COL.x1 - COL.x0, COL.palmY - topY);
+                ctx.strokeStyle = '#00897B'; ctx.lineWidth = 3; ctx.strokeRect(COL.x0, topY, COL.x1 - COL.x0, COL.palmY - topY);
+                drawArrow((COL.x0 + COL.x1) / 2, Math.max(topY + 6, COL.palmY - 90), (COL.x0 + COL.x1) / 2, COL.palmY - 4, '#E53935', 5, null);
+            }
+            // particles — thick near the ground, thin up high
+            for (const d of skyDots) {
+                const x = d.hx + 4 * Math.sin(this.t * d.f + d.ph), y = d.hy + 4 * Math.cos(this.t * d.f * 1.3 + d.ph);
+                const inCol = x > COL.x0 && x < COL.x1 && y > topY && y < COL.palmY && this.h > 0;
+                dot(x, y, inCol ? 3.2 : 2.4, inCol ? '#004D40' : (y < altY(20) ? 'rgba(255,255,255,0.85)' : AIR));
+            }
+            // person holding the 15 cm square
+            const px = 222;
+            ctx.strokeStyle = '#3949AB'; ctx.lineWidth = 9; ctx.lineCap = 'round';
+            ctx.beginPath(); ctx.moveTo(px - 6, 498); ctx.lineTo(px - 10, 528); ctx.moveTo(px + 6, 498); ctx.lineTo(px + 10, 528); ctx.stroke();
+            ctx.fillStyle = '#26A69A'; roundRect(px - 18, 452, 36, 50, 10); ctx.fill();
+            ctx.strokeStyle = '#FFCC80'; ctx.lineWidth = 7;
+            ctx.beginPath(); ctx.moveTo(px + 14, 458); ctx.lineTo(px + 36, 420); ctx.lineTo(262, COL.palmY + 8); ctx.moveTo(px - 14, 458); ctx.lineTo(px - 24, 494); ctx.stroke();
+            dot(px, 436, 15, '#FFCC80');
+            ctx.fillStyle = '#4E342E'; ctx.beginPath(); ctx.arc(px, 433, 15.5, Math.PI, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#FFE082'; ctx.fillRect(COL.x0, COL.palmY, COL.x1 - COL.x0, 8); ctx.strokeStyle = '#F9A825'; ctx.lineWidth = 2; ctx.strokeRect(COL.x0, COL.palmY, COL.x1 - COL.x0, 8);
+            text('15 cm × 15 cm', COL.x0 - 6, COL.palmY - 4, { size: 12, align: 'right', color: '#263238' });
+            // load panel
+            const F = this.force(), kg = F / 10, blocks = Math.round(kg / KG_PER_BLOCK);
+            const bx = 690, by = 190;
+            ctx.fillStyle = 'rgba(255,255,255,0.95)'; roundRect(bx, by, 198, 300, 14); ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1; ctx.stroke();
+            text('The air column weighs like…', bx + 99, by + 22, { size: 13, color: '#37474F' });
+            for (let i = 0; i < blocks; i++) {
+                ctx.fillStyle = i % 2 ? '#546E7A' : '#607D8B'; roundRect(bx + 18, by + 262 - i * 24, 74, 21, 5); ctx.fill();
+                text('25 kg', bx + 55, by + 277 - i * 24, { size: 11, color: '#fff' });
+            }
+            emoji('\u{1F418}', bx + 148, by + 250 - 25 * (kg / 225), 18 + 46 * (kg / 225));
+            text(Math.round(kg) + ' kg', bx + 148, by + 284, { size: 18, color: '#00695C', font: "'Fredoka One', cursive", weight: 400 });
+            text(kg > 200 ? 'a baby elephant!' : 'keep sliding up…', bx + 99, by + 300 - 6, { size: 12, color: '#607D8B' });
+            gauge(98, 452, 36, 0.62, 'AIR PRESSURE', '1013 mb');
+            // why-aren't-we-crushed inset
+            if (this.why) {
+                const ix = 320, iy = 340, iw = 350, ih = 186, cx = ix + 175, cy = iy + 104;
+                ctx.fillStyle = 'rgba(255,255,255,0.97)'; roundRect(ix, iy, iw, ih, 14); ctx.fill(); ctx.strokeStyle = '#00897B'; ctx.lineWidth = 2; ctx.stroke();
+                text('Zoom into your arm', cx, iy + 20, { size: 13, color: '#00695C' });
+                for (let i = 0; i < 26; i++) { const a = i * 0.9 + this.t * 0.8, rr = 62 + (i % 4) * 8; dot(cx + Math.cos(a) * rr * 1.5, cy + Math.sin(a) * rr * 0.75, 2.6, AIR); }
+                ctx.fillStyle = '#FFE0B2'; ctx.beginPath(); ctx.ellipse(cx, cy, 70, 44, 0, 0, Math.PI * 2); ctx.fill(); ctx.strokeStyle = '#E0A060'; ctx.lineWidth = 3; ctx.stroke();
+                for (let i = 0; i < 12; i++) { const a = i * 2.1 + this.t * 1.7; dot(cx + Math.cos(a) * (18 + (i % 3) * 14), cy + Math.sin(a * 1.3) * 22, 3, '#EF5350'); }
+                for (let k = 0; k < 8; k++) {
+                    const a = k * Math.PI / 4, ex = cx + Math.cos(a) * 70, ey = cy + Math.sin(a) * 44;
+                    drawArrow(ex + Math.cos(a) * 40, ey + Math.sin(a) * 26, ex + Math.cos(a) * 6, ey + Math.sin(a) * 4, '#3949AB', 3, null);
+                    drawArrow(cx + Math.cos(a) * 34, cy + Math.sin(a) * 20, ex - Math.cos(a) * 4, ey - Math.sin(a) * 3, '#C62828', 3, null);
+                }
+                text('blue = air outside pushes IN', ix + 10, iy + ih - 26, { size: 12, align: 'left', color: '#3949AB' });
+                text('red = fluids inside push OUT', ix + 10, iy + ih - 10, { size: 12, align: 'left', color: '#C62828' });
+                text('⚖️ equal → balanced!', ix + iw - 10, iy + ih - 10, { size: 13, align: 'right', color: '#2E7D32' });
+            }
+            text(this.h === 0 ? 'Slide up to stack the air above the square' : 'Air above the square up to ' + this.h + ' km pushes with ' + Math.round(F).toLocaleString('en-IN') + ' N', 470, 64, { size: 15, color: '#fff' });
+            setText('co-h', this.h + ' km'); setText('co-f', Math.round(F).toLocaleString('en-IN') + ' N');
+            setText('co-m', Math.round(kg) + ' kg'); setText('co-p', '1,01,325 Pa = 1013 mb');
+        },
+    };
+
+    // =====================================================
+    // TAB 2 — Balloon (Fig 6.10)
+    // =====================================================
+    const balloon = {
+        inside: [], outside: makeGas(70, 10, 10, W - 10, H - 30, 70), hits: [], jet: [],
+        state: 'held', bx: 430, by: 222, vx: 0, vy: 0, ang: Math.PI / 2, spin: 0, flyT: 0, escaped: 0, blowT: 0, t: 0,
+        n() { return this.inside.length; },
+        r() { return 26 + 9.5 * Math.sqrt(this.inside.length); },
+        mouth() { const r = this.r(); return { x: this.bx + Math.cos(this.ang) * (r + 10), y: this.by + Math.sin(this.ang) * (r + 10) }; },
+        blow() {
+            if (this.state !== 'held' || this.n() >= 160) return;
+            const r = this.r();
+            for (let i = 0; i < 8; i++) { const a = -Math.PI / 2 + (rng() - 0.5) * 1.4, s = 120 + rng() * 80; this.inside.push({ x: (rng() - 0.5) * 8, y: r - 8, vx: Math.cos(a) * s, vy: Math.sin(a) * s }); }
+            this.blowT = 0.4;
+        },
+        letGo() { if (this.state === 'held' && this.n() > 0) { this.state = 'flying'; this.flyT = 0; this.escaped = 0; } },
+        reset() { this.inside = []; this.jet = []; this.hits = []; this.state = 'held'; this.bx = 430; this.by = 222; this.vx = this.vy = 0; this.ang = Math.PI / 2; this.spin = 0; },
+        update(dt) {
+            this.t += dt; this.blowT = Math.max(0, this.blowT - dt);
+            let r = this.r();
+            // particles inside hit the wall everywhere
+            for (const p of this.inside) {
+                p.x += p.vx * dt; p.y += p.vy * dt;
+                const d = Math.hypot(p.x, p.y), lim = r - 5;
+                if (d > lim) {
+                    const nx = p.x / d, ny = p.y / d, dotv = p.vx * nx + p.vy * ny;
+                    if (dotv > 0) { p.vx -= 2 * dotv * nx; p.vy -= 2 * dotv * ny; if (this.hits.length < 120) this.hits.push({ a: Math.atan2(ny, nx), life: 0.3 }); }
+                    p.x = nx * lim; p.y = ny * lim;
+                }
+            }
+            this.hits.forEach(h => { h.life -= dt; }); this.hits = this.hits.filter(h => h.life > 0);
+            if (this.state === 'flying') {
+                this.flyT += dt;
+                // air escapes through the mouth: high pressure inside → low pressure outside
+                const rate = Math.max(8, this.n() * 1.4);
+                this.escAcc = (this.escAcc || 0) + rate * dt;
+                while (this.escAcc >= 1 && this.inside.length) {
+                    this.escAcc -= 1; this.inside.pop(); this.escaped++;
+                    const m = this.mouth(), a = this.ang + (rng() - 0.5) * 0.5, s = 260 + rng() * 120;
+                    this.jet.push({ x: m.x, y: m.y, vx: Math.cos(a) * s + this.vx, vy: Math.sin(a) * s + this.vy, life: 1.2 });
+                }
+                const thrust = 60 + 5 * this.n();
+                this.vx -= Math.cos(this.ang) * thrust * dt; this.vy -= Math.sin(this.ang) * thrust * dt;
+                this.spin += (rng() - 0.5) * 40 * dt; this.spin *= 0.97;
+                this.ang += (this.spin + 2.2 * Math.sin(this.t * 6)) * dt;
+                this.vx *= 1 - 1.2 * dt; this.vy *= 1 - 1.2 * dt;
+                if (this.escaped > 5) predicts.balloon.reveal();
+                if (!this.inside.length) this.state = 'limp';
+            } else if (this.state === 'limp') {
+                this.vy += 600 * dt; this.vx *= 1 - 2 * dt;
+                this.ang += (Math.PI / 2 - this.ang) * Math.min(1, dt * 3);
+            }
+            if (this.state !== 'held') {
+                this.bx += this.vx * dt; this.by += this.vy * dt; r = this.r();
+                if (this.bx < r) { this.bx = r; this.vx = Math.abs(this.vx) * 0.7; } if (this.bx > W - r) { this.bx = W - r; this.vx = -Math.abs(this.vx) * 0.7; }
+                if (this.by < r) { this.by = r; this.vy = Math.abs(this.vy) * 0.7; } if (this.by > 540 - r) { this.by = 540 - r; this.vy = -Math.abs(this.vy) * (this.state === 'limp' ? 0.2 : 0.7); }
+            }
+            this.jet.forEach(j => { j.x += j.vx * dt; j.y += j.vy * dt; j.vx *= 1 - 1.5 * dt; j.vy *= 1 - 1.5 * dt; j.life -= dt; });
+            this.jet = this.jet.filter(j => j.life > 0);
+            moveGas(this.outside, dt, 6, 6, W - 6, 534);
+            for (const p of this.outside) {   // outside air bounces off the rubber
+                const dx = p.x - this.bx, dy = p.y - this.by, d = Math.hypot(dx, dy);
+                if (d < r + 4 && d > 0) { const nx = dx / d, ny = dy / d, dv = p.vx * nx + p.vy * ny; if (dv < 0) { p.vx -= 2 * dv * nx; p.vy -= 2 * dv * ny; } p.x = this.bx + nx * (r + 4); p.y = this.by + ny * (r + 4); }
+            }
+        },
+        draw() {
+            drawBackdrop();
+            ctx.fillStyle = '#E0E0E0'; ctx.fillRect(0, 540, W, 20);
+            for (const p of this.outside) dot(p.x, p.y, 2.6, 'rgba(92,107,192,0.55)');
+            const r = this.r(), n = this.n(), cx = this.bx, cy = this.by;
+            // girl blowing (only while holding the balloon)
+            if (this.state === 'held') {
+                const fy = cy + r + 50;
+                ctx.strokeStyle = '#E53935'; ctx.lineWidth = 10; ctx.beginPath(); ctx.moveTo(cx, cy + r - 2); ctx.lineTo(cx, fy - 30); ctx.stroke();
+                dot(cx, fy, 32, '#FFCC80');
+                ctx.fillStyle = '#4E342E'; ctx.beginPath(); ctx.arc(cx, fy + 4, 34, Math.PI * 0.05, Math.PI * 0.95); ctx.fill();
+                dot(cx - 18, fy - 4, 8, this.blowT > 0 ? '#F48FB1' : 'rgba(244,143,177,0.5)'); dot(cx + 18, fy - 4, 8, this.blowT > 0 ? '#F48FB1' : 'rgba(244,143,177,0.5)');
+                ctx.strokeStyle = '#4E342E'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(cx - 16, fy + 8); ctx.lineTo(cx - 6, fy + 8); ctx.moveTo(cx + 6, fy + 8); ctx.lineTo(cx + 16, fy + 8); ctx.stroke();
+                emoji('\u{1F90F}', cx + 26, cy + r + 14, 24);
+                if (this.blowT > 0) emoji('\u{1F4A8}', cx - 30, cy + r + 18, 24);
+            }
+            // jet of escaping air
+            for (const j of this.jet) dot(j.x, j.y, 2.8, 'rgba(92,107,192,' + clamp(j.life, 0, 1).toFixed(2) + ')');
+            // pressure arrows all round while held
+            if (this.state === 'held' && n > 0) {
+                const L = clamp(8 + 0.3 * n, 8, 52);
+                for (let k = 0; k < 12; k++) { const a = k * Math.PI / 6; drawArrow(cx + Math.cos(a) * (r + 6), cy + Math.sin(a) * (r + 6), cx + Math.cos(a) * (r + 6 + L), cy + Math.sin(a) * (r + 6 + L), 'rgba(0,137,123,0.8)', 3, null); }
+            }
+            // rubber
+            const m = { x: cx + Math.cos(this.ang) * r, y: cy + Math.sin(this.ang) * r };
+            ctx.fillStyle = 'rgba(239,83,80,0.22)'; ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#E53935'; ctx.lineWidth = 4; ctx.stroke();
+            ctx.fillStyle = '#E53935'; ctx.save(); ctx.translate(m.x, m.y); ctx.rotate(this.ang - Math.PI / 2);
+            ctx.beginPath(); ctx.moveTo(-9, -4); ctx.lineTo(9, -4); ctx.lineTo(5, 12); ctx.lineTo(-5, 12); ctx.closePath(); ctx.fill(); ctx.restore();
+            ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.beginPath(); ctx.ellipse(cx - r * 0.45, cy - r * 0.4, r * 0.12, r * 0.24, 0.6, 0, Math.PI * 2); ctx.fill();
+            // hits (little flashes where particles strike the rubber)
+            for (const h of this.hits) { const a = h.a; ctx.strokeStyle = 'rgba(0,105,92,' + (h.life / 0.3).toFixed(2) + ')'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * (r - 2), cy + Math.sin(a) * (r - 2)); ctx.lineTo(cx + Math.cos(a) * (r + 7), cy + Math.sin(a) * (r + 7)); ctx.stroke(); }
+            for (const p of this.inside) dot(cx + p.x, cy + p.y, 3, AIR);
+            let msg = 'Blow air in! Watch the particles hit the rubber from inside.';
+            if (this.state === 'held' && n > 0) msg = 'Particles hit the rubber everywhere → it grows equally in ALL directions';
+            if (this.state === 'flying') msg = 'Air rushes out: from HIGH pressure inside to LOW pressure outside!';
+            if (this.state === 'limp') msg = 'All the extra air escaped — pressure inside = pressure outside.';
+            text(msg, 400, 30, { size: 15, color: '#00695C' });
+            if (n >= 160 && this.state === 'held') text('That is full — one more and it may burst!', 400, 54, { size: 13, color: '#C62828' });
+            setText('ba-n', n + ''); setText('ba-d', (2 * r / 10).toFixed(1) + ' cm');
+            setText('ba-p', this.state === 'flying' ? 'AIR RUSHING OUT' : n > 0 ? 'INSIDE HIGHER' : 'EQUAL');
+            setText('ba-s', { held: n ? 'HELD SHUT' : 'EMPTY', flying: 'WHOOSH!', limp: 'EMPTY' }[this.state]);
+        },
+    };
+
+    // =====================================================
+    // TAB 3 — Rubber sucker (Activity 6.4)
+    // =====================================================
+    const SU = { face: 300, cy: 290, half: 70, area: Math.PI * 0.03 * 0.03, weight: 1, floor: 540 };   // cup 6 cm across
+    const sucker = {
+        surf: 'glass', state: 'off', gap: 60, depth: 46, fill: 1, pull: 0, pressT: 0, sneak: [], squeezed: [], sneakAcc: 0,
+        ox: 0, oy: 0, rot: 0, vx: 0, vy: 0, spin: 0, outside: makeGas(80, 310, 8, W - 8, 532, 80), tried: new Set(), t: 0, msg: '',
+        hold() { return (this.state === 'stuck' || this.state === 'pressing') ? Math.max(0, (1 - this.fill) * P0 * SU.area) : 0; },   // N
+        press() { if (this.state !== 'off') this.reset(); this.state = 'pressing'; this.pressT = 0; this.tried.add(this.surf); },
+        reset() { Object.assign(this, { state: 'off', gap: 60, depth: 46, fill: 1, ox: 0, oy: 0, rot: 0, vx: 0, vy: 0, spin: 0, sneak: [], squeezed: [], msg: '' }); },
+        letGoOff(popped) {
+            this.state = popped ? 'popped' : 'falling';
+            this.vx = popped ? 220 + this.pull * 1.2 : 30; this.vy = popped ? -80 : 0; this.spin = popped ? 6 : 1.5;
+            this.msg = popped ? 'POP! Your pull beat the push of the air outside.' : 'It fell off — air leaked in through the rough gaps.';
+            if (!popped && this.surf === 'brick') predicts.sucker.reveal();
+        },
+        update(dt) {
+            this.t += dt;
+            if (this.state === 'pressing') {
+                this.pressT += dt; const s = clamp(this.pressT / 0.6, 0, 1);
+                this.gap = 60 * (1 - s); this.depth = 46 - 24 * s;
+                const newFill = 1 - 0.9 * s, lost = Math.round(this.fill * 20) - Math.round(newFill * 20);
+                for (let i = 0; i < lost; i++) { const up = rng() < 0.5; this.squeezed.push({ x: SU.face + 6 + rng() * 6, y: SU.cy + (up ? -1 : 1) * (SU.half - 4), vx: 40 + rng() * 60, vy: (up ? -1 : 1) * (140 + rng() * 80), life: 0.8 }); }
+                this.fill = newFill;
+                if (s >= 1) this.state = 'stuck';
+            } else if (this.state === 'stuck') {
+                if (this.surf === 'brick') {   // air sneaks back in through the gaps of the rough surface
+                    this.sneakAcc += dt * 5;
+                    while (this.sneakAcc >= 1) { this.sneakAcc -= 1; this.sneak.push({ s: 0, up: rng() < 0.5 }); }
+                }
+                this.sneak.forEach(p => { p.s += dt * 2; if (p.s >= 1) this.fill = Math.min(1, this.fill + 1 / 20); });
+                this.sneak = this.sneak.filter(p => p.s < 1);
+                const h = this.hold();
+                if (h < this.pull + SU.weight) this.letGoOff(this.pull > 5);
+            } else if (this.state === 'popped' || this.state === 'falling') {
+                this.fill = Math.min(1, this.fill + dt * 3);
+                this.vy += 900 * dt; this.ox += this.vx * dt; this.oy += this.vy * dt; this.rot += this.spin * dt;
+                this.vx *= 1 - 0.8 * dt;
+                if (SU.cy + this.oy > SU.floor - 30) { this.oy = SU.floor - 30 - SU.cy; this.vy = 0; this.vx *= 0.8; this.spin *= 0.8; this.rot += (Math.PI / 2 - this.rot) * Math.min(1, dt * 6); }
+                if (SU.face + 60 + this.ox > W - 40) { this.ox = W - 100 - SU.face; this.vx = -Math.abs(this.vx) * 0.4; }
+            }
+            this.squeezed.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt; }); this.squeezed = this.squeezed.filter(p => p.life > 0);
+            moveGas(this.outside, dt, SU.face + 8, 8, W - 8, 532);
+            const onWall = this.state !== 'popped' && this.state !== 'falling';
+            if (onWall) for (const p of this.outside) {   // keep outside air out of the cup
+                const right = SU.face + this.gap + this.depth + 4;
+                if (p.x < right && p.y > SU.cy - SU.half - 4 && p.y < SU.cy + SU.half + 4) { p.x = right; p.vx = Math.abs(p.vx); }
+            }
+        },
+        drawCup(x0, depth) {
+            // dome (side view) from the rim at x0 bulging to the right, plus stem and knob
+            const top = SU.cy - SU.half, bot = SU.cy + SU.half;
+            ctx.fillStyle = 'rgba(255,112,67,0.35)'; ctx.strokeStyle = '#E64A19'; ctx.lineWidth = 6;
+            ctx.beginPath(); ctx.moveTo(x0, top); ctx.quadraticCurveTo(x0 + 2 * depth, SU.cy, x0, bot); ctx.closePath(); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(x0, top); ctx.quadraticCurveTo(x0 + 2 * depth, SU.cy, x0, bot); ctx.stroke();
+            ctx.fillStyle = '#E64A19'; ctx.fillRect(x0 + depth - 2, SU.cy - 7, 56, 14);
+            dot(x0 + depth + 60, SU.cy, 14, '#BF360C');
+            return x0 + depth + 60;
+        },
+        draw() {
+            drawBackdrop();
+            ctx.fillStyle = '#E0E0E0'; ctx.fillRect(0, SU.floor, W, H - SU.floor);
+            // wall
+            if (this.surf === 'glass') {
+                ctx.fillStyle = 'rgba(178,235,242,0.85)'; ctx.fillRect(200, 0, SU.face - 200, SU.floor);
+                ctx.fillStyle = 'rgba(255,255,255,0.7)'; for (let k = 0; k < 4; k++) { ctx.save(); ctx.translate(230 + k * 18, 60 + k * 110); ctx.rotate(-0.6); ctx.fillRect(0, 0, 8, 70); ctx.restore(); }
+                ctx.strokeStyle = '#4DD0E1'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(SU.face, 0); ctx.lineTo(SU.face, SU.floor); ctx.stroke();
+                text('Smooth glass', 250, 24, { size: 13, color: '#006064' });
+            } else {
+                ctx.fillStyle = '#C0623E'; ctx.beginPath(); ctx.moveTo(200, 0);
+                for (let y = 0; y <= SU.floor; y += 8) ctx.lineTo(SU.face - ((y / 8) % 2 ? 6 : 0), y);
+                ctx.lineTo(200, SU.floor); ctx.closePath(); ctx.fill();
+                ctx.strokeStyle = 'rgba(255,255,255,0.45)'; ctx.lineWidth = 2;
+                for (let y = 0; y < SU.floor; y += 36) { ctx.beginPath(); ctx.moveTo(200, y); ctx.lineTo(SU.face - 6, y); ctx.stroke(); const xo = (y / 36) % 2 ? 230 : 260; ctx.beginPath(); ctx.moveTo(xo, y); ctx.lineTo(xo, y + 36); ctx.stroke(); }
+                text('Rough brick', 250, 24, { size: 13, color: '#fff' });
+            }
+            for (const p of this.outside) dot(p.x, p.y, 2.6, 'rgba(92,107,192,0.6)');
+            for (const p of this.squeezed) dot(p.x, p.y, 3, AIR);
+            const onWall = this.state !== 'popped' && this.state !== 'falling';
+            const x0 = SU.face + this.gap;
+            ctx.save();
+            if (!onWall) { ctx.translate(SU.face + 40 + this.ox, SU.cy + this.oy); ctx.rotate(this.rot); ctx.translate(-(SU.face + 40), -SU.cy); }
+            // air particles inside the cup
+            const nIn = Math.round(this.fill * 20);
+            for (let i = 0; i < nIn; i++) {
+                const s = (i + 0.5) / 20, yy = SU.cy - SU.half + 2 * SU.half * s, xm = 4 * this.depth * s * (1 - s);
+                dot(x0 + 4 + Math.max(0, xm - 8) * (0.5 + 0.45 * Math.sin(this.t * 5 + i * 1.7)), yy, 2.8, AIR);
+            }
+            const knobX = this.drawCup(x0, this.depth);
+            ctx.restore();
+            // air sneaking in through brick gaps
+            if (this.state === 'stuck') for (const p of this.sneak) { const sgn = p.up ? -1 : 1; dot(SU.face + 4, SU.cy + sgn * (SU.half + 26 - (SU.half - 6) * p.s), 3, '#1A237E'); }
+            if (this.state === 'stuck' && this.surf === 'brick') { ctx.fillStyle = '#263238'; [-1, 1].forEach(sg => { ctx.beginPath(); ctx.moveTo(SU.face - 6, SU.cy + sg * SU.half); ctx.lineTo(SU.face + 2, SU.cy + sg * (SU.half - 5)); ctx.lineTo(SU.face + 2, SU.cy + sg * (SU.half + 5)); ctx.fill(); }); }
+            // pressure arrows: big push from outside, small push from inside
+            if (onWall && this.state !== 'off') {
+                const dx = x0 + this.depth;
+                for (let k = -2; k <= 2; k++) {
+                    const y = SU.cy + k * 26; if (k === 0) continue;
+                    drawArrow(dx + 70, y, dx + 14, y, '#3949AB', 4, null);
+                    if (this.fill > 0.12) drawArrow(SU.face + 2, y, SU.face + 2 + 40 * this.fill, y, '#2E7D32', 2.5, null);
+                }
+                text('air outside pushes in', dx + 76, SU.cy - 60, { size: 12, align: 'left', color: '#3949AB' });
+            }
+            // the pull
+            if (onWall && this.state === 'stuck' && this.pull > 0) {
+                const L = 20 + this.pull * 0.45;
+                drawArrow(knobX + 16, SU.cy, knobX + 16 + L, SU.cy, '#E65100', 6, null);
+                emoji('✊', knobX + 30 + L, SU.cy, 34);
+                text('pull ' + this.pull + ' N', knobX + 16 + L / 2, SU.cy + 34, { size: 13, color: '#E65100' });
+            }
+            // bars: hold vs pull
+            const h = this.hold(), px = 650, py = 190;
+            ctx.fillStyle = '#fff'; roundRect(px, py, 236, 200, 14); ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1; ctx.stroke();
+            [['Air holds it on with', h, '#3949AB'], ['Your pull', this.pull, '#E65100']].forEach(([lab, v, c], i) => {
+                const y = py + 34 + i * 70;
+                text(lab, px + 14, y, { size: 13, align: 'left', color: '#37474F' });
+                ctx.fillStyle = 'rgba(0,0,0,0.06)'; roundRect(px + 14, y + 8, 206, 24, 8); ctx.fill();
+                ctx.fillStyle = c; if (v > 0) { roundRect(px + 14, y + 8, Math.max(10, 206 * Math.min(1, v / 400)), 24, 8); ctx.fill(); }
+                text(Math.round(v) + ' N', px + 20, y + 26, { size: 13, align: 'left', color: v > 60 ? '#fff' : '#37474F' });
+            });
+            text('Hold = (outside − inside pressure) × cup area', px + 118, py + 182, { size: 11, color: '#607D8B' });
+            gauge(768, 452, 38, this.fill, 'INSIDE CUP', Math.round(this.fill * 1013) + ' mb');
+            let msg = this.msg || 'Press the sucker on the surface!';
+            if (!this.msg && this.state === 'stuck') msg = this.surf === 'glass' ? 'Stuck! Air outside presses it on with about ' + Math.round(h) + ' N. Try pulling.' : 'Air is sneaking in through the rough gaps…';
+            text(msg, 430, 548, { size: 15, color: '#00695C' });
+            setText('su-s', this.surf === 'glass' ? 'SMOOTH GLASS' : 'ROUGH BRICK');
+            setText('su-in', Math.round(this.fill * 100) + '% of outside');
+            setText('su-h', Math.round(h) + ' N'); setText('su-p', this.pull + ' N');
+        },
+    };
+
+    // =====================================================
+    // TAB 4 — Crushing can (teacher demo)
+    // =====================================================
+    const CAN = { w: 80, h: 160, open: 13, burnX: 250, burnY: 420, bowlX0: 540, bowlX1: 760, waterY: 446 };
+    function canLocalGas(n) { const a = []; for (let i = 0; i < n; i++) { const ang = rng() * 6.28; a.push({ u: (rng() - 0.5) * 70, v: 10 + rng() * 140, vu: Math.cos(ang) * 70, vv: Math.sin(ang) * 70 }); } return a; }
+    const can = {
+        stage: 'start', heat: false, air: canLocalGas(28), steam: [], escaping: [], drops: [], outside: makeGas(80, 8, 8, W - 8, 536, 60),
+        flipT: 0, crush: 0, crushed: false, t: 0, steamAcc: 0, waterLeft: 1,
+        pIn() { return (this.air.length + this.steam.length) / 30; },
+        pose() {
+            const s = clamp(this.flipT, 0, 1), e = s * s * (3 - 2 * s);
+            return { x: CAN.burnX + (650 - CAN.burnX) * e, y: CAN.burnY + (300 - CAN.burnY) * e - 150 * Math.sin(Math.PI * e), rot: Math.PI * e };
+        },
+        toWorld(u, v) { const p = this.pose(), c = Math.cos(p.rot), s = Math.sin(p.rot); return { x: p.x + u * c + v * s, y: p.y + u * s - v * c }; },
+        toLocal(x, y) { const p = this.pose(), c = Math.cos(p.rot), s = Math.sin(p.rot), dx = x - p.x, dy = y - p.y; return { u: dx * c + dy * s, v: dx * s - dy * c }; },
+        heatToggle() { if (this.stage !== 'start') return; this.heat = !this.heat; $('ca-heat').textContent = this.heat ? '\u{1F9EF} Turn burner off' : '\u{1F525} Heat the can'; },
+        flip() { if (this.stage !== 'start') return; this.heat = false; this.stage = 'flip'; this.flipT = 0; $('ca-heat').textContent = '\u{1F525} Heat the can'; },
+        reset() { Object.assign(this, { stage: 'start', heat: false, air: canLocalGas(28), steam: [], escaping: [], drops: [], flipT: 0, crush: 0, crushed: false, waterLeft: 1 }); $('ca-heat').textContent = '\u{1F525} Heat the can'; },
+        update(dt) {
+            this.t += dt;
+            const crumple = 1 - 0.45 * this.crush;
+            const lim = 34 * crumple;
+            [this.air, this.steam].forEach(list => list.forEach(p => {
+                p.u += p.vu * dt; p.v += p.vv * dt;
+                if (p.u < -lim) { p.u = -lim; p.vu = Math.abs(p.vu); } if (p.u > lim) { p.u = lim; p.vu = -Math.abs(p.vu); }
+                if (p.v < 8) { p.v = 8; p.vv = Math.abs(p.vv); } if (p.v > 154) { p.v = 154; p.vv = -Math.abs(p.vv); }
+            }));
+            if (this.stage === 'start' && this.heat && this.waterLeft > 0.25) {
+                // boiling water makes steam; steam pushes the air out of the opening
+                this.steamAcc += dt * 9; this.waterLeft -= dt * 0.04;
+                while (this.steamAcc >= 1) {
+                    this.steamAcc -= 1;
+                    if (this.steam.length < 30) this.steam.push({ u: (rng() - 0.5) * 60, v: 16, vu: (rng() - 0.5) * 80, vv: 60 + rng() * 60 });
+                    if (this.air.length + this.steam.length > 30) {
+                        if (this.air.length) { const p = this.air.splice(Math.floor(rng() * this.air.length), 1)[0]; this.escaping.push({ u: p.u, v: p.v, kind: 'air' }); }
+                        else this.escaping.push({ u: (rng() - 0.5) * 20, v: 150, kind: 'steam' });
+                    }
+                }
+            }
+            // particles leaving through the opening at the top of the can
+            this.escaping.forEach(p => { p.u += (0 - p.u) * Math.min(1, dt * 5); p.v += 220 * dt; });
+            this.escaping = this.escaping.filter(p => {
+                if (p.v < 172) return true;
+                const w = this.toWorld(p.u, p.v);
+                if (p.kind === 'air' && this.outside.length < 140) this.outside.push({ x: w.x, y: w.y, vx: (rng() - 0.5) * 80, vy: -60 - rng() * 40 });
+                else if (p.kind === 'steam') this.drops.push({ x: w.x, y: w.y, vx: (rng() - 0.5) * 30, vy: -50, life: 1, puff: true });
+                return false;
+            });
+            if (this.stage === 'flip') { this.flipT += dt / 1.4; if (this.flipT >= 1) { this.flipT = 1; this.stage = 'cool'; } }
+            if (this.stage === 'cool') {
+                // cold water: steam condenses into a few drops of water and vanishes
+                this.steam = this.steam.filter(p => { if (rng() < dt * 2.5) { const w = this.toWorld(p.u, p.v); this.drops.push({ x: w.x, y: w.y, vx: 0, vy: 0, life: 0.5 }); return false; } return true; });
+                if (!this.crushed && this.pIn() < 0.55) { this.crushed = true; predicts.can.reveal(); }
+            }
+            if (this.crushed) this.crush = Math.min(1, this.crush + dt / 0.45);
+            this.drops.forEach(d => { d.x += d.vx * dt; d.y += d.vy * dt; d.life -= dt; }); this.drops = this.drops.filter(d => d.life > 0);
+            moveGas(this.outside, dt, 6, 6, W - 6, 534);
+            for (const p of this.outside) {
+                const l = this.toLocal(p.x, p.y);
+                const inCan = Math.abs(l.u) < 46 && l.v > -6 && l.v < 168;
+                const inWater = p.x > CAN.bowlX0 && p.x < CAN.bowlX1 && p.y > CAN.waterY - 3;
+                if (inCan || inWater) { p.x -= p.vx * dt * 2; p.y -= p.vy * dt * 2; p.vx = -p.vx; p.vy = -p.vy; if (inWater) { p.y = Math.min(p.y, CAN.waterY - 4); p.vy = -Math.abs(p.vy); } }
+            }
+        },
+        canOutline() {
+            // perimeter points in can-local coords, pulled inward by the crumple
+            const pts = [], c = this.crush, n = 14;
+            const squash = (u, v, i) => { const k = 1 - c * (0.35 + 0.25 * Math.sin(i * 2.7)); return [u * (Math.abs(v - 80) < 70 ? k : 1 - c * 0.15), v * (1 - 0.12 * c)]; };
+            for (let i = 0; i <= n; i++) pts.push(squash(-40, 160 - 160 * i / n, i));
+            for (let i = 0; i <= n; i++) pts.push(squash(40, 160 * i / n, i + 31));
+            return pts;
+        },
+        draw() {
+            drawBackdrop();
+            ctx.fillStyle = '#D7CCC8'; ctx.fillRect(0, 536, W, H - 536);
+            // burner
+            const bx = CAN.burnX;
+            ctx.fillStyle = '#455A64'; roundRect(bx - 50, 488, 100, 48, 8); ctx.fill();
+            ctx.strokeStyle = '#37474F'; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(bx - 52, CAN.burnY + 4); ctx.lineTo(bx - 40, 490); ctx.moveTo(bx + 52, CAN.burnY + 4); ctx.lineTo(bx + 40, 490); ctx.moveTo(bx - 56, CAN.burnY + 2); ctx.lineTo(bx + 56, CAN.burnY + 2); ctx.stroke();
+            if (this.heat) for (let k = -2; k <= 2; k++) { const fl = 34 + 10 * Math.sin(this.t * 14 + k * 2); ctx.fillStyle = 'rgba(255,152,0,0.85)'; ctx.beginPath(); ctx.moveTo(bx + k * 14 - 7, 488); ctx.quadraticCurveTo(bx + k * 14, 488 - fl * 1.4, bx + k * 14 + 7, 488); ctx.fill(); ctx.fillStyle = 'rgba(41,121,255,0.8)'; ctx.beginPath(); ctx.moveTo(bx + k * 14 - 4, 488); ctx.quadraticCurveTo(bx + k * 14, 488 - fl * 0.6, bx + k * 14 + 4, 488); ctx.fill(); }
+            // bowl of cold water
+            ctx.fillStyle = waterBowl(); ctx.beginPath(); ctx.moveTo(CAN.bowlX0, CAN.waterY); ctx.lineTo(CAN.bowlX1, CAN.waterY); ctx.lineTo(CAN.bowlX1 - 20, 530); ctx.lineTo(CAN.bowlX0 + 20, 530); ctx.closePath(); ctx.fill();
+            emoji('\u{1F9CA}', 580, CAN.waterY + 14, 22); emoji('\u{1F9CA}', 722, CAN.waterY + 18, 20);
+            for (const p of this.outside) dot(p.x, p.y, 2.6, 'rgba(92,107,192,0.6)');
+            // can
+            const P = this.pose(), pIn = this.pIn();
+            ctx.save(); ctx.translate(P.x, P.y); ctx.rotate(P.rot);
+            const pts = this.canOutline();
+            ctx.beginPath(); pts.forEach(([u, v], i) => i ? ctx.lineTo(u, -v) : ctx.moveTo(u, -v)); ctx.closePath();
+            const g = ctx.createLinearGradient(-40, 0, 40, 0); g.addColorStop(0, '#90A4AE'); g.addColorStop(0.4, '#ECEFF1'); g.addColorStop(1, '#78909C');
+            ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = '#455A64'; ctx.lineWidth = 3; ctx.stroke();
+            ctx.save(); ctx.clip();
+            ctx.fillStyle = 'rgba(255,255,255,0.75)'; ctx.fillRect(-36, -156, 72, 148);   // cut-away window
+            if (this.stage === 'start') { ctx.fillStyle = 'rgba(41,182,246,0.8)'; ctx.fillRect(-36, -8 - 14 * this.waterLeft, 72, 14 * this.waterLeft); if (this.heat) for (let k = 0; k < 6; k++) dot(-28 + k * 11, -10 - ((this.t * 40 + k * 7) % 12), 2.5, '#fff'); }
+            ctx.fillStyle = 'rgba(229,57,53,0.5)'; ctx.fillRect(-40, -110, 80, 14);
+            ctx.restore();
+            ctx.fillStyle = '#263238'; ctx.fillRect(-CAN.open, -162 + 12 * this.crush * 0.12, CAN.open * 2, 5);   // the opening
+            for (const p of this.air) dot(p.u, -p.v, 3, AIR);
+            for (const p of this.steam) dot(p.u, -p.v, 3.4, STEAM, '#90A4AE');
+            for (const p of this.escaping) dot(p.u, -p.v, 3, p.kind === 'air' ? AIR : STEAM, p.kind === 'air' ? null : '#90A4AE');
+            ctx.restore();
+            ctx.globalAlpha = 0.45; ctx.fillStyle = waterBowl(); ctx.beginPath(); ctx.moveTo(CAN.bowlX0, CAN.waterY); ctx.lineTo(CAN.bowlX1, CAN.waterY); ctx.lineTo(CAN.bowlX1 - 20, 530); ctx.lineTo(CAN.bowlX0 + 20, 530); ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1;   // water in front of the dipped can
+            for (const d of this.drops) d.puff ? dot(d.x, d.y, 6 * (1.3 - d.life), 'rgba(236,239,241,' + d.life.toFixed(2) + ')') : dot(d.x, d.y, 2, 'rgba(2,136,209,' + (d.life * 2).toFixed(2) + ')');
+            // pressure arrows: outside in, inside out
+            if (this.stage !== 'flip') {
+                [[-1, 40], [-1, 110], [1, 40], [1, 110]].forEach(([sg, v]) => {
+                    const edge = this.toWorld(sg * 44 * (1 - 0.4 * this.crush), v), out = this.toWorld(sg * 84, v), inner = this.toWorld(sg * (44 - 34 * Math.min(1, pIn)), v);
+                    drawArrow(out.x, out.y, edge.x, edge.y, '#3949AB', 4, null);
+                    if (pIn > 0.08) drawArrow(this.toWorld(sg * 8, v).x, this.toWorld(sg * 8, v).y, inner.x, inner.y, '#2E7D32', 3, null);
+                });
+            }
+            if (this.crush > 0) text('CRUNCH!', P.x, P.y - 190, { size: 30, color: '#C62828', font: "'Fredoka One', cursive", weight: 400 });
+            let msg = 'Heat the can: steam will push the air out.';
+            if (this.stage === 'start' && this.heat) msg = this.air.length ? 'Steam is pushing the air particles out of the can…' : 'Only steam inside now. Flip it into the cold water!';
+            if (this.stage === 'flip') msg = 'Flipping it mouth-down into ice-cold water…';
+            if (this.stage === 'cool') msg = this.crushed ? 'Steam turned back to water → almost nothing inside pushes back → the air outside crushes the can!' : (this.steam.length ? 'Steam is condensing…' : 'Nothing happens: the air inside still pushes back as hard as the air outside.');
+            text(msg, 450, 30, { size: 15, color: this.crushed ? '#C62828' : '#00695C' });
+            text('⚠️ Teacher demo only — hot can and steam. Use tongs.', 14, 552, { size: 12, align: 'left', color: '#BF360C' });
+            text('blue arrows = air outside pushing in • green = air/steam inside pushing out', 886, 552, { size: 12, align: 'right', color: '#455A64' });
+            setText('ca-a', this.air.length + ''); setText('ca-s', this.steam.length + '');
+            setText('ca-p', Math.round(pIn * 100) + '% of outside');
+            setText('ca-c', this.crushed ? 'CRUSHED!' : this.stage === 'flip' ? 'FLIPPING' : this.stage === 'cool' ? 'IN COLD WATER' : this.heat ? 'HEATING' : 'READY');
+        },
+    };
+    function waterBowl() { const g = ctx.createLinearGradient(0, CAN.waterY, 0, 530); g.addColorStop(0, 'rgba(129,212,250,0.9)'); g.addColorStop(1, 'rgba(2,119,189,0.9)'); return g; }
+
+    // ================= Predictions =================
+    const predicts = {
+        column: makePredict('predict-column',
+            'The air above a 15 cm × 15 cm patch pushes down with about 2250 N — like a 225 kg load! Why are we not crushed?',
+            ['Air is too light to push on us', 'The pressure inside our body pushes back equally', 'Our bones are strong enough to hold it up'], 1,
+            'The fluids and gases inside our body are at the same pressure as the air outside, pushing outwards just as hard. The pushes balance, so we feel nothing.'),
+        balloon: makePredict('predict-balloon',
+            'You blow up a balloon and then let go of its open mouth. What will the air do?',
+            ['Stay inside the balloon', 'Rush out — and the balloon zooms around', 'More air will rush in'], 1,
+            'Inside, the air is squeezed to a <strong>higher pressure</strong> than outside. Air always moves from high pressure to low pressure, so it rushes out — and pushes the balloon the other way.'),
+        sucker: makePredict('predict-sucker',
+            'The same rubber sucker is pressed on smooth glass and on a rough brick. Where will it stay stuck?',
+            ['On both', 'Only on the smooth glass', 'Only on the rough brick', 'On neither'], 1,
+            'Pressing squeezes the air out, so the air outside presses the cup on. On the rough brick, air sneaks back in through tiny gaps, the pressures become equal and the sucker falls off.'),
+        can: makePredict('predict-can',
+            'A can full of steam is flipped mouth-down into ice-cold water. What happens?',
+            ['Nothing', 'It gets crushed inwards', 'It bursts outwards'], 1,
+            'The cold water turns the steam back into a few drops of water. Almost nothing is left inside to push back, so the big pressure of the air outside crushes the can.'),
+    };
+
+    // ================= Controls =================
+    $('ch').addEventListener('input', e => column.setH(+e.target.value));
+    $('co-all').addEventListener('click', () => column.setH(100));
+    $('co-why').addEventListener('click', () => column.toggleWhy());
+    $('ba-blow').addEventListener('click', () => balloon.blow());
+    $('ba-go').addEventListener('click', () => balloon.letGo());
+    $('ba-reset').addEventListener('click', () => balloon.reset());
+    $('su-surf').addEventListener('change', e => { sucker.surf = e.target.value; sucker.reset(); });
+    $('su-press').addEventListener('click', () => sucker.press());
+    $('sp').addEventListener('input', e => { sucker.pull = +e.target.value; $('sp-val').textContent = sucker.pull + ' N'; });
+    $('su-reset').addEventListener('click', () => sucker.reset());
+    $('ca-heat').addEventListener('click', () => can.heatToggle());
+    $('ca-flip').addEventListener('click', () => can.flip());
+    $('ca-reset').addEventListener('click', () => can.reset());
+
+    // ================= Tabs + loop =================
+    const sims = { column, balloon, sucker, can };
+    let active = 'column';
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => {
+        active = btn.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + active));
+        document.querySelectorAll('.info-display').forEach(i => i.classList.toggle('active', i.id === 'info-' + active));
+    }));
+    $('info-column').classList.add('active');
+
+    buildChallenge('challenge-root', [
+        { q: 'A rubber sucker M is pressed on a flat smooth surface and an identical sucker N on a rough surface. What happens?',
+          opts: ['Both M and N stick to their surfaces', 'Neither M nor N sticks', 'M sticks but N does not', 'M does not stick but N does'], correct: 2,
+          explain: 'On the rough surface air leaks back in under N, so the pressure inside becomes equal to the pressure outside and N falls off.' },
+        { q: 'The atmosphere pushes on a 15 cm × 15 cm area with about 2250 N. Why are we not crushed?',
+          opts: ['Air has no weight', 'The pressure inside our body equals the atmospheric pressure and balances it', 'Our skin is very hard'], correct: 1,
+          explain: 'Fluids and gases in our tissues push outwards with the same pressure, so the forces balance.' },
+        { q: 'Why does a balloon grow equally in all directions when we blow air into it?',
+          opts: ['Air pushes only upwards', 'The air inside exerts pressure in all directions on the rubber', 'Rubber can only stretch sideways'], correct: 1,
+          explain: 'Air particles hit the rubber from inside everywhere — air exerts pressure in all directions.' },
+    ], 'air', 'badge-banner');
+
+    let last = performance.now();
+    function frame(now) {
+        const dt = Math.min((now - last) / 1000, 0.033); last = now;
+        const sim = sims[active];
+        sim.update(dt);
+        ctx.setTransform(viewScale, 0, 0, viewScale, 0, 0);
+        sim.draw();
+        requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+    window.PLAB = { column, balloon, sucker, can, predicts, sims };
+    </script>
+</body>
+</html>

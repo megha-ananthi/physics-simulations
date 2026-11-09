@@ -1,6 +1,6 @@
 # Physics Simulations Lab
 
-Interactive physics simulations demonstrating the **Magnetic**, **Heating**, and **Chemical** effects of electric current, plus a **Types of Forces** module. Built for students to explore and learn through hands-on experimentation in their browser.
+Interactive physics simulations demonstrating the **Magnetic**, **Heating**, and **Chemical** effects of electric current, plus **Types of Forces** and **Pressure, Winds & Storms** modules. Built for students to explore and learn through hands-on experimentation in their browser.
 
 **A personal portfolio project by Megha Ananthi B**
 
@@ -35,11 +35,26 @@ A second mini-lab covering **friction, gravitational, magnetic and electrostatic
 Unlike the 3D electricity experiments, the forces sims are lightweight **2D Canvas** pages (no Three.js) so they run
 smoothly on low-end devices, and they use a **light theme** so they stay readable on classroom projectors.
 
+## Pressure, Winds & Storms Module
+
+Six simulations on pressure and weather, opened from the **Pressure, Winds & Storms** card. Each page has
+tabs, Predict → Observe → Explain prompts and a 3- or 4-question challenge with a badge (stored in `localStorage`);
+earn all six to become a Weather Wizard.
+
+| Sim | What you do |
+|-----|-------------|
+| **Pressure = Force ÷ Area** | Sink into sand standing, lying or in heels; narrow vs broad bag straps; nail point vs head; a calculator with the book's examples |
+| **Liquids Exert Pressure** | Balloons on wide and narrow pipes, a leaky bottle, a three-storey water tank, a dam and connected vessels |
+| **Air Exerts Pressure** | The air column above you, a balloon, a rubber sucker on smooth and rough surfaces, a crushing can |
+| **How Wind Forms** | A balloon-and-straw race, a full day at the beach (sea breeze and land breeze), fast air between balloons, roofs in a storm |
+| **Clouds, Storms & Lightning** | The storm cycle, charging a cloud until lightning strikes, flash-to-bang timing, a lightning conductor you build, a stay-safe game |
+| **Cyclones** | Warm the sea and switch Earth's rotation on or off to spin up a cyclone, fly a drone into the eye, steer it to landfall |
+
 ## Tech Stack
 
 - **HTML5 / CSS3 / Vanilla JavaScript** — no build tools, no frameworks
 - **Three.js** (v0.164.1 via CDN) — 3D rendering with WebGL (electricity experiments)
-- **Canvas 2D** — dependency-free rendering for the Types of Forces module
+- **Canvas 2D** — dependency-free rendering for the Types of Forces and Pressure, Winds & Storms modules
 - **OrbitControls** — click-drag to rotate, scroll to zoom, pinch on mobile
 - **Google Fonts** — Fredoka One (headings) + Nunito (body)
 - **GitHub Pages** — static hosting, always live
@@ -59,12 +74,15 @@ physics-simulations/
 │   ├── heating.html              # Experiment 3: Nichrome Wire Heater
 │   ├── lemon-battery.html        # Experiment 4: Lemon Battery
 │   ├── voltaic-cell.html         # Experiment 5: Voltaic Cell
-│   └── forces/                   # Types of Forces module (2D Canvas, light theme)
-│       ├── index.html            # Module hub + "Sort the Force" game
-│       ├── friction.html         # Static/sliding/rolling/fluid friction (4 tabs)
-│       ├── gravity.html          # Drop race, two-mass attraction, orbits (3 tabs)
-│       ├── magnetic.html         # Magnet playground + two magnets (2 tabs)
-│       └── electrostatic.html    # Charge-the-balloon sandbox
+│   ├── forces/                   # Types of Forces module (2D Canvas, light theme)
+│   │   ├── index.html            # Module hub + "Sort the Force" game
+│   │   ├── friction.html         # Static/sliding/rolling/fluid friction (4 tabs)
+│   │   ├── gravity.html          # Drop race, two-mass attraction, orbits (3 tabs)
+│   │   ├── magnetic.html         # Magnet playground + two magnets (2 tabs)
+│   │   └── electrostatic.html    # Charge-the-balloon sandbox
+│   └── pressure/                 # Pressure, Winds & Storms module (2D Canvas, light theme)
+│       ├── index.html            # Module hub + badges
+│       └── *.html                # Six simulations (area, liquid, air, wind, storms, cyclone)
 ├── CLAUDE.md                     # AI agent context file
 └── README.md                     # This file
 ```

@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liquids Exert Pressure - Pressure, Winds &amp; Storms - Science Lab</title>
+    <meta name="description" content="Balloons on water pipes, a leaky bottle, an overhead tank tower, a dam wall and connected vessels: liquid pressure grows with depth and pushes in all directions.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F4A7;</text></svg>">
+    <style>
+        /* ===== Shared "Pressure, Winds & Storms" sim-page styles — light, projector-friendly (accent set per page) ===== */
+        :root {
+            --accent: #0288D1;
+            --accent-soft: rgba(2, 136, 209, 0.13);
+            --accent-border: rgba(2, 136, 209, 0.55);
+            --good: #4CAF50;
+            --bad: #E53935;
+            --ink: #2D2D2D;
+            --panel-bg: rgba(255, 255, 255, 0.92);
+            --panel-border: rgba(0, 0, 0, 0.08);
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Nunito', sans-serif; background: #F5F0FF; color: var(--ink); min-height: 100vh; -webkit-tap-highlight-color: transparent; }
+        a { color: inherit; text-decoration: none; }
+        .top-bar { display: flex; align-items: center; justify-content: space-between; padding: 0.9rem 1.2rem; gap: 0.6rem; flex-wrap: wrap; }
+        .back-btn {
+            background: #fff; border: 1px solid rgba(0,0,0,0.12); color: #444; padding: 0.5rem 1rem; border-radius: 50px;
+            font-weight: 700; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem;
+            transition: background 0.3s; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .back-btn:hover { background: #F0EAFB; }
+        .exp-title { font-family: 'Fredoka One', cursive; font-size: 1.5rem; text-align: center; color: #6B3FA0; }
+        .big-idea { text-align: center; opacity: 0.85; max-width: 760px; margin: 0.2rem auto 0.8rem; padding: 0 1.2rem; font-size: 0.98rem; }
+        .big-idea strong { color: var(--accent); }
+        .tabs { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; padding: 0 1rem; margin-bottom: 0.9rem; }
+        .tab-btn {
+            background: #fff; border: 1px solid rgba(0,0,0,0.12); color: #444; padding: 0.5rem 1rem; border-radius: 50px;
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.85rem; cursor: pointer;
+            transition: background 0.25s, border-color 0.25s, transform 0.15s;
+        }
+        .tab-btn:hover { transform: translateY(-1px); }
+        .tab-btn.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+        .stage-wrap { position: relative; max-width: 960px; margin: 0 auto; padding: 0 0.8rem; }
+        #sim-canvas { display: block; width: 100%; background: #FBFAFF; border-radius: 16px; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 4px 18px rgba(0,0,0,0.07); touch-action: none; }
+        .info-display {
+            position: absolute; top: 0.7rem; right: 1.4rem; background: var(--panel-bg);
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--panel-border); border-radius: 14px; padding: 0.7rem 0.9rem; font-size: 0.8rem; min-width: 170px; display: none;
+        }
+        .info-display.active { display: block; }
+        .info-row { display: flex; justify-content: space-between; gap: 0.9rem; padding: 0.12rem 0; }
+        .info-label { opacity: 0.6; }
+        .info-val { font-weight: 800; color: var(--accent); }
+        .panels { max-width: 960px; margin: 0 auto; padding: 0 0.8rem 2rem; }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+        .predict-bar { background: var(--accent-soft); border: 1px solid var(--accent-border); border-radius: 14px; padding: 0.85rem 1rem; margin: 0.9rem 0 0.6rem; }
+        .predict-q { font-weight: 800; font-size: 0.95rem; margin-bottom: 0.55rem; }
+        .predict-q .tag { background: var(--accent); color: #fff; border-radius: 50px; font-size: 0.7rem; padding: 0.1rem 0.6rem; margin-right: 0.45rem; text-transform: uppercase; letter-spacing: 0.5px; vertical-align: middle; }
+        .predict-opts { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .predict-opt {
+            background: #fff; border: 1px solid rgba(0,0,0,0.15); color: #333; border-radius: 50px; padding: 0.42rem 0.95rem;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.83rem; cursor: pointer; transition: background 0.2s, border-color 0.2s;
+        }
+        .predict-opt:hover { background: rgba(0,0,0,0.05); }
+        .predict-opt.chosen { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+        .predict-opt.right { border-color: var(--good); background: rgba(76,175,80,0.14); color: #2E7D32; }
+        .predict-opt.wrong { border-color: var(--bad); background: rgba(229,57,53,0.12); color: #C62828; }
+        .predict-reveal { margin-top: 0.55rem; font-size: 0.88rem; display: none; }
+        .predict-reveal.show { display: block; animation: popIn 0.3s ease; }
+        .control-panel {
+            background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 18px; padding: 1rem 1.3rem;
+            display: flex; align-items: center; gap: 1.3rem; flex-wrap: wrap; justify-content: center; margin-top: 0.7rem;
+        }
+        .control-group { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+        .control-label { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.7; }
+        .control-value { font-family: 'Fredoka One', cursive; font-size: 1rem; color: var(--accent); }
+        input[type="range"] { -webkit-appearance: none; appearance: none; width: 130px; height: 8px; border-radius: 4px; background: rgba(0,0,0,0.12); outline: none; cursor: pointer; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; cursor: pointer; }
+        input[type="range"]::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); border: 3px solid #fff; cursor: pointer; }
+        select, .num-in {
+            background: #fff; color: #333; border: 1px solid rgba(0,0,0,0.2); border-radius: 10px;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.85rem; padding: 0.4rem 0.6rem; cursor: pointer;
+        }
+        .num-in { width: 7rem; cursor: text; }
+        .action-btn {
+            background: var(--accent); color: #fff; border: none; border-radius: 50px; padding: 0.55rem 1.3rem;
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.9rem; cursor: pointer; transition: transform 0.15s, filter 0.2s;
+        }
+        .action-btn:hover { transform: scale(1.05); filter: brightness(1.1); }
+        .action-btn:disabled { opacity: 0.4; cursor: default; transform: none; }
+        .ghost-btn {
+            background: #fff; color: #444; border: 1px solid rgba(0,0,0,0.15); border-radius: 50px; padding: 0.55rem 1.1rem;
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.85rem; cursor: pointer; transition: background 0.2s;
+        }
+        .ghost-btn:hover { background: #F3EFFA; }
+        .ghost-btn.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+        .hint { text-align: center; font-size: 0.8rem; opacity: 0.55; margin-top: 0.5rem; }
+        .section-card { background: #fff; border: 1px solid rgba(0,0,0,0.06); border-radius: 18px; padding: 1.3rem 1.4rem; margin-top: 1.6rem; box-shadow: 0 4px 15px rgba(0,0,0,0.06); }
+        .section-card h2 { font-family: 'Fredoka One', cursive; font-size: 1.25rem; color: var(--accent); margin-bottom: 0.6rem; }
+        .section-card p, .section-card li { font-size: 0.93rem; opacity: 0.9; line-height: 1.65; }
+        .section-card ul { padding-left: 1.3rem; margin: 0.4rem 0; }
+        .callout-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.7rem; }
+        .callout-chip { background: #F6F2FE; border: 1px solid rgba(0,0,0,0.08); border-radius: 50px; padding: 0.35rem 0.85rem; font-size: 0.8rem; font-weight: 700; }
+        .quiz-q { margin-top: 1rem; }
+        .quiz-q .q-text { font-weight: 800; font-size: 0.95rem; margin-bottom: 0.5rem; }
+        .quiz-opts { display: flex; flex-direction: column; gap: 0.45rem; }
+        .quiz-opt {
+            text-align: left; background: #FBFAFF; border: 1px solid rgba(0,0,0,0.14); color: #333; border-radius: 12px; padding: 0.55rem 0.9rem;
+            font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: background 0.2s, border-color 0.2s;
+        }
+        .quiz-opt:hover { background: #F1ECFA; }
+        .quiz-opt.right { border-color: var(--good); background: rgba(76,175,80,0.14); }
+        .quiz-opt.wrong { border-color: var(--bad); background: rgba(229,57,53,0.12); }
+        .quiz-explain { display: none; font-size: 0.85rem; margin-top: 0.4rem; color: #2E7D32; }
+        .quiz-explain.show { display: block; animation: popIn 0.3s ease; }
+        .badge-banner { display: none; text-align: center; margin-top: 1.2rem; background: linear-gradient(135deg, #FFF8E1, #FFECB3); border: 1px solid #F0C24B; border-radius: 16px; padding: 1rem; }
+        .badge-banner.show { display: block; animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .badge-banner .big { font-family: 'Fredoka One', cursive; font-size: 1.3rem; color: #B8860B; }
+        .page-footer { text-align: center; padding: 1.2rem; font-size: 0.8rem; opacity: 0.5; }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.92); } 100% { opacity: 1; transform: scale(1); } }
+        /* page-specific */
+        .calc-row { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: flex-end; }
+        .calc-out { font-family: 'Fredoka One', cursive; font-size: 1.35rem; color: var(--accent); margin-top: 0.7rem; }
+        .calc-work { font-size: 0.92rem; margin-top: 0.3rem; font-family: 'Times New Roman', Georgia, serif; }
+        .preset-row { display: flex; gap: 0.45rem; flex-wrap: wrap; margin-top: 0.7rem; }
+        @media (max-width: 600px) {
+            .exp-title { font-size: 1.15rem; }
+            .top-bar { padding: 0.7rem 0.8rem; }
+            .info-display { position: static; display: none; margin: 0.6rem 0 0; width: 100%; }
+            .info-display.active { display: flex; flex-wrap: wrap; gap: 0.1rem 1.2rem; }
+            .info-display .info-row { flex: 1 1 40%; }
+            .control-panel { padding: 0.8rem; gap: 0.9rem; }
+            input[type="range"] { width: 105px; }
+        }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="index.html" class="back-btn">&larr; Pressure &amp; Weather</a>
+        <div class="exp-title">&#x1F4A7; Liquids Exert Pressure</div>
+        <a href="../../index.html" class="back-btn">&#x1F3E0; Lab</a>
+    </div>
+    <p class="big-idea">Water pushes on the bottom <em>and</em> the sides of its container &mdash; in <strong>all directions</strong>.
+        The deeper you go, the harder it pushes: liquid pressure depends on the <strong>height of the water above</strong>, not on how much water there is.</p>
+
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="pipes">&#x1F388; Two Pipes &amp; Balloons</button>
+        <button class="tab-btn" data-tab="bottle">&#x1F9F4; Leaky Bottle</button>
+        <button class="tab-btn" data-tab="tower">&#x1F3E2; Water Tank Tower</button>
+        <button class="tab-btn" data-tab="dam">&#x1F30A; Dam &amp; Connected Vessels</button>
+    </div>
+
+    <div class="stage-wrap">
+        <canvas id="sim-canvas"></canvas>
+        <div class="info-display" id="info-pipes">
+            <div class="info-row"><span class="info-label">Wide: height</span><span class="info-val" id="pi-hw">-</span></div>
+            <div class="info-row"><span class="info-label">Wide: water</span><span class="info-val" id="pi-mw">-</span></div>
+            <div class="info-row"><span class="info-label">Narrow: height</span><span class="info-val" id="pi-hn">-</span></div>
+            <div class="info-row"><span class="info-label">Narrow: water</span><span class="info-val" id="pi-mn">-</span></div>
+            <div class="info-row"><span class="info-label">Bulges</span><span class="info-val" id="pi-b">-</span></div>
+        </div>
+        <div class="info-display" id="info-bottle">
+            <div class="info-row"><span class="info-label">Water depth</span><span class="info-val" id="bo-d">-</span></div>
+            <div class="info-row"><span class="info-label">Holes squirting</span><span class="info-val" id="bo-n">-</span></div>
+            <div class="info-row"><span class="info-label">Deepest hole</span><span class="info-val" id="bo-h">-</span></div>
+            <div class="info-row"><span class="info-label">Its jet speed</span><span class="info-val" id="bo-v">-</span></div>
+        </div>
+        <div class="info-display" id="info-tower">
+            <div class="info-row"><span class="info-label">Tank above roof</span><span class="info-val" id="tw-h">-</span></div>
+            <div class="info-row"><span class="info-label">Ground floor tap</span><span class="info-val" id="tw-p0">-</span></div>
+            <div class="info-row"><span class="info-label">1st floor tap</span><span class="info-val" id="tw-p1">-</span></div>
+            <div class="info-row"><span class="info-label">2nd floor tap</span><span class="info-val" id="tw-p2">-</span></div>
+        </div>
+        <div class="info-display" id="info-dam">
+            <div class="info-row"><span class="info-label">Dam: water depth</span><span class="info-val" id="dm-d">-</span></div>
+            <div class="info-row"><span class="info-label">Pressure at base</span><span class="info-val" id="dm-p">-</span></div>
+            <div class="info-row"><span class="info-label">Wall</span><span class="info-val" id="dm-s">-</span></div>
+            <div class="info-row"><span class="info-label">Levels P / Q / R</span><span class="info-val" id="dm-l">-</span></div>
+        </div>
+    </div>
+
+    <div class="panels">
+        <div class="tab-panel active" id="panel-pipes">
+            <div class="predict-bar" id="predict-pipes"></div>
+            <div class="control-panel">
+                <div class="control-group">
+                    <span class="control-label">Wide pipe water</span><span class="control-value" id="pw-val">0 cm</span>
+                    <input type="range" id="pw" min="0" max="25" step="0.5" value="0">
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Narrow pipe water</span><span class="control-value" id="pn-val">0 cm</span>
+                    <input type="range" id="pn" min="0" max="25" step="0.5" value="0">
+                </div>
+                <button class="action-btn" id="p-half">&#x1F4A7; Fill both halfway</button>
+                <button class="ghost-btn" id="p-more">&#x2795; More water in narrow pipe</button>
+                <button class="ghost-btn" id="p-empty">&#x1F504; Empty both</button>
+            </div>
+            <p class="hint">Fill both pipes to the same height. The wide pipe holds far more water &mdash; watch the balloons.</p>
+        </div>
+
+        <div class="tab-panel" id="panel-bottle">
+            <div class="predict-bar" id="predict-bottle"></div>
+            <div class="control-panel">
+                <button class="ghost-btn" id="b-three">&#x1F4CF; 3 holes, different heights</button>
+                <button class="ghost-btn" id="b-around">&#x1F504; 4 holes all around, same height</button>
+                <button class="action-btn" id="b-tape">&#x2702;&#xFE0F; Remove the tape</button>
+                <button class="ghost-btn" id="b-refill">&#x1F6B0; Refill</button>
+                <button class="ghost-btn" id="b-clear">&#x1FA79; Seal all holes</button>
+            </div>
+            <p class="hint">Tap the bottle wall to poke a hole anywhere, or pick a set of taped holes and pull the tape off.</p>
+        </div>
+
+        <div class="tab-panel" id="panel-tower">
+            <div class="predict-bar" id="predict-tower"></div>
+            <div class="control-panel">
+                <div class="control-group">
+                    <span class="control-label">Tank height above roof (H)</span><span class="control-value" id="th-val">2 m</span>
+                    <input type="range" id="th" min="0" max="4" step="0.5" value="2">
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Water in tank</span><span class="control-value" id="td-val">1.5 m deep</span>
+                    <input type="range" id="td" min="0" max="2" step="0.1" value="1.5">
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Tank</span>
+                    <select id="tw-size">
+                        <option value="wide">Big, wide tank</option>
+                        <option value="narrow">Small, narrow tank (same height)</option>
+                    </select>
+                </div>
+                <button class="action-btn" id="tw-open">&#x1F6B0; Open all taps</button>
+            </div>
+            <p class="hint">Tap a floor to open or close its tap. Stream length shows the tap pressure.</p>
+        </div>
+
+        <div class="tab-panel" id="panel-dam">
+            <div class="predict-bar" id="predict-dam"></div>
+            <div class="control-panel">
+                <div class="control-group">
+                    <span class="control-label">Dam wall</span>
+                    <select id="dm-wall">
+                        <option value="thin">Thin straight wall</option>
+                        <option value="broad">Real dam: broad base</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <span class="control-label">Reservoir level</span><span class="control-value" id="dl-val">50%</span>
+                    <input type="range" id="dl" min="0" max="100" step="1" value="50">
+                </div>
+                <button class="ghost-btn" id="dm-reset">&#x1F9F1; Rebuild dam</button>
+                <div class="control-group">
+                    <span class="control-label">Pour into</span>
+                    <select id="vs-into">
+                        <option value="2">Vessel R</option>
+                        <option value="1">Vessel Q</option>
+                        <option value="0">Vessel P</option>
+                    </select>
+                </div>
+                <button class="action-btn" id="vs-pour">&#x1F4A7; Pour</button>
+                <button class="ghost-btn" id="vs-empty">&#x1F504; Empty vessels</button>
+            </div>
+            <p class="hint">Left: fill the reservoir right up and compare the two walls. Right: pour into one vessel and watch where the water goes.</p>
+        </div>
+
+        <div class="section-card">
+            <h2>&#x1F4A1; What did we discover?</h2>
+            <ul>
+                <li><strong>Liquids exert pressure.</strong> A column of water pushes on the bottom of its container &mdash; the balloons bulge.</li>
+                <li><strong>Pressure depends on the height of the liquid column</strong>, not on the amount of liquid. Equal heights give equal bulges even when one pipe holds much more water.</li>
+                <li><strong>The deeper the point, the larger the pressure.</strong> Holes lower down squirt faster and farther; the ground-floor tap gets the strongest stream.</li>
+                <li><strong>Liquids push in all directions</strong> &mdash; on the sides of a container too. Holes at the same height spurt out equally all around.</li>
+                <li>Overhead tanks are placed high to increase the pressure at the taps. A dam is broad at the base because the push of water is largest near the bottom.</li>
+                <li>Connected vessels fill to the <strong>same level</strong>, whatever their shapes.</li>
+            </ul>
+            <div class="callout-chips">
+                <span class="callout-chip">&#x1F3E0; Black overhead tank on the rooftop</span>
+                <span class="callout-chip">&#x1F5FC; Municipal water tower</span>
+                <span class="callout-chip">&#x26F2; Fountain from a leaking pipe joint on the road</span>
+                <span class="callout-chip">&#x1F3DE;&#xFE0F; Broad base of big river dams</span>
+                <span class="callout-chip">&#x1F477; Mason's water-level tube for marking equal heights</span>
+                <span class="callout-chip">&#x1F3CA; Ears hurt at the deep end of a pool</span>
+                <span class="callout-chip">&#x1FAD9; Tap at the bottom of a matka or water drum</span>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2>&#x1F3C6; Liquid Pressure Challenge</h2>
+            <p>Answer all three correctly to earn the <strong>Liquid Pressure badge</strong>!</p>
+            <div id="challenge-root"></div>
+            <div class="badge-banner" id="badge-banner">
+                <div class="big">&#x1F396;&#xFE0F; Liquid Pressure Badge earned!</div>
+                <p>Head back to <a href="index.html" style="text-decoration: underline;">Pressure &amp; Weather</a> to see your progress.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="page-footer">Pressure, Winds &amp; Storms &bull; Made by Megha Ananthi B &bull; Simplified model for learning &mdash; values are illustrative</footer>
+
+    <script>
+    'use strict';
+
+    // ================= Shared helpers (same in every page of this module) =================
+    const PROGRESS_KEY = 'pressure-lab-progress';
+    function setBadge(name) {
+        let p = {};
+        try { p = JSON.parse(localStorage.getItem(PROGRESS_KEY)) || {}; } catch (e) {}
+        p[name] = true;
+        try { localStorage.setItem(PROGRESS_KEY, JSON.stringify(p)); } catch (e) {}
+    }
+    const canvas = document.getElementById('sim-canvas');
+    const ctx = canvas.getContext('2d');
+    const W = 900, H = 560;
+    let viewScale = 1;
+    function fitCanvas() {
+        const cssW = canvas.getBoundingClientRect().width || canvas.parentElement.clientWidth;
+        canvas.style.height = Math.round(cssW * H / W) + 'px';
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(cssW * dpr);
+        canvas.height = Math.round(cssW * H / W * dpr);
+        viewScale = canvas.width / W;
+    }
+    window.addEventListener('resize', fitCanvas);
+    fitCanvas();
+    function ptr(e) {
+        const r = canvas.getBoundingClientRect();
+        return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height };
+    }
+    function drawArrow(x1, y1, x2, y2, color, width, label, labelSide) {
+        const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
+        if (len < 2) return;
+        const ang = Math.atan2(dy, dx), head = Math.min(14, 6 + width * 1.4);
+        ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = width; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2 - Math.cos(ang) * head * 0.7, y2 - Math.sin(ang) * head * 0.7); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - Math.cos(ang - 0.45) * head, y2 - Math.sin(ang - 0.45) * head);
+        ctx.lineTo(x2 - Math.cos(ang + 0.45) * head, y2 - Math.sin(ang + 0.45) * head);
+        ctx.closePath(); ctx.fill();
+        if (label) {
+            ctx.font = '800 15px Nunito, sans-serif'; ctx.textAlign = 'center';
+            ctx.fillText(label, (x1 + x2) / 2, (y1 + y2) / 2 + (labelSide === 'below' ? 24 : -12));
+        }
+    }
+    function emoji(txt, x, y, size) {
+        ctx.font = size + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(txt, x, y); ctx.textBaseline = 'alphabetic';
+    }
+    function text(str, x, y, o) {
+        o = o || {};
+        ctx.font = (o.weight || 800) + ' ' + (o.size || 14) + 'px ' + (o.font || 'Nunito, sans-serif');
+        ctx.fillStyle = o.color || '#2D2D2D'; ctx.textAlign = o.align || 'center'; ctx.textBaseline = o.base || 'alphabetic';
+        ctx.fillText(str, x, y); ctx.textBaseline = 'alphabetic';
+    }
+    function roundRect(x, y, w, h, r) {
+        ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+        ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+    }
+    /* Round needle gauge. frac 0..1 maps to the dial; zones coloured green → amber → red. */
+    function gauge(cx, cy, r, frac, label, valueText) {
+        frac = Math.max(0, Math.min(1, frac));
+        const a0 = Math.PI * 0.8, a1 = Math.PI * 2.2;
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(cx, cy, r + 8, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 2; ctx.stroke();
+        [['#66BB6A', 0, 0.45], ['#FFB300', 0.45, 0.75], ['#E53935', 0.75, 1]].forEach(([c, f0, f1]) => {
+            ctx.strokeStyle = c; ctx.lineWidth = 9; ctx.beginPath(); ctx.arc(cx, cy, r - 4, a0 + (a1 - a0) * f0, a0 + (a1 - a0) * f1); ctx.stroke();
+        });
+        const a = a0 + (a1 - a0) * frac;
+        ctx.strokeStyle = '#263238'; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * (r - 10), cy + Math.sin(a) * (r - 10)); ctx.stroke();
+        ctx.fillStyle = '#263238'; ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI * 2); ctx.fill();
+        text(label, cx, cy + r * 0.5, { size: 11, color: '#607D8B' });
+        if (valueText) text(valueText, cx, cy + r + 26, { size: 15, color: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#F4511E' });
+    }
+    function setText(id, txt) { const el = document.getElementById(id); if (el && el.textContent !== txt) el.textContent = txt; }
+    function makePredict(rootId, question, options, correctIdx, revealText) {
+        const root = document.getElementById(rootId);
+        root.innerHTML = '<div class="predict-q"><span class="tag">Predict first!</span>' + question + '</div><div class="predict-opts"></div><div class="predict-reveal"></div>';
+        const optsEl = root.querySelector('.predict-opts'), revealEl = root.querySelector('.predict-reveal');
+        const state = { chosen: null, revealed: false, reveal() {
+            if (state.revealed) return;
+            state.revealed = true;
+            btns[correctIdx].classList.add('right');
+            let verdict = '🔍 ';
+            if (state.chosen === correctIdx) verdict = '🎉 Your prediction was right! ';
+            else if (state.chosen !== null) { btns[state.chosen].classList.add('wrong'); verdict = '🤯 Surprised? '; }
+            revealEl.innerHTML = verdict + revealText; revealEl.classList.add('show');
+        } };
+        const btns = options.map((o, i) => {
+            const b = document.createElement('button'); b.className = 'predict-opt'; b.textContent = o;
+            b.addEventListener('click', () => { if (state.revealed) return; state.chosen = i; btns.forEach(x => x.classList.remove('chosen')); b.classList.add('chosen'); });
+            optsEl.appendChild(b); return b;
+        });
+        return state;
+    }
+    function buildChallenge(rootId, questions, badgeName, bannerId) {
+        const root = document.getElementById(rootId), solved = new Set();
+        questions.forEach((q, qi) => {
+            const qEl = document.createElement('div'); qEl.className = 'quiz-q';
+            qEl.innerHTML = '<div class="q-text">' + (qi + 1) + '. ' + q.q + '</div>';
+            const opts = document.createElement('div'); opts.className = 'quiz-opts';
+            const explain = document.createElement('div'); explain.className = 'quiz-explain';
+            q.opts.forEach((o, oi) => {
+                const b = document.createElement('button'); b.className = 'quiz-opt'; b.textContent = o;
+                b.addEventListener('click', () => {
+                    if (solved.has(qi)) return;
+                    if (oi === q.correct) {
+                        b.classList.add('right'); explain.textContent = '✅ ' + q.explain; explain.classList.add('show'); solved.add(qi);
+                        if (solved.size === questions.length) { setBadge(badgeName); document.getElementById(bannerId).classList.add('show'); }
+                    } else { b.classList.add('wrong'); setTimeout(() => b.classList.remove('wrong'), 900); }
+                });
+                opts.appendChild(b);
+            });
+            qEl.appendChild(opts); qEl.appendChild(explain); root.appendChild(qEl);
+        });
+    }
+    function drawBackdrop(color) {
+        ctx.fillStyle = color || '#FBFAFF'; ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = 'rgba(0,0,0,0.035)';
+        for (let x = 0; x < W; x += 45) ctx.fillRect(x, 0, 1, H);
+        for (let y = 0; y < H; y += 45) ctx.fillRect(0, y, W, 1);
+    }
+    const $ = (id) => document.getElementById(id);
+
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const fmtPa = (p) => Math.round(p).toLocaleString('en-IN') + ' Pa';
+    const BLUE = '#0288D1', PURPLE = '#7E57C2';
+    /* water colour: a vertical gradient between two y values (lighter at the top) */
+    function waterGrad(y0, y1) {
+        const g = ctx.createLinearGradient(0, y0, 0, y1);
+        g.addColorStop(0, 'rgba(79,195,247,0.85)'); g.addColorStop(1, 'rgba(2,119,189,0.9)');
+        return g;
+    }
+    function dashedLine(x1, y1, x2, y2, color, w) {
+        ctx.strokeStyle = color; ctx.lineWidth = w || 2; ctx.setLineDash([7, 6]);
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.setLineDash([]);
+    }
+    /* a simple jug tipped over (x, y) = spout position */
+    function jug(x, y, flip) {
+        ctx.save(); ctx.translate(x, y); ctx.scale(flip ? -1 : 1, 1); ctx.rotate(-0.75);
+        ctx.fillStyle = '#FFB74D'; roundRect(4, -18, 46, 40, 8); ctx.fill();
+        ctx.strokeStyle = '#E65100'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(50, 2, 11, -Math.PI / 2, Math.PI / 2); ctx.stroke();
+        ctx.fillStyle = '#FFB74D'; ctx.beginPath(); ctx.moveTo(4, -18); ctx.lineTo(-6, -22); ctx.lineTo(4, -8); ctx.closePath(); ctx.fill();
+        ctx.restore();
+    }
+    function pourStream(x, yTop, yBot, w) {
+        if (yBot <= yTop) return;
+        ctx.fillStyle = 'rgba(41,182,246,0.8)'; ctx.fillRect(x - w / 2, yTop, w, yBot - yTop);
+        ctx.fillStyle = 'rgba(255,255,255,0.6)';
+        const t = performance.now() / 1000;
+        for (let yy = yTop + ((t * 260) % 22); yy < yBot; yy += 22) ctx.fillRect(x - 1, yy, 2, 8);
+    }
+
+    // =====================================================
+    // TAB 1 — Two pipes & balloons (Activity 6.1)
+    // =====================================================
+    const PIPE_TOP = 70, PIPE_BOT = 330, PX_PER_CM = 10.4, PIPE_CM = 25, NECK_Y = 352;
+    const pipes = {
+        P: [
+            { key: 'wide', name: 'Wide pipe', x: 220, w: 80, dcm: 3, h: 0, target: 0, color: BLUE, gx: 72 },
+            { key: 'narrow', name: 'Narrow pipe', x: 470, w: 26, dcm: 1, h: 0, target: 0, color: PURPLE, gx: 610 },
+        ],
+        t: 0,
+        pressure(p) { return 1000 * 10 * p.h / 100; },               // ρ g h  (h in cm → m)
+        mass(p) { return Math.PI * (p.dcm / 2) * (p.dcm / 2) * p.h; },  // grams: 1 cm³ of water = 1 g
+        bulgeR(p) { return 18 + 2.2 * p.h; },                          // depends ONLY on the height
+        setTarget(i, v) { this.P[i].target = clamp(Math.round(v * 2) / 2, 0, PIPE_CM); pipesUI(); },
+        settled(p) { return Math.abs(p.h - p.target) < 1e-6; },
+        update(dt) {
+            this.t += dt;
+            this.P.forEach(p => {
+                const d = p.target - p.h, step = 7 * dt;
+                p.h = Math.abs(d) <= step ? p.target : p.h + Math.sign(d) * step;
+            });
+            const [a, b] = this.P;
+            if (a.h > 4 && b.h > 4 && Math.abs(a.h - b.h) < 0.5 && this.settled(a) && this.settled(b)) predicts.pipes.reveal();
+        },
+        drawBalloon(p) {
+            const R = this.bulgeR(p), cy = NECK_Y + R - 4, cx = p.x;
+            // pressure arrows pushing the rubber outwards (all directions)
+            if (p.h > 0.5) {
+                const L = 6 + 1.5 * p.h;
+                for (let i = 0; i <= 8; i++) {
+                    const a = -0.35 + i * (Math.PI + 0.7) / 8;
+                    drawArrow(cx + Math.cos(a) * (R + 4), cy + Math.sin(a) * (R + 4), cx + Math.cos(a) * (R + 4 + L), cy + Math.sin(a) * (R + 4 + L), 'rgba(2,119,189,0.75)', 3, null);
+                }
+            }
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(cx - 7, NECK_Y);
+            ctx.bezierCurveTo(cx - 9, NECK_Y + 10, cx - R, cy - R * 0.7, cx - R, cy);
+            ctx.arc(cx, cy, R, Math.PI, 0, true);
+            ctx.bezierCurveTo(cx + R, cy - R * 0.7, cx + 9, NECK_Y + 10, cx + 7, NECK_Y);
+            ctx.closePath();
+            ctx.fillStyle = p.h > 0.05 ? waterGrad(NECK_Y, cy + R) : '#EF9A9A';
+            ctx.fill();
+            ctx.fillStyle = 'rgba(239,83,80,0.28)'; ctx.fill();
+            ctx.strokeStyle = '#E53935'; ctx.lineWidth = 3.5; ctx.stroke();
+            ctx.fillStyle = 'rgba(255,255,255,0.45)'; ctx.beginPath(); ctx.ellipse(cx - R * 0.45, cy - R * 0.2, R * 0.13, R * 0.3, 0.4, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+            ctx.fillStyle = '#C62828'; ctx.fillRect(cx - 11, NECK_Y - 3, 22, 6);          // thread tied round the neck
+        },
+        drawPipe(p) {
+            const x0 = p.x - p.w / 2, yW = PIPE_BOT - p.h * PX_PER_CM;
+            // stopper with a nozzle — same nozzle on both pipes, so the balloons are identical
+            ctx.fillStyle = '#8D6E63'; ctx.beginPath(); ctx.moveTo(x0 - 3, PIPE_BOT); ctx.lineTo(x0 + p.w + 3, PIPE_BOT); ctx.lineTo(p.x + 12, PIPE_BOT + 13); ctx.lineTo(p.x - 12, PIPE_BOT + 13); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = p.h > 0.05 ? 'rgba(2,136,209,0.8)' : 'rgba(200,225,240,0.8)'; ctx.fillRect(p.x - 7, PIPE_BOT + 13, 14, NECK_Y - PIPE_BOT - 13);
+            ctx.strokeStyle = '#78909C'; ctx.lineWidth = 2; ctx.strokeRect(p.x - 7, PIPE_BOT + 13, 14, NECK_Y - PIPE_BOT - 13);
+            // glass tube + water column
+            ctx.fillStyle = 'rgba(225,242,255,0.6)'; ctx.fillRect(x0, PIPE_TOP, p.w, PIPE_BOT - PIPE_TOP);
+            if (p.h > 0.05) {
+                ctx.fillStyle = waterGrad(PIPE_TOP, PIPE_BOT); ctx.fillRect(x0, yW, p.w, PIPE_BOT - yW);
+                ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.fillRect(x0, yW, p.w, 3);
+            }
+            ctx.strokeStyle = '#607D8B'; ctx.lineWidth = 3; ctx.beginPath();
+            ctx.moveTo(x0, PIPE_TOP); ctx.lineTo(x0, PIPE_BOT); ctx.moveTo(x0 + p.w, PIPE_TOP); ctx.lineTo(x0 + p.w, PIPE_BOT); ctx.stroke();
+            ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.fillRect(x0 + 4, PIPE_TOP + 6, 4, PIPE_BOT - PIPE_TOP - 12);
+            // cm scale
+            for (let c = 0; c <= 25; c += 5) {
+                const y = PIPE_BOT - c * PX_PER_CM;
+                ctx.fillStyle = '#90A4AE'; ctx.fillRect(x0 - 10, y - 1, 10, 2);
+                text(c + '', x0 - 14, y + 4, { size: 11, align: 'right', color: '#78909C' });
+            }
+            // pouring
+            if (p.h < p.target - 0.01) {
+                jug(p.x + 14, PIPE_TOP - 26, false);
+                pourStream(p.x + 2, PIPE_TOP - 24, yW, Math.min(10, p.w * 0.4));
+            }
+            text(p.name + ' (' + p.dcm + ' cm across)', p.x, PIPE_TOP - 46, { size: 14, color: p.color });
+            text('water in pipe: ' + Math.round(this.mass(p)) + ' g', p.x + p.w / 2 + 10, PIPE_BOT - 6, { size: 13, align: 'left', color: p.color });
+        },
+        draw() {
+            drawBackdrop();
+            // stand
+            ctx.fillStyle = '#6D4C41'; roundRect(110, 514, 500, 18, 6); ctx.fill();
+            ctx.fillStyle = '#90A4AE'; ctx.fillRect(339, 40, 12, 476);
+            this.P.forEach(p => {
+                [110, 270].forEach(y => {
+                    const xa = p.x < 345 ? p.x + p.w / 2 : 351, xb = p.x < 345 ? 339 : p.x - p.w / 2;
+                    ctx.fillStyle = '#B0BEC5'; ctx.fillRect(xa, y - 4, xb - xa, 8);
+                    ctx.fillStyle = '#546E7A'; ctx.fillRect(p.x - p.w / 2 - 5, y - 8, p.w + 10, 16);
+                });
+            });
+            this.P.forEach(p => this.drawBalloon(p));
+            this.P.forEach(p => this.drawPipe(p));
+            // equal-height marker
+            const [a, b] = this.P;
+            if (a.h > 0.5 && b.h > 0.5) {
+                if (Math.abs(a.h - b.h) < 0.5) {
+                    const y = PIPE_BOT - a.h * PX_PER_CM;
+                    dashedLine(150, y, 540, y, '#2E7D32', 2);
+                    text('same height!', 345, y - 8, { size: 14, color: '#2E7D32' });
+                } else {
+                    this.P.forEach(p => { const y = PIPE_BOT - p.h * PX_PER_CM; dashedLine(p.x - p.w / 2 - 12, y, p.x + p.w / 2 + 12, y, p.color, 2); });
+                }
+            }
+            // gauges at the balloons
+            this.P.forEach(p => gauge(p.gx, 418, 40, p.h / PIPE_CM, 'PRESSURE', fmtPa(this.pressure(p))));
+            // comparison panel
+            const px = 670, py = 200;
+            ctx.fillStyle = '#fff'; roundRect(px, py, 215, 320, 14); ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1; ctx.stroke();
+            const bars = (title, y0, vals, max, unit) => {
+                text(title, px + 107, y0, { size: 14, color: '#37474F' });
+                vals.forEach((v, i) => {
+                    const p = this.P[i], bw = 150 * clamp(v / max, 0, 1);
+                    ctx.fillStyle = 'rgba(0,0,0,0.06)'; roundRect(px + 52, y0 + 14 + i * 38, 150, 24, 8); ctx.fill();
+                    ctx.fillStyle = p.color; if (bw > 1) { roundRect(px + 52, y0 + 14 + i * 38, Math.max(bw, 10), 24, 8); ctx.fill(); }
+                    text(i ? 'narrow' : 'wide', px + 46, y0 + 31 + i * 38, { size: 12, align: 'right', color: p.color });
+                    text(unit(v), px + 58, y0 + 31 + i * 38, { size: 12, align: 'left', color: bw > 60 ? '#fff' : '#37474F' });
+                });
+            };
+            bars('Amount of water', py + 28, this.P.map(p => this.mass(p)), 177, v => Math.round(v) + ' g');
+            bars('Balloon bulge', py + 160, this.P.map(p => this.bulgeR(p) - 18), 55, v => (v / 10).toFixed(1) + ' cm');
+            const same = a.h > 0.5 && Math.abs(a.h - b.h) < 0.5;
+            text(same ? 'Different water, SAME bulge!' : 'Bulge follows the height', px + 107, py + 300, { size: 13, color: same ? '#2E7D32' : '#607D8B' });
+            // headline
+            let msg = 'Pour water into the pipes and watch the balloons at the bottom.';
+            if (same && a.h > 4) msg = 'Same height → same pressure → same bulge. The amount of water does not matter!';
+            else if (a.h > 0.5 || b.h > 0.5) msg = 'Taller water column → more pressure at the bottom → bigger bulge.';
+            text(msg, 345, 552, { size: 15, color: '#01579B' });
+            setText('pi-hw', a.h.toFixed(1) + ' cm'); setText('pi-hn', b.h.toFixed(1) + ' cm');
+            setText('pi-mw', Math.round(this.mass(a)) + ' g'); setText('pi-mn', Math.round(this.mass(b)) + ' g');
+            setText('pi-b', a.h < 0.5 && b.h < 0.5 ? '-' : Math.abs(this.bulgeR(a) - this.bulgeR(b)) < 0.5 ? 'EQUAL' : (a.h > b.h ? 'WIDE BIGGER' : 'NARROW BIGGER'));
+        },
+    };
+
+    // =====================================================
+    // TAB 2 — Leaky bottle (Activity 6.2)
+    // =====================================================
+    const BOT = { cx: 450, hw: 62, base: 350, shoulder: 178, neckY: 128, neckHW: 26, mouth: 96, full: 168, minHole: 176, maxHole: 340, floor: 548 };
+    const G_PX = 900, BOT_PX_PER_CM = 10;
+    function bottlePath() {
+        const { cx, hw, base, shoulder, neckY, neckHW, mouth } = BOT;
+        ctx.beginPath();
+        ctx.moveTo(cx - neckHW, mouth);
+        ctx.lineTo(cx - neckHW, neckY);
+        ctx.bezierCurveTo(cx - neckHW, neckY + 26, cx - hw, shoulder - 26, cx - hw, shoulder);
+        ctx.lineTo(cx - hw, base - 12); ctx.quadraticCurveTo(cx - hw, base, cx - hw + 12, base);
+        ctx.lineTo(cx + hw - 12, base); ctx.quadraticCurveTo(cx + hw, base, cx + hw, base - 12);
+        ctx.lineTo(cx + hw, shoulder);
+        ctx.bezierCurveTo(cx + hw, shoulder - 26, cx + neckHW, neckY + 26, cx + neckHW, neckY);
+        ctx.lineTo(cx + neckHW, mouth);
+    }
+    const bottle = {
+        level: BOT.full, holes: [], drops: [], refilling: false,
+        depth(h) { return Math.max(0, h.y - this.level); },             // px of water above the hole
+        speed(h) { return Math.sqrt(2 * G_PX * this.depth(h)); },        // Torricelli: v = √(2 g h)
+        flowing(h) { return !h.taped && this.depth(h) > 3; },
+        addHole(side, y, taped) {
+            y = clamp(y, BOT.minHole, BOT.maxHole);
+            if (this.holes.some(h => h.side === side && Math.abs(h.y - y) < 14)) return false;
+            if (this.holes.length >= 10) this.holes.shift();
+            this.holes.push({ side, y, taped: !!taped, acc: 0, onT: 0, landed: false, landX: null });
+            return true;
+        },
+        preset(kind) {
+            this.holes = []; this.drops = []; this.level = BOT.full; this.refilling = false;
+            if (kind === 'three') [215, 275, 336].forEach(y => this.addHole('R', y, true));
+            else ['L', 'R', 'F', 'B'].forEach(s => this.addHole(s, 318, true));
+        },
+        removeTape() { this.holes.forEach(h => { h.taped = false; }); },
+        pointer(pt) {
+            const { cx, hw } = BOT;
+            if (pt.x < cx - hw - 26 || pt.x > cx + hw + 26 || pt.y < BOT.minHole - 6 || pt.y > BOT.maxHole + 6) return;
+            this.addHole(pt.x < cx ? 'L' : 'R', pt.y, false);
+        },
+        emit(h) {
+            const v = this.speed(h) * (0.97 + Math.random() * 0.06);
+            const { cx, hw } = BOT;
+            if (h.side === 'L') this.drops.push({ x: cx - hw - 2, y: h.y, vx: -v, vy: 0, h, r: 3.2 });
+            else if (h.side === 'R') this.drops.push({ x: cx + hw + 2, y: h.y, vx: v, vy: 0, h, r: 3.2 });
+            else if (h.side === 'F') this.drops.push({ x: cx + (Math.random() - 0.5) * 8, y: h.y + 4, vx: (Math.random() - 0.5) * 30, vy: v * 0.08, h, r: 3 + v / 160, front: true });
+        },
+        update(dt) {
+            if (this.refilling) { this.level -= 120 * dt; if (this.level <= BOT.full) { this.level = BOT.full; this.refilling = false; } }
+            let drain = 0;
+            this.holes.forEach(h => {
+                if (!this.flowing(h)) { h.onT = 0; h.landed = false; return; }
+                h.onT += dt;
+                drain += 0.35 * Math.sqrt(this.depth(h));
+                h.acc += dt * 48;
+                while (h.acc >= 1) { h.acc -= 1; this.emit(h); }
+            });
+            if (!this.refilling) this.level = Math.min(BOT.base - 2, this.level + drain * dt);
+            const keep = [];
+            for (const d of this.drops) {
+                d.vy += G_PX * dt; d.x += d.vx * dt; d.y += d.vy * dt;
+                const groundY = d.front ? BOT.base : BOT.floor;
+                if (d.y >= groundY || d.x < -10 || d.x > W + 10) {
+                    if (!d.front) { d.h.landed = true; d.h.landX = d.h.landX == null ? d.x : d.h.landX * 0.85 + d.x * 0.15; }
+                    continue;
+                }
+                keep.push(d);
+            }
+            this.drops = keep.length > 1600 ? keep.slice(-1600) : keep;
+            // reveal once jets from clearly different heights are squirting at the same time and have landed
+            const live = this.holes.filter(h => this.flowing(h) && h.landed && h.onT > 0.4 && (h.side === 'L' || h.side === 'R'));
+            if (live.length >= 2) {
+                const ys = live.map(h => h.y);
+                if (Math.max(...ys) - Math.min(...ys) > 40) predicts.bottle.reveal();
+            }
+        },
+        draw() {
+            const { cx, hw, base, floor } = BOT;
+            ctx.fillStyle = '#F4F8FC'; ctx.fillRect(0, 0, W, H);
+            ctx.fillStyle = '#CFD8DC'; ctx.fillRect(0, floor, W, H - floor);
+            // stool
+            ctx.fillStyle = '#A1887F'; ctx.fillRect(cx - 58, base, 116, 12);
+            ctx.fillStyle = '#8D6E63'; ctx.fillRect(cx - 50, base + 12, 10, floor - base - 12); ctx.fillRect(cx + 40, base + 12, 10, floor - base - 12);
+            ctx.fillRect(cx - 44, 470, 88, 7);
+            // puddles where the jets land
+            this.holes.forEach(h => {
+                if (h.landX == null || h.side === 'F' || h.side === 'B') return;
+                ctx.fillStyle = 'rgba(41,182,246,' + (this.flowing(h) ? 0.45 : 0.2) + ')';
+                ctx.beginPath(); ctx.ellipse(h.landX, floor + 3, 26, 5, 0, 0, Math.PI * 2); ctx.fill();
+            });
+            // water + bottle
+            ctx.save(); bottlePath(); ctx.closePath(); ctx.clip();
+            ctx.fillStyle = 'rgba(225,242,255,0.7)'; ctx.fillRect(0, 0, W, H);
+            ctx.fillStyle = waterGrad(BOT.full, base); ctx.fillRect(cx - hw - 2, this.level, hw * 2 + 4, base - this.level + 2);
+            ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.fillRect(cx - hw - 2, this.level, hw * 2 + 4, 3);
+            ctx.restore();
+            bottlePath(); ctx.strokeStyle = '#78909C'; ctx.lineWidth = 3.5; ctx.stroke();
+            ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.fillRect(cx - hw + 8, BOT.shoulder + 6, 6, base - BOT.shoulder - 24);
+            ctx.fillStyle = '#90A4AE'; roundRect(cx - BOT.neckHW - 4, BOT.mouth - 8, BOT.neckHW * 2 + 8, 10, 3); ctx.fill();
+            // holes, tape, depth labels
+            this.holes.forEach(h => {
+                if (h.side === 'B') return;
+                const hx = h.side === 'L' ? cx - hw : h.side === 'R' ? cx + hw : cx;
+                ctx.fillStyle = '#263238'; ctx.beginPath(); ctx.arc(hx, h.y, 4, 0, Math.PI * 2); ctx.fill();
+                if (h.taped) { ctx.fillStyle = 'rgba(255,224,130,0.95)'; ctx.fillRect(hx - 11, h.y - 7, 22, 14); ctx.strokeStyle = '#C8A04A'; ctx.lineWidth = 1; ctx.strokeRect(hx - 11, h.y - 7, 22, 14); }
+                else if (this.flowing(h) && h.side !== 'F') {
+                    const dcm = this.depth(h) / BOT_PX_PER_CM;
+                    text(dcm.toFixed(0) + ' cm deep', h.side === 'L' ? hx - 10 : hx + 10, h.y - 10, { size: 12, align: h.side === 'L' ? 'right' : 'left', color: '#01579B' });
+                }
+            });
+            // droplets
+            ctx.fillStyle = 'rgba(2,136,209,0.85)';
+            for (const d of this.drops) { ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2); ctx.fill(); }
+            // water surface marker
+            dashedLine(cx - hw - 40, this.level, cx - hw - 4, this.level, '#0277BD', 2);
+            text('water surface', cx - hw - 44, this.level + 4, { size: 12, align: 'right', color: '#0277BD' });
+            // top-view inset: liquids push out in all directions
+            const ix = 100, iy = 105;
+            ctx.fillStyle = '#fff'; roundRect(12, 12, 176, 186, 14); ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,0.1)'; ctx.lineWidth = 1; ctx.stroke();
+            text('Seen from above', ix, 34, { size: 13, color: '#607D8B' });
+            const ang = { R: 0, F: Math.PI / 2, L: Math.PI, B: -Math.PI / 2 };
+            this.holes.forEach(h => {
+                if (!this.flowing(h)) return;
+                const a = ang[h.side], len = 14 + this.speed(h) * 0.11;
+                ctx.strokeStyle = 'rgba(2,136,209,0.8)'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+                ctx.beginPath(); ctx.moveTo(ix + Math.cos(a) * 30, iy + 6 + Math.sin(a) * 30); ctx.lineTo(ix + Math.cos(a) * (30 + len), iy + 6 + Math.sin(a) * (30 + len)); ctx.stroke();
+            });
+            ctx.fillStyle = waterGrad(iy - 24, iy + 36); ctx.beginPath(); ctx.arc(ix, iy + 6, 28, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#78909C'; ctx.lineWidth = 3; ctx.stroke();
+            text('jets = arrows of push', ix, 188, { size: 11, color: '#607D8B' });
+            // headline
+            const live = this.holes.filter(h => this.flowing(h));
+            let msg = 'Tap the bottle wall to poke a hole!';
+            if (this.holes.length && !live.length) msg = this.holes.some(h => h.taped) ? 'Holes are taped. Pull off the tape!' : 'Water is below the holes — refill the bottle.';
+            else if (live.length) msg = 'Deeper hole → more water above it → bigger push → longer jet';
+            text(msg, 545, 32, { size: 15, color: '#01579B' });
+            if (this.holes.some(h => h.side === 'F')) text('Holes at the same height spurt equally all around', 545, 56, { size: 13, color: '#2E7D32' });
+            // info
+            setText('bo-d', ((base - this.level) / BOT_PX_PER_CM).toFixed(1) + ' cm');
+            setText('bo-n', live.length + '');
+            const deep = live.reduce((m, h) => (!m || h.y > m.y ? h : m), null);
+            setText('bo-h', deep ? (this.depth(deep) / BOT_PX_PER_CM).toFixed(1) + ' cm below surface' : '-');
+            setText('bo-v', deep ? Math.sqrt(2 * 10 * this.depth(deep) / BOT_PX_PER_CM / 100).toFixed(2) + ' m/s' : '-');
+        },
+    };
+
+    // =====================================================
+    // TAB 3 — Water tank tower (Fig 6.4)
+    // =====================================================
+    const TW = { left: 90, right: 370, ground: 540, pxPerM: 100 / 3, tankX: 230 };
+    const yOfM = (m) => TW.ground - m * TW.pxPerM;
+    const FLOORS = [
+        { name: 'Ground floor', who: '\u{1F475}', label: 'Grandma', tapM: 1 },
+        { name: '1st floor', who: '\u{1F466}', label: 'Your friend', tapM: 4 },
+        { name: '2nd floor', who: '\u{1F9D2}', label: 'You', tapM: 7 },
+    ];
+    const ROOF_M = 9;
+    const tower = {
+        H: 2, depth: 1.5, size: 'wide', open: [false, false, false], t: 0,
+        surface() { return ROOF_M + this.H + this.depth; },                  // height of the tank's water surface (m)
+        head(i) { return this.depth > 0.01 ? Math.max(0, this.surface() - FLOORS[i].tapM) : 0; },
+        pressure(i) { return 1000 * 10 * this.head(i); },                     // ρ g h
+        reach(i) { return 92 * Math.sqrt(this.head(i)); },                    // px — stream length grows with √pressure
+        toggle(i) { this.open[i] = !this.open[i]; this.check(); },
+        openAll() { const all = this.open.every(o => o); this.open = [!all, !all, !all]; this.check(); },
+        check() { if (this.open.every(o => o) && this.depth > 0.05) predicts.tower.reveal(); $('tw-open').textContent = this.open.every(o => o) ? '\u{1F6B1} Close all taps' : '\u{1F6B0} Open all taps'; },
+        pointer(pt) {
+            if (pt.x < TW.left || pt.x > TW.right + 60 || pt.y > TW.ground || pt.y < yOfM(ROOF_M)) return;
+            const i = clamp(Math.floor((TW.ground - pt.y) / (3 * TW.pxPerM)), 0, 2);
+            this.toggle(i);
+        },
+        update(dt) { this.t += dt; },
+        draw() {
+            const sky = ctx.createLinearGradient(0, 0, 0, TW.ground);
+            sky.addColorStop(0, '#D6EEFF'); sky.addColorStop(1, '#F6FBFF');
+            ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+            ctx.fillStyle = '#A5D6A7'; ctx.fillRect(0, TW.ground, W, H - TW.ground);
+            ctx.fillStyle = '#BDBDBD'; ctx.fillRect(380, TW.ground, W - 380, 8);
+            const roofY = yOfM(ROOF_M);
+            // building
+            ctx.fillStyle = '#FFE0B2'; ctx.fillRect(TW.left, roofY, TW.right - TW.left, TW.ground - roofY);
+            ctx.strokeStyle = '#BF8F5A'; ctx.lineWidth = 3; ctx.strokeRect(TW.left, roofY, TW.right - TW.left, TW.ground - roofY);
+            FLOORS.forEach((f, i) => {
+                const fy = yOfM(i * 3);
+                ctx.fillStyle = '#D7A86E'; ctx.fillRect(TW.left, fy - 6, TW.right - TW.left, 6);
+                ctx.fillStyle = '#B3E5FC'; ctx.fillRect(TW.left + 120, fy - 80, 60, 46); ctx.strokeStyle = '#8D6E63'; ctx.lineWidth = 3; ctx.strokeRect(TW.left + 120, fy - 80, 60, 46);
+                ctx.beginPath(); ctx.moveTo(TW.left + 150, fy - 80); ctx.lineTo(TW.left + 150, fy - 34); ctx.stroke();
+                emoji(f.who, TW.left + 50, fy - 40, 40);
+                text(f.name, TW.left + 50, fy - 76, { size: 12, color: '#6D4C41' });
+                text(f.label, TW.left + 228, fy - 12, { size: 12, color: '#6D4C41' });
+                if (this.open[i] && this.head(i) > 0) emoji(i === 0 ? '\u{1F604}' : i === 1 ? '\u{1F642}' : '\u{1F610}', TW.left + 228, fy - 50, 26);
+            });
+            ctx.fillStyle = '#8D6E63'; ctx.fillRect(TW.left - 8, roofY - 8, TW.right - TW.left + 16, 10);
+            // tank on its stand
+            const tw = this.size === 'wide' ? 130 : 60, tankBot = yOfM(ROOF_M + this.H), tankTop = tankBot - 2.2 * TW.pxPerM;
+            ctx.strokeStyle = '#616161'; ctx.lineWidth = 6;
+            ctx.beginPath(); ctx.moveTo(TW.tankX - tw / 2 + 8, roofY - 8); ctx.lineTo(TW.tankX - tw / 2 + 8, tankBot); ctx.moveTo(TW.tankX + tw / 2 - 8, roofY - 8); ctx.lineTo(TW.tankX + tw / 2 - 8, tankBot); ctx.stroke();
+            if (this.H > 0.4) { ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(TW.tankX - tw / 2 + 8, roofY - 8); ctx.lineTo(TW.tankX + tw / 2 - 8, tankBot); ctx.moveTo(TW.tankX + tw / 2 - 8, roofY - 8); ctx.lineTo(TW.tankX - tw / 2 + 8, tankBot); ctx.stroke(); }
+            ctx.fillStyle = '#ECEFF1'; roundRect(TW.tankX - tw / 2, tankTop, tw, tankBot - tankTop, 10); ctx.fill();
+            const surfY = yOfM(this.surface());
+            if (this.depth > 0.01) { ctx.fillStyle = waterGrad(surfY, tankBot); ctx.fillRect(TW.tankX - tw / 2 + 3, surfY, tw - 6, tankBot - surfY - 2); }
+            ctx.strokeStyle = '#263238'; ctx.lineWidth = 5; roundRect(TW.tankX - tw / 2, tankTop, tw, tankBot - tankTop, 10); ctx.stroke();
+            text('Overhead tank', TW.tankX, tankTop - 10, { size: 13, color: '#263238' });
+            // H marker
+            if (this.H > 0) {
+                drawArrow(TW.tankX + tw / 2 + 16, roofY - 4, TW.tankX + tw / 2 + 16, tankBot + 2, '#6D4C41', 2, null);
+                drawArrow(TW.tankX + tw / 2 + 16, tankBot + 2, TW.tankX + tw / 2 + 16, roofY - 4, '#6D4C41', 2, null);
+                text('H = ' + this.H + ' m', TW.tankX + tw / 2 + 24, (roofY + tankBot) / 2 + 5, { size: 13, align: 'left', color: '#6D4C41' });
+            }
+            // supply pipe: from tank bottom, along the roof, down the outside wall
+            const pipeX = TW.right + 10;
+            ctx.strokeStyle = '#78909C'; ctx.lineWidth = 9; ctx.lineJoin = 'round';
+            ctx.beginPath(); ctx.moveTo(TW.tankX, tankBot); ctx.lineTo(TW.tankX, roofY - 16); ctx.lineTo(pipeX, roofY - 16); ctx.lineTo(pipeX, yOfM(FLOORS[0].tapM)); ctx.stroke();
+            if (this.depth > 0.01) {
+                ctx.strokeStyle = 'rgba(2,136,209,0.85)'; ctx.lineWidth = 4;
+                ctx.beginPath(); ctx.moveTo(TW.tankX, tankBot); ctx.lineTo(TW.tankX, roofY - 16); ctx.lineTo(pipeX, roofY - 16); ctx.lineTo(pipeX, yOfM(FLOORS[0].tapM)); ctx.stroke();
+            }
+            // dashed water-surface line
+            if (this.depth > 0.01) {
+                dashedLine(TW.tankX + tw / 2, surfY, 880, surfY, '#0277BD', 1.5);
+                text('water surface in the tank', TW.tankX + tw / 2 + 10, surfY - 6, { size: 12, align: 'left', color: '#0277BD' });
+            }
+            // taps and streams
+            FLOORS.forEach((f, i) => {
+                const ty = yOfM(f.tapM), nx = pipeX + 20;
+                ctx.fillStyle = '#90A4AE'; ctx.fillRect(pipeX, ty - 5, 20, 10);
+                ctx.fillStyle = this.open[i] ? '#43A047' : '#E53935'; ctx.beginPath(); ctx.arc(pipeX + 10, ty - 12, 7, 0, Math.PI * 2); ctx.fill();
+                const hd = this.head(i);
+                if (this.open[i] && hd > 0) {
+                    const R = this.reach(i), D = Math.min(58, TW.ground - ty - 3), pts = [];
+                    for (let s = 0; s <= 1.0001; s += 0.05) pts.push([nx + R * s, ty + D * s * s]);
+                    const path = () => { ctx.beginPath(); pts.forEach(([x, y], k) => k ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); };
+                    ctx.lineCap = 'round';
+                    ctx.strokeStyle = 'rgba(41,182,246,0.85)'; ctx.lineWidth = 8; path(); ctx.stroke();
+                    ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = 2; ctx.setLineDash([10, 14]); ctx.lineDashOffset = -this.t * 160; path(); ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0;
+                    ctx.fillStyle = 'rgba(2,136,209,0.8)';
+                    for (let k = 0; k < 6; k++) {
+                        const ph = (this.t * 2.2 + k / 6) % 1, a = -Math.PI / 2 + (k - 2.5) * 0.45;
+                        ctx.beginPath(); ctx.arc(nx + R + Math.cos(a) * 26 * ph, ty + D + Math.sin(a) * 30 * ph + 40 * ph * ph, 3, 0, Math.PI * 2); ctx.fill();
+                    }
+                }
+                const lab = hd > 0 ? hd.toFixed(1) + ' m of water above → ' + fmtPa(this.pressure(i)) : 'no water';
+                text(lab + (this.open[i] ? '' : '  (tap closed)'), nx + 6, ty - 14, { size: 13, align: 'left', color: this.open[i] ? '#01579B' : '#90A4AE' });
+            });
+            // headline (left area under the sky, clear of the info panel)
+            let msg = 'Open the taps! Which floor gets the strongest stream?';
+            if (this.open.some(o => o)) msg = this.size === 'narrow' ? 'Smaller tank, same height → same streams! Only the height matters.' : 'Lower tap → taller water column above it → more pressure';
+            text(msg, 345, 22, { size: 14, color: '#01579B', align: 'center' });
+            setText('tw-h', this.H + ' m');
+            FLOORS.forEach((f, i) => setText('tw-p' + i, fmtPa(this.pressure(i))));
+        },
+    };
+
+    // =====================================================
+    // TAB 4 — Dam (Fig 6.8) + connected vessels P, Q, R (Fig 6.21)
+    // =====================================================
+    const DAM = { face: 270, ground: 500, top: 200, maxDepth: 290, pxPerM: 10 };
+    const dam = {
+        frac: 0.5, wall: 'thin', strain: 0, burst: false, drops: [], flood: 0, msg: '',
+        depthPx() { return this.frac * DAM.maxDepth; },
+        reset() { this.strain = 0; this.burst = false; this.drops = []; this.flood = 0; },
+        update(dt) {
+            if (this.wall === 'thin' && !this.burst && this.frac > 0.72) {
+                this.strain += dt * (this.frac - 0.7) * 2.5;
+                if (this.strain >= 1) { this.strain = 1; this.burst = true; }
+            }
+            if (this.burst) {
+                const crackY = 452, surf = DAM.ground - this.depthPx(), d = crackY - surf;
+                if (d > 4) {
+                    this.frac = Math.max((DAM.ground - crackY + 4) / DAM.maxDepth, this.frac - dt * 0.035);
+                    $('dl').value = Math.round(this.frac * 100); $('dl-val').textContent = Math.round(this.frac * 100) + '%';
+                    const v = Math.sqrt(2 * G_PX * d) * 0.8;
+                    for (let k = 0; k < 3; k++) this.drops.push({ x: DAM.face + 18, y: crackY + (Math.random() - 0.5) * 10, vx: v * (0.8 + Math.random() * 0.3), vy: -20 + Math.random() * 40 });
+                    this.flood = Math.min(26, this.flood + dt * 8);
+                }
+            }
+            const keep = [];
+            for (const p of this.drops) { p.vy += G_PX * dt; p.x += p.vx * dt; p.y += p.vy * dt; if (p.y < DAM.ground - this.flood + 2 && p.x < 448) keep.push(p); }
+            this.drops = keep.slice(-500);
+        },
+        draw() {
+            const surf = DAM.ground - this.depthPx(), face = DAM.face;
+            // sky, hills, ground
+            ctx.fillStyle = '#E3F2FD'; ctx.fillRect(0, 0, 450, DAM.ground);
+            ctx.fillStyle = '#C5E1A5'; ctx.beginPath(); ctx.moveTo(0, 240); ctx.quadraticCurveTo(120, 150, 250, 230); ctx.lineTo(250, DAM.ground); ctx.lineTo(0, DAM.ground); ctx.fill();
+            ctx.fillStyle = '#A1887F'; ctx.fillRect(0, DAM.ground, 450, H - DAM.ground);
+            // reservoir water
+            if (this.frac > 0.005) { ctx.fillStyle = waterGrad(DAM.top, DAM.ground); ctx.fillRect(0, surf, face, DAM.ground - surf); ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.fillRect(0, surf, face, 3); }
+            // downstream village + flood
+            emoji('\u{1F3D8}\u{FE0F}', 410, DAM.ground - 22, 34);
+            if (this.flood > 0) { ctx.fillStyle = 'rgba(2,136,209,0.55)'; ctx.fillRect(face + 16, DAM.ground - this.flood, 450 - face - 16, this.flood); }
+            // the wall
+            if (this.wall === 'thin') {
+                const bend = this.strain * 16;
+                const off = (y) => bend * Math.exp(-Math.pow((y - 450) / 38, 2));
+                ctx.fillStyle = '#B0BEC5'; ctx.beginPath();
+                for (let y = DAM.top - 10; y <= DAM.ground; y += 5) ctx.lineTo(face + off(y), y);
+                for (let y = DAM.ground; y >= DAM.top - 10; y -= 5) ctx.lineTo(face + 16 + off(y), y);
+                ctx.closePath(); ctx.fill(); ctx.strokeStyle = '#607D8B'; ctx.lineWidth = 2; ctx.stroke();
+                if (this.strain > 0.25) {
+                    ctx.strokeStyle = '#37474F'; ctx.lineWidth = 2; const n = Math.floor(this.strain * 6);
+                    for (let k = 0; k < n; k++) { const y = 430 + k * 8; ctx.beginPath(); ctx.moveTo(face + 16 + off(y), y); ctx.lineTo(face + 9 + off(y), y + 4); ctx.lineTo(face + 13 + off(y), y + 8); ctx.lineTo(face + 5 + off(y), y + 12); ctx.stroke(); }
+                }
+            } else {
+                ctx.fillStyle = '#B0BEC5'; ctx.beginPath(); ctx.moveTo(face, DAM.top - 10); ctx.lineTo(face + 28, DAM.top - 10); ctx.lineTo(face + 150, DAM.ground); ctx.lineTo(face, DAM.ground); ctx.closePath(); ctx.fill();
+                ctx.strokeStyle = '#607D8B'; ctx.lineWidth = 2; ctx.stroke();
+                ctx.fillStyle = 'rgba(0,0,0,0.06)'; for (let k = 0; k < 5; k++) ctx.fillRect(face + 4, DAM.top + 40 + k * 55, 20 + k * 22, 3);
+            }
+            // jets through the crack
+            ctx.fillStyle = 'rgba(2,136,209,0.85)';
+            for (const p of this.drops) { ctx.beginPath(); ctx.arc(p.x, p.y, 3.2, 0, Math.PI * 2); ctx.fill(); }
+            // horizontal pressure arrows on the wall face: longer with depth
+            if (this.frac > 0.02) {
+                for (let y = surf + 14; y < DAM.ground - 4; y += 30) {
+                    const dep = y - surf, L = 8 + 0.42 * dep, k = clamp(dep / DAM.maxDepth, 0, 1);
+                    drawArrow(face - 6 - L, y, face - 3, y, 'rgb(' + Math.round(120 + 110 * k) + ',' + Math.round(70 - 30 * k) + ',' + Math.round(200 - 150 * k) + ')', 2.5 + 2.5 * k, null);
+                }
+                text('push grows with depth ↓', 120, Math.max(surf + 26, 130), { size: 13, color: '#4A148C' });
+            }
+            const pBase = 1000 * 10 * this.depthPx() / DAM.pxPerM;
+            text('Dam wall', 225, 28, { size: 16, color: '#37474F' });
+            let m = 'Fill the reservoir up to the top!';
+            if (this.burst) m = '\u{1F4A5} The thin wall cracked at the bottom!';
+            else if (this.wall === 'thin' && this.strain > 0.05) m = '⚠️ The wall is bulging at the bottom...';
+            else if (this.wall === 'broad' && this.frac > 0.72) m = '✅ The broad base holds the big push at the bottom';
+            text(m, 225, 52, { size: 14, color: this.burst ? '#C62828' : '#01579B' });
+            setText('dm-d', (this.depthPx() / DAM.pxPerM).toFixed(1) + ' m');
+            setText('dm-p', fmtPa(pBase));
+            setText('dm-s', this.burst ? 'CRACKED' : this.wall === 'thin' && this.strain > 0.05 ? 'BULGING' : 'HOLDING');
+        },
+    };
+
+    const VS = { yb: 470, hMax: 262, pipeH: 18 };
+    const VESSELS = [
+        { name: 'P', cx: 525, width: () => 22 },
+        { name: 'Q', cx: 632, width: (h) => 24 + 0.33 * h },
+        { name: 'R', cx: 800, width: () => 100 },
+    ];
+    VESSELS.forEach(v => { v.cum = [0]; for (let k = 1; k <= VS.hMax; k++) v.cum.push(v.cum[k - 1] + v.width(k - 0.5)); });   // volume up to each 1 px level
+    const volAt = (v, h) => { h = clamp(h, 0, VS.hMax); const k = Math.floor(h); return v.cum[k] + (k < VS.hMax ? (h - k) * v.width(k + 0.5) : 0); };
+    const hAt = (v, V) => { let lo = 0, hi = VS.hMax; for (let it = 0; it < 30; it++) { const mid = (lo + hi) / 2; if (volAt(v, mid) < V) lo = mid; else hi = mid; } return lo; };
+    const vessels = {
+        V: [0, 0, 0], h: [0, 0, 0], into: 2, pourT: 0, poured: false, flow: [0, 0, 0], t: 0,
+        total() { return this.V[0] + this.V[1] + this.V[2]; },
+        common() { const T = this.total(); let lo = 0, hi = VS.hMax; for (let it = 0; it < 30; it++) { const mid = (lo + hi) / 2; if (VESSELS.reduce((s, v) => s + volAt(v, mid), 0) < T) lo = mid; else hi = mid; } return lo; },
+        pour() { this.pourT = Math.min(this.pourT + 1.2, 3); this.poured = true; },
+        empty() { this.V = [0, 0, 0]; this.h = [0, 0, 0]; this.pourT = 0; },
+        settled() { const c = this.common(); return this.pourT <= 0 && this.h.every(x => Math.abs(x - c) < 1); },
+        update(dt) {
+            this.t += dt;
+            if (this.pourT > 0) {
+                this.pourT -= dt;
+                if (Math.max(...this.h) < VS.hMax - 12) this.V[this.into] += 2600 * dt; else this.pourT = 0;
+            }
+            // water flows through the bottom pipe from higher level to lower level
+            const k = 120, f = [0, 0, 0];
+            [[0, 1], [1, 2], [0, 2]].forEach(([i, j]) => {
+                let q = k * (this.h[i] - this.h[j]) * dt;
+                q = q > 0 ? Math.min(q, this.V[i]) : Math.max(q, -this.V[j]);
+                this.V[i] -= q; this.V[j] += q; f[i] -= q; f[j] += q;
+            });
+            this.flow = f.map(x => x / Math.max(dt, 1e-6));
+            this.h = VESSELS.map((v, i) => hAt(v, this.V[i]));
+            if (this.poured && this.settled() && this.common() > 30) predicts.dam.reveal();
+        },
+        draw() {
+            const yb = VS.yb, x0 = VESSELS[0].cx - 11, x1 = VESSELS[2].cx + 50;
+            ctx.fillStyle = '#FBFAFF'; ctx.fillRect(452, 0, W - 452, H);
+            ctx.fillStyle = 'rgba(0,0,0,0.035)';
+            for (let x = 495; x < W; x += 45) ctx.fillRect(x, 0, 1, H);
+            for (let y = 0; y < H; y += 45) ctx.fillRect(452, y, W - 452, 1);
+            const has = this.total() > 1;
+            // bottom pipe
+            ctx.fillStyle = has ? waterGrad(yb, yb + VS.pipeH) : 'rgba(225,242,255,0.8)'; ctx.fillRect(x0, yb, x1 - x0, VS.pipeH);
+            ctx.strokeStyle = '#607D8B'; ctx.lineWidth = 3; ctx.strokeRect(x0, yb, x1 - x0, VS.pipeH);
+            // flow chevrons in the pipe (net water entering P, then P+Q)
+            const segs = [[VESSELS[0].cx + 14, VESSELS[1].cx - 16, this.flow[0]], [VESSELS[1].cx + 16, VESSELS[2].cx - 52, this.flow[0] + this.flow[1]]];
+            segs.forEach(([a, b, q]) => {
+                if (Math.abs(q) < 150) return;
+                const dir = q > 0 ? -1 : 1, sp = 40 + Math.min(120, Math.abs(q) / 40);
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 3;
+                for (let x = a + ((this.t * sp * dir) % 22 + 22) % 22; x < b; x += 22) { ctx.beginPath(); ctx.moveTo(x - 4 * dir, yb + 4); ctx.lineTo(x + 4 * dir, yb + 9); ctx.lineTo(x - 4 * dir, yb + 14); ctx.stroke(); }
+            });
+            // vessels
+            VESSELS.forEach((v, i) => {
+                const wb = v.width(0), wt = v.width(VS.hMax), topY = yb - VS.hMax, hh = this.h[i];
+                if (hh > 0.3) {
+                    const wl = v.width(hh);
+                    ctx.fillStyle = waterGrad(topY, yb); ctx.beginPath();
+                    ctx.moveTo(v.cx - wb / 2, yb + 2); ctx.lineTo(v.cx - wl / 2, yb - hh); ctx.lineTo(v.cx + wl / 2, yb - hh); ctx.lineTo(v.cx + wb / 2, yb + 2); ctx.closePath(); ctx.fill();
+                    ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.fillRect(v.cx - wl / 2, yb - hh, wl, 2);
+                }
+                ctx.fillStyle = 'rgba(225,242,255,0.35)'; ctx.beginPath(); ctx.moveTo(v.cx - wb / 2, yb); ctx.lineTo(v.cx - wt / 2, topY); ctx.lineTo(v.cx + wt / 2, topY); ctx.lineTo(v.cx + wb / 2, yb); ctx.closePath(); ctx.fill();
+                ctx.strokeStyle = '#607D8B'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(v.cx - wt / 2, topY); ctx.lineTo(v.cx - wb / 2, yb); ctx.moveTo(v.cx + wb / 2, yb); ctx.lineTo(v.cx + wt / 2, topY); ctx.stroke();
+                text(v.name, v.cx, yb + 46, { size: 20, color: '#37474F', font: "'Fredoka One', cursive", weight: 400 });
+            });
+            // pouring
+            const tv = VESSELS[this.into];
+            if (this.pourT > 0) {
+                const sx = tv.cx + (this.into === 2 ? 20 : 0), topY = yb - VS.hMax;
+                jug(sx + 12, topY - 18, false);
+                pourStream(sx, topY - 16, yb - this.h[this.into], 8);
+            }
+            // same-level line
+            const c = this.common();
+            if (this.settled() && c > 3) {
+                dashedLine(x0 - 10, yb - c, x1 + 10, yb - c, '#2E7D32', 2);
+                text('same level in P, Q and R!', 680, yb - c - 10, { size: 14, color: '#2E7D32' });
+            }
+            text('Connected vessels', 680, 192, { size: 16, color: '#37474F' });
+            setText('dm-l', this.h.map(x => (x / 10).toFixed(1)).join(' / ') + ' cm');
+        },
+    };
+    const damTab = {
+        update(dt) { dam.update(dt); vessels.update(dt); },
+        draw() {
+            dam.draw(); vessels.draw();
+            ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = 2; ctx.setLineDash([6, 6]);
+            ctx.beginPath(); ctx.moveTo(451, 0); ctx.lineTo(451, H); ctx.stroke(); ctx.setLineDash([]);
+        },
+    };
+
+    // ================= Predictions =================
+    const predicts = {
+        pipes: makePredict('predict-pipes',
+            'Both pipes are filled to the SAME height. The wide pipe holds much more water. Which balloon bulges more?',
+            ['The wide pipe\'s balloon', 'The narrow pipe\'s balloon', 'Both bulge the same'], 2,
+            'Equal heights give equal bulges, although the wide pipe holds about 9 times more water. So the <strong>weight of water</strong> is not what decides it &mdash; the <strong>height of the water column</strong> decides the pressure at the bottom.'),
+        bottle: makePredict('predict-bottle',
+            'A full bottle has holes at three different heights. Which hole squirts water the farthest?',
+            ['The top hole', 'The middle hole', 'The bottom hole', 'All the same'], 2,
+            'The bottom hole has the most water above it, so the pressure there is largest and the jet shoots out fastest. Liquids also push sideways &mdash; on the walls of the container &mdash; not just on the bottom.'),
+        tower: makePredict('predict-tower',
+            'The overhead tank is on the roof. Who gets the strongest stream of water: ground, first or second floor?',
+            ['Second floor (closest to the tank)', 'First floor', 'Ground floor', 'All equal'], 2,
+            'The ground-floor tap has the tallest column of water above it, so its pressure is highest. You on the 2nd floor get a weaker stream than your friend on the 1st floor. Raising the tank (bigger H) makes every stream stronger.'),
+        dam: makePredict('predict-dam',
+            'Water is poured into vessel R only. When the water stops moving, where is the level highest?',
+            ['In thin vessel P', 'In vessel Q', 'In vessel R, where we poured', 'Equal in all three'], 3,
+            'The water flows through the bottom pipe until the level is the same in P, Q and R &mdash; whatever their shapes. At the bottom, equal heights mean equal pressures, so nothing pushes water any further.'),
+    };
+
+    // ================= Controls =================
+    function pipesUI() {
+        $('pw').value = pipes.P[0].target; $('pn').value = pipes.P[1].target;
+        $('pw-val').textContent = pipes.P[0].target + ' cm'; $('pn-val').textContent = pipes.P[1].target + ' cm';
+    }
+    $('pw').addEventListener('input', e => pipes.setTarget(0, +e.target.value));
+    $('pn').addEventListener('input', e => pipes.setTarget(1, +e.target.value));
+    $('p-half').addEventListener('click', () => { pipes.setTarget(0, 12.5); pipes.setTarget(1, 12.5); });
+    $('p-more').addEventListener('click', () => pipes.setTarget(1, pipes.P[1].target + 3));
+    $('p-empty').addEventListener('click', () => { pipes.setTarget(0, 0); pipes.setTarget(1, 0); });
+    $('b-three').addEventListener('click', () => bottle.preset('three'));
+    $('b-around').addEventListener('click', () => bottle.preset('around'));
+    $('b-tape').addEventListener('click', () => bottle.removeTape());
+    $('b-refill').addEventListener('click', () => { bottle.refilling = true; });
+    $('b-clear').addEventListener('click', () => { bottle.holes = []; bottle.drops = []; });
+    $('th').addEventListener('input', e => { tower.H = +e.target.value; $('th-val').textContent = tower.H + ' m'; });
+    $('td').addEventListener('input', e => { tower.depth = +e.target.value; $('td-val').textContent = tower.depth.toFixed(1) + ' m deep'; });
+    $('tw-size').addEventListener('change', e => { tower.size = e.target.value; });
+    $('tw-open').addEventListener('click', () => tower.openAll());
+    $('dm-wall').addEventListener('change', e => { dam.wall = e.target.value; dam.reset(); });
+    $('dl').addEventListener('input', e => { dam.frac = +e.target.value / 100; $('dl-val').textContent = e.target.value + '%'; });
+    $('dm-reset').addEventListener('click', () => { dam.reset(); dam.frac = 0.5; $('dl').value = 50; $('dl-val').textContent = '50%'; });
+    $('vs-into').addEventListener('change', e => { vessels.into = +e.target.value; });
+    $('vs-pour').addEventListener('click', () => vessels.pour());
+    $('vs-empty').addEventListener('click', () => vessels.empty());
+    canvas.addEventListener('pointerdown', e => { const s = sims[active]; if (s.pointer) s.pointer(ptr(e)); });
+
+    // ================= Tabs + loop =================
+    const sims = { pipes, bottle, tower, dam: damTab };
+    let active = 'pipes';
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => {
+        active = btn.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + active));
+        document.querySelectorAll('.info-display').forEach(i => i.classList.toggle('active', i.id === 'info-' + active));
+    }));
+    $('info-pipes').classList.add('active');
+
+    buildChallenge('challenge-root', [
+        { q: 'Vessels P, Q and R of different shapes are joined at the bottom. Water is poured into R until it stops. The water level will be…',
+          opts: ['Highest in the thin vessel P', 'Highest in vessel Q', 'Highest in vessel R, where it was poured', 'Equal in all three vessels'], correct: 3,
+          explain: 'Connected vessels always settle to the same level, whatever their shapes — equal heights mean equal pressures at the bottom.' },
+        { q: 'A water tank is placed on the roof of a building at a height H. To get water with more pressure on the ground floor, one has to…',
+          opts: ['Increase the height H of the tank', 'Decrease the height H of the tank', 'Use a tank of the same height that holds more water', 'Use a tank of the same height that holds less water'], correct: 0,
+          explain: 'Tap pressure depends on the height of the water surface above the tap. A bigger or smaller tank at the same height changes nothing.' },
+        { q: 'Two identical balloons are stretched over holes in the side of a bottle: A near the bottom, B higher up. The bottle is filled with water above both. What happens?',
+          opts: ['Only A bulges', 'Both bulge equally', 'Both bulge, but A bulges more', 'Both bulge, but B bulges more'], correct: 2,
+          explain: 'Water pushes on the sides too, so both bulge. A is deeper, with more water above it, so the pressure — and the bulge — is bigger.' },
+    ], 'liquid', 'badge-banner');
+
+    pipesUI();
+    let last = performance.now();
+    function frame(now) {
+        const dt = Math.min((now - last) / 1000, 0.033); last = now;
+        const sim = sims[active];
+        sim.update(dt);
+        ctx.setTransform(viewScale, 0, 0, viewScale, 0, 0);
+        sim.draw();
+        requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+    window.PLAB = { pipes, bottle, tower, dam, vessels, damTab, predicts, sims };
+    </script>
+</body>
+</html>
