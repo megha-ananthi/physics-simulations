@@ -219,7 +219,7 @@
                     <span class="control-label" id="st-wlab">Strap width</span><span class="control-value" id="st-w-val">1 cm</span>
                     <input type="range" id="st-w" min="0.5" max="8" step="0.5" value="1">
                 </div>
-                <button class="ghost-btn" id="st-pawan">&#x1F466; Pawan (narrow)</button>
+                <button class="ghost-btn" id="st-vignesh">&#x1F466; Vignesh (narrow)</button>
                 <button class="ghost-btn" id="st-megha">&#x1F467; Megha (broad)</button>
             </div>
             <p class="hint">The red glow on the shoulder shows how hard each square centimetre is pressed.</p>
@@ -727,8 +727,8 @@
             ['Standing', 'Lying down', 'The same — his weight has not changed'], 0,
             'Standing puts all 500 N on two small soles, so the <strong>pressure</strong> is about 12 times bigger than when lying down. Same force, smaller area, bigger pressure.'),
         straps: makePredict('predict-straps',
-            'Megha and Pawan carry identical 60 N bags. Pawan\'s straps are narrow. Whose shoulders hurt more?',
-            ['Megha\'s (broad straps)', 'Pawan\'s (narrow straps)', 'Neither — the bags weigh the same'], 1,
+            'Megha and Vignesh carry identical 60 N bags. Vignesh\'s straps are narrow. Whose shoulders hurt more?',
+            ['Megha\'s (broad straps)', 'Vignesh\'s (narrow straps)', 'Neither — the bags weigh the same'], 1,
             'Narrow straps put the same weight on a smaller area of the shoulder, so the pressure is larger and it hurts. Broad straps spread the force out.'),
         sharp: makePredict('predict-sharp',
             'You push a nail with the same force: once with its point, once with its flat head. Which goes into the wood?',
@@ -750,7 +750,7 @@
     }
     $('st-thing').addEventListener('change', e => { straps.thing = e.target.value; strapsUI(); });
     $('st-w').addEventListener('input', e => { straps.w = +e.target.value; strapsUI(); });
-    $('st-pawan').addEventListener('click', () => { straps.thing = 'bag'; $('st-thing').value = 'bag'; straps.w = 1; strapsUI(); });
+    $('st-vignesh').addEventListener('click', () => { straps.thing = 'bag'; $('st-thing').value = 'bag'; straps.w = 1; strapsUI(); });
     $('st-megha').addEventListener('click', () => { straps.thing = 'bag'; $('st-thing').value = 'bag'; straps.w = 6; strapsUI(); });
     $('sh-tool').addEventListener('change', e => { sharp.tool = e.target.value; sharp.reset(); });
     $('sh-end').addEventListener('change', e => { sharp.end = e.target.value; sharp.reset(); });
